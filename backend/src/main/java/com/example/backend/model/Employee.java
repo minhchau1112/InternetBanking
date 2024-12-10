@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 import com.example.backend.enums.EmployeeStatus;
 
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter

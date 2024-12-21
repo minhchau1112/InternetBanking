@@ -1,6 +1,7 @@
 package com.example.backend.controller;
 
 import com.example.backend.dto.LoginRequest;
+import com.example.backend.service.LoginService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -17,16 +18,20 @@ public class AuthenticationController {
 
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
 
-    public AuthenticationController(AuthenticationManagerBuilder authenticationManagerBuilder) {
+    private final LoginService loginService;
+
+    public AuthenticationController(AuthenticationManagerBuilder authenticationManagerBuilder, LoginService securityService) {
         this.authenticationManagerBuilder = authenticationManagerBuilder;
+        this.loginService = securityService;
     }
+
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
         UsernamePasswordAuthenticationToken authenticationToken
                 = new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword());
         Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
-
+        String access_token = loginService.createToken(authentication);
         return ResponseEntity.ok().body(null);
     }
 }

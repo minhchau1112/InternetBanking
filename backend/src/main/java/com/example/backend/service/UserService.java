@@ -1,9 +1,11 @@
 package com.example.backend.service;
 
+import com.example.backend.enums.UserRole;
 import com.example.backend.model.User;
 import com.example.backend.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,5 +20,15 @@ public class UserService {
 
     public Optional<User> handleGetUserByUsername(String username) {
         return this.userRepository.findByUsername((username));
+    }
+
+    public User handleCreateUser(User user) {
+        Optional<User> existingUser = userRepository.findByUsername(user.getUsername());
+        if (existingUser.isPresent()) {
+            throw new IllegalArgumentException("User with username " + user.getUsername() + " already exists.");
+        }
+        user.setRole(UserRole.EMPLOYEE);
+        user.setCreatedAt(LocalDateTime.now());
+        return userRepository.save(user);
     }
 }

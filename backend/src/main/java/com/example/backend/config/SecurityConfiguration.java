@@ -18,6 +18,7 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableMethodSecurity(securedEnabled = true)
 @EnableWebSecurity
 public class SecurityConfiguration {
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -30,7 +31,7 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(
                         authz -> authz
                                 .requestMatchers("/","/login").permitAll()
-                                .anyRequest().authenticated()
+                                .anyRequest().permitAll()
                 )
                 .oauth2ResourceServer((oauth2)->oauth2.jwt(Customizer.withDefaults())
                         .authenticationEntryPoint(authenticationEntryPointConfiguration)

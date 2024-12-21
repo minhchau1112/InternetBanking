@@ -1,5 +1,7 @@
 package com.example.backend.service;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
@@ -13,6 +15,8 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
 @Service
+@Getter
+@Setter
 public class LoginService {
     public static final MacAlgorithm JWT_ALGORITHM = MacAlgorithm.HS256;
 
@@ -27,6 +31,9 @@ public class LoginService {
 
     @Value("${login.jwt.token-validity-in-second}")
     private long jwtExpiration;
+
+    @Value("${login.refresh_expires_in-second}")
+    private long refreshExpiresIn;
 
 
     public String createToken(Authentication authentication) {

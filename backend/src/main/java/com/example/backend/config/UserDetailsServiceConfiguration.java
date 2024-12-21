@@ -1,5 +1,8 @@
 package com.example.backend.config;
 
+import com.example.backend.model.Admin;
+import com.example.backend.model.Customer;
+import com.example.backend.model.Employee;
 import com.example.backend.model.User;
 import com.example.backend.service.UserService;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -27,7 +30,20 @@ public class UserDetailsServiceConfiguration implements UserDetailsService {
         return new org.springframework.security.core.userdetails.User(
                 user.getUsername(),
                 user.getPassword(),
-                Collections.singletonList(new SimpleGrantedAuthority(user.getRole().name()))
+                Collections.singletonList(new SimpleGrantedAuthority(getRole(user)))
         );
+    }
+
+    public String getRole(User user) {
+        if (user instanceof Admin) {
+            return "ROLE_ADMIN";
+        }
+        if (user instanceof Customer) {
+            return "ROLE_CUSTOMER";
+        }
+        if (user instanceof Employee) {
+            return "ROLE_EMPLOYEE";
+        }
+        return null;
     }
 }

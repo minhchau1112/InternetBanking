@@ -1,5 +1,3 @@
-import React from "react";
-
 const CustomerDashboard = () => {
   return (
     <div className="min-h-screen bg-gray-100 p-6">
@@ -19,43 +17,6 @@ const CustomerDashboard = () => {
               <p>**** **** **** 3783</p>
             </div>
           </div>
-        </div>
-
-        <div>
-          <h2 className="text-lg font-semibold mb-2">Add New Bank Account</h2>
-          <form className="bg-white p-4 rounded-lg shadow-md space-y-4">
-            <input
-              type="text"
-              placeholder="Bank Name"
-              className="w-full p-2 border border-gray-300 rounded"
-            />
-            <input
-              type="text"
-              placeholder="Account Name"
-              className="w-full p-2 border border-gray-300 rounded"
-            />
-            <input
-              type="text"
-              placeholder="Account Number"
-              className="w-full p-2 border border-gray-300 rounded"
-            />
-            <input
-              type="text"
-              placeholder="Swift Code"
-              className="w-full p-2 border border-gray-300 rounded"
-            />
-            <input
-              type="text"
-              placeholder="Branch"
-              className="w-full p-2 border border-gray-300 rounded"
-            />
-            <button
-              type="submit"
-              className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600"
-            >
-              Add
-            </button>
-          </form>
         </div>
       </div>
     </div>

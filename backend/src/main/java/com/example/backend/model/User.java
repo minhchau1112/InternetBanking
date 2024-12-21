@@ -2,7 +2,6 @@ package com.example.backend.model;
 
 import jakarta.persistence.*;
 import lombok.*;
-import com.example.backend.enums.UserRole;
 import java.time.LocalDateTime;
 
 @Builder
@@ -25,10 +24,6 @@ public class User {
 
     @Column(nullable = false)
     private String password;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "role", insertable = false, updatable = false)
-    private UserRole role;
 
     @Column(nullable = false)
     private LocalDateTime createdAt;

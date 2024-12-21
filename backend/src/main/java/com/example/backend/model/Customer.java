@@ -9,6 +9,7 @@ import lombok.*;
 @Setter
 @Entity
 @Table(name = "customers")
+@DiscriminatorValue("CUSTOMER")
 public class Customer extends User {
     @Column(nullable = false)
     private String name;

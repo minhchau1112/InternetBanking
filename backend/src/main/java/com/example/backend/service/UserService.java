@@ -22,13 +22,5 @@ public class UserService {
         return this.userRepository.findByUsername((username));
     }
 
-    public User handleCreateUser(User user) {
-        Optional<User> existingUser = userRepository.findByUsername(user.getUsername());
-        if (existingUser.isPresent()) {
-            throw new IllegalArgumentException("User with username " + user.getUsername() + " already exists.");
-        }
-        user.setRole(UserRole.EMPLOYEE);
-        user.setCreatedAt(LocalDateTime.now());
-        return userRepository.save(user);
-    }
+
 }

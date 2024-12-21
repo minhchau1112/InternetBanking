@@ -20,11 +20,5 @@ public class UserController {
         this.passwordEncoder = passwordEncoder;
     }
 
-    @PostMapping("/users")
-    public ResponseEntity<User> createUser(@RequestBody User user) {
-        String hash = passwordEncoder.encode(user.getPassword());
-        user.setPassword(hash);
-        User createdUser = userService.handleCreateUser(user);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
-    }
+
 }

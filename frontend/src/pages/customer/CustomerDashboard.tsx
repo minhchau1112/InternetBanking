@@ -5,11 +5,9 @@ const CustomerDashboard = () => {
     <div className="min-h-screen bg-gray-100 p-6">
       <h1 className="text-2xl font-bold mb-4">Manage Bank Account</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* My Card Section */}
         <div>
           <h2 className="text-lg font-semibold mb-2">My Card</h2>
           <div className="space-y-4">
-            {/* Card */}
             <div className="bg-blue-500 text-white p-4 rounded-lg shadow-md">
               <p className="font-bold text-lg">MasterCard</p>
               <p>Total Balance: $219.78</p>
@@ -23,7 +21,6 @@ const CustomerDashboard = () => {
           </div>
         </div>
 
-        {/* Add New Bank Account Section */}
         <div>
           <h2 className="text-lg font-semibold mb-2">Add New Bank Account</h2>
           <form className="bg-white p-4 rounded-lg shadow-md space-y-4">

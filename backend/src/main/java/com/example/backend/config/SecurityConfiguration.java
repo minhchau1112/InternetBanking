@@ -30,11 +30,11 @@ public class SecurityConfiguration {
                 .csrf(c -> c.disable())
                 .authorizeHttpRequests(
                         authz -> authz
-                                .requestMatchers("/","/login").permitAll()
+                                .requestMatchers("/","/api/auth/login").permitAll()
                                 .requestMatchers("/admin/**").hasRole("ADMIN")
                                 .requestMatchers("/customer/**").hasRole("CUSTOMER")
                                 .requestMatchers("/employee/**").hasRole("EMPLOYEE")
-                                .anyRequest().permitAll()
+                                .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer((oauth2)->oauth2.jwt(Customizer.withDefaults())
                         .authenticationEntryPoint(authenticationEntryPointConfiguration)

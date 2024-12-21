@@ -14,12 +14,12 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 
 @Component
-public class AuthenticationEntryPointConfig implements org.springframework.security.web.AuthenticationEntryPoint {
+public class AuthenticationEntryPointConfiguration implements org.springframework.security.web.AuthenticationEntryPoint {
     private final AuthenticationEntryPoint delegate = new BearerTokenAuthenticationEntryPoint();
 
     private final ObjectMapper mapper;
 
-    public AuthenticationEntryPointConfig(ObjectMapper mapper) {
+    public AuthenticationEntryPointConfiguration(ObjectMapper mapper) {
         this.mapper = mapper;
     }
 

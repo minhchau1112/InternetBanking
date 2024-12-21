@@ -17,7 +17,7 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ userType }) => {
   const getNavLinkClass = ({ isActive }: { isActive: boolean }): string =>
-    `flex items-center gap-4 px-6 py-3 text-lg transition duration-200 ease-in-out ${
+    `flex items-center font-family text-black gap-4 px-6 py-3 text-lg transition duration-200 ease-in-out ${
       isActive
         ? "text-blue-600 font-bold bg-blue-100 rounded-full"
         : "hover:text-blue-600 hover:bg-blue-50 rounded-full"

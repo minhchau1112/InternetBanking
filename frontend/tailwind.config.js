@@ -1,4 +1,3 @@
-/** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
     "./src/**/*.{js,jsx,ts,tsx}",
@@ -6,7 +5,7 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["Roboto", "Arial", "sans-serif"], // Thay "Roboto" bằng font bạn chọn
+        sans: ["Roboto", "Arial", "sans-serif"],
       },
     },
   },

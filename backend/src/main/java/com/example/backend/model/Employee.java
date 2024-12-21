@@ -10,6 +10,7 @@ import com.example.backend.enums.EmployeeStatus;
 @Setter
 @Entity
 @Table(name = "employees")
+@DiscriminatorValue("EMPLOYEE")
 public class Employee extends User {
     @Column(nullable = false)
     private String name;

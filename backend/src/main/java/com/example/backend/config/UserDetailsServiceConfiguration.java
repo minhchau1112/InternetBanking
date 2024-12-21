@@ -26,7 +26,6 @@ public class UserDetailsServiceConfiguration implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = userService.handleGetUserByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
-
         return new org.springframework.security.core.userdetails.User(
                 user.getUsername(),
                 user.getPassword(),
@@ -44,6 +43,6 @@ public class UserDetailsServiceConfiguration implements UserDetailsService {
         if (user instanceof Employee) {
             return "ROLE_EMPLOYEE";
         }
-        return null;
+        throw new IllegalStateException("Unknown user type: " + user.getClass().getName());
     }
 }

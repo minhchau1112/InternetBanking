@@ -1,6 +1,6 @@
 package com.example.backend.config;
 
-import com.example.backend.dto.RestResponse;
+import com.example.backend.dto.response.RestResponse;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.MediaType;

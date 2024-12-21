@@ -1,15 +1,15 @@
 package com.example.backend.repository;
 
 import com.example.backend.model.DebtReminder;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-
-import java.util.List;
 
 @Repository
 public interface DebtReminderRepository extends JpaRepository<DebtReminder, Integer> {
 
-    List<DebtReminder> findByCreatorAccountId(Integer creatorAccountId);
+    Page<DebtReminder> findByCreatorAccountId(Integer creatorAccountId, Pageable pageable);
 
-    List<DebtReminder> findByDebtorAccountId(Integer debtorAccountId);
+    Page<DebtReminder> findByDebtorAccountId(Integer debtorAccountId, Pageable pageable);
 }

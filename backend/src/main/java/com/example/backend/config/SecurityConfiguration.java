@@ -28,6 +28,7 @@ public class SecurityConfiguration {
                                 .requestMatchers("/").permitAll()
                                 .anyRequest().permitAll())
                 .formLogin(form -> form.disable())
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
         return http.build();
     }

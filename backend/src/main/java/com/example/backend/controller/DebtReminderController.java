@@ -2,6 +2,8 @@ package com.example.backend.controller;
 
 import com.example.backend.dto.request.DebtReminderRequest;
 import com.example.backend.dto.response.ApiResponse;
+import com.example.backend.dto.response.GetDebtReminderForCreatorResponse;
+import com.example.backend.enums.DebtReminderStatus;
 import com.example.backend.enums.StatusCode;
 import com.example.backend.model.DebtReminder;
 import com.example.backend.service.DebtReminderService;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 
+@CrossOrigin(origins = "http://localhost:5173")
 @RestController
 @RequestMapping("/api/debt-reminders")
 public class DebtReminderController {
@@ -39,16 +42,15 @@ public class DebtReminderController {
 
 
     @GetMapping("/creator/{creatorAccountId}")
-    public ResponseEntity<ApiResponse<Page<DebtReminder>>> getDebtRemindersForCreator(@PathVariable Integer creatorAccountId,
-                                                                         @RequestParam(defaultValue = "0") int page,
-                                                                         @RequestParam(defaultValue = "10") int size) {
-        System.out.println("getDebtRemindersForCreator" + page + " " + size);
+    public ResponseEntity<ApiResponse<Page<GetDebtReminderForCreatorResponse>>> getDebtRemindersForCreator(@PathVariable Integer creatorAccountId,
+                                                                                                           @RequestParam(required = false) DebtReminderStatus status,
+                                                                                                           @RequestParam(defaultValue = "0") int page,
+                                                                                                           @RequestParam(defaultValue = "10") int size) {
         Pageable pageable = PageRequest.of(page, size);
 
-        Page<DebtReminder> reminders = debtReminderService.getDebtRemindersForCreator(creatorAccountId, pageable);
+        Page<GetDebtReminderForCreatorResponse> reminders = debtReminderService.getDebtRemindersForCreator(creatorAccountId, status, pageable);
 
-        System.out.println(reminders.getContent());
-        ApiResponse<Page<DebtReminder>> apiResponse = new ApiResponse<>(true, StatusCode.SUCCESS.getCode(), reminders, "Get debt reminders for creator success", LocalDateTime.now());
+        ApiResponse<Page<GetDebtReminderForCreatorResponse>> apiResponse = new ApiResponse<>(true, StatusCode.SUCCESS.getCode(), reminders, "Get debt reminders for creator success", LocalDateTime.now());
         return ResponseEntity.ok(apiResponse);
     }
 

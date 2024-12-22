@@ -1,5 +1,6 @@
 package com.example.backend.service;
 
+import com.example.backend.dto.response.GetDebtReminderForCreatorResponse;
 import com.example.backend.enums.DebtReminderStatus;
 import com.example.backend.exception.NotFoundException;
 import com.example.backend.model.Account;
@@ -42,11 +43,15 @@ public class DebtReminderService {
         return debtReminderRepository.save(debtReminder);
     }
 
-    public Page<DebtReminder> getDebtRemindersForCreator(Integer creatorAccountId, Pageable pageable) {
+    public Page<GetDebtReminderForCreatorResponse> getDebtRemindersForCreator(Integer creatorAccountId, DebtReminderStatus status, Pageable pageable) {
         Account creatorAccount = accountRepository.findById(creatorAccountId)
                 .orElseThrow(() -> new NotFoundException("Creator account not found"));
 
-        return debtReminderRepository.findByCreatorAccountId(creatorAccountId, pageable);
+        if (status == null) {
+            return debtReminderRepository.findByCreatorAccountId(creatorAccountId, pageable);
+        }
+
+        return debtReminderRepository.findByCreatorAccountIdAAndStatus(creatorAccountId, status, pageable);
     }
 
     public Page<DebtReminder> getDebtRemindersForDebtor(Integer debtorAccountId, Pageable pageable) {

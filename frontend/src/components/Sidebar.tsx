@@ -43,19 +43,19 @@ const Sidebar: React.FC<SidebarProps> = ({ userType }) => {
 
           {userType === "customer" && (
             <>
-              <NavLink to="/payments" className={getNavLinkClass}>
+              <NavLink to="/customer/payments" className={getNavLinkClass}>
                 <PaymentOutlined /> Payments
               </NavLink>
-              <NavLink to="/transactions" className={getNavLinkClass}>
+              <NavLink to="/customer/transactions" className={getNavLinkClass}>
                 <AccountBalanceOutlined /> Transaction
               </NavLink>
-              <NavLink to="/debt-reminder" className={getNavLinkClass}>
+              <NavLink to="/customer/debt-reminder" className={getNavLinkClass}>
                 <NotificationsActiveOutlined /> Debt Reminder
               </NavLink>
-              <NavLink to="/history" className={getNavLinkClass}>
+              <NavLink to="/customer/history" className={getNavLinkClass}>
                 <EqualizerOutlined /> History
               </NavLink>
-              <NavLink to="/profile" className={getNavLinkClass}>
+              <NavLink to="/customer/profile" className={getNavLinkClass}>
                 <PersonOutlineOutlined /> Profile
               </NavLink>
             </>
@@ -63,13 +63,13 @@ const Sidebar: React.FC<SidebarProps> = ({ userType }) => {
 
           {userType === "employee" && (
             <>
-              <NavLink to="/customers" className={getNavLinkClass}>
+              <NavLink to="/employee/customers" className={getNavLinkClass}>
                 <PaymentOutlined /> Accounts
               </NavLink>
-              <NavLink to="/transactions" className={getNavLinkClass}>
+              <NavLink to="/employee/transactions" className={getNavLinkClass}>
                 <AccountBalanceOutlined /> Transaction
               </NavLink>
-              <NavLink to="/history" className={getNavLinkClass}>
+              <NavLink to="/employee/history" className={getNavLinkClass}>
                 <EqualizerOutlined /> History
               </NavLink>
             </>
@@ -77,10 +77,10 @@ const Sidebar: React.FC<SidebarProps> = ({ userType }) => {
 
           {userType === "admin" && (
             <>
-              <NavLink to="/employees" className={getNavLinkClass}>
+              <NavLink to="/admin/employees" className={getNavLinkClass}>
                 <PaymentOutlined /> Employees
               </NavLink>
-              <NavLink to="/transactions" className={getNavLinkClass}>
+              <NavLink to="/admin/transactions" className={getNavLinkClass}>
                 <AccountBalanceOutlined /> Transaction
               </NavLink>
             </>

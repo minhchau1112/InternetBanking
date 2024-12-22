@@ -54,11 +54,15 @@ public class DebtReminderService {
         return debtReminderRepository.findByCreatorAccountIdAAndStatus(creatorAccountId, status, pageable);
     }
 
-    public Page<DebtReminder> getDebtRemindersForDebtor(Integer debtorAccountId, Pageable pageable) {
+    public Page<DebtReminder> getDebtRemindersForDebtor(Integer debtorAccountId, DebtReminderStatus status, Pageable pageable) {
         Account debtorAccount = accountRepository.findById(debtorAccountId)
                 .orElseThrow(() -> new NotFoundException("Debtor account not found"));
 
-        return debtReminderRepository.findByDebtorAccountId(debtorAccountId, pageable);
+        if (status == null) {
+            return debtReminderRepository.findByDebtorAccountId(debtorAccountId, pageable);
+        }
+
+        return debtReminderRepository.findByDebtorAccountIdAAndStatus(debtorAccountId, status, pageable);
     }
 
     public void cancelDebtReminder(Integer reminderId, String reason) {

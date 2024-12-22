@@ -9,15 +9,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
-
 @Repository
 public interface DebtReminderRepository extends JpaRepository<DebtReminder, Integer> {
     @Query("""
         SELECT new com.example.backend.dto.response.GetDebtReminderForCreatorResponse(
             dr.debtorAccount.accountNumber,
             dr.debtorAccount.customer.name,
-            dr.debtorAccount.customer.email,
             dr.amount,
             dr.message,
             dr.status,
@@ -32,7 +29,6 @@ public interface DebtReminderRepository extends JpaRepository<DebtReminder, Inte
         SELECT new com.example.backend.dto.response.GetDebtReminderForCreatorResponse(
             dr.debtorAccount.accountNumber,
             dr.debtorAccount.customer.name,
-            dr.debtorAccount.customer.email,
             dr.amount,
             dr.message,
             dr.status,
@@ -44,5 +40,33 @@ public interface DebtReminderRepository extends JpaRepository<DebtReminder, Inte
     """)
     Page<GetDebtReminderForCreatorResponse> findByCreatorAccountIdAAndStatus(Integer creatorAccountId, DebtReminderStatus debtReminderStatus, Pageable pageable);
 
+    @Query("""
+        SELECT new com.example.backend.dto.response.GetDebtReminderForCreatorResponse(
+            dr.creatorAccount.accountNumber,
+            dr.creatorAccount.customer.name,
+            dr.amount,
+            dr.message,
+            dr.status,
+            dr.createdAt
+        )
+        FROM DebtReminder dr
+        WHERE dr.debtorAccount.id = :debtorAccountId
+        ORDER BY dr.createdAt DESC
+    """)
     Page<DebtReminder> findByDebtorAccountId(Integer debtorAccountId, Pageable pageable);
+
+    @Query("""
+        SELECT new com.example.backend.dto.response.GetDebtReminderForCreatorResponse(
+            dr.creatorAccount.accountNumber,
+            dr.creatorAccount.customer.name,
+            dr.amount,
+            dr.message,
+            dr.status,
+            dr.createdAt
+        )
+        FROM DebtReminder dr
+        WHERE dr.debtorAccount.id = :debtorAccountId AND dr.status = :debtReminderStatus
+        ORDER BY dr.createdAt DESC
+    """)
+    Page<DebtReminder> findByDebtorAccountIdAAndStatus(Integer debtorAccountId, DebtReminderStatus debtReminderStatus, Pageable pageable);
 }

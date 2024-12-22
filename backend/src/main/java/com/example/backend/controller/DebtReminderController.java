@@ -56,10 +56,11 @@ public class DebtReminderController {
 
     @GetMapping("/debtor/{debtorAccountId}")
     public ResponseEntity<ApiResponse<Page<DebtReminder>>> getDebtRemindersForDebtor(@PathVariable Integer debtorAccountId,
-                                                                        @RequestParam(defaultValue = "0") int page,
-                                                                        @RequestParam(defaultValue = "10") int size) {
+                                                                                     @RequestParam(required = false) DebtReminderStatus status,
+                                                                                     @RequestParam(defaultValue = "0") int page,
+                                                                                     @RequestParam(defaultValue = "10") int size) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<DebtReminder> reminders = debtReminderService.getDebtRemindersForDebtor(debtorAccountId, pageable);
+        Page<DebtReminder> reminders = debtReminderService.getDebtRemindersForDebtor(debtorAccountId, status, pageable);
         ApiResponse<Page<DebtReminder>> apiResponse = new ApiResponse<>(true, StatusCode.SUCCESS.getCode(), reminders, "Get debt reminders for debtor success", LocalDateTime.now());
 
         return ResponseEntity.ok(apiResponse);

@@ -17,9 +17,6 @@ public class GetDebtReminderForCreatorResponse {
     @JsonProperty("debt_name")
     private String debtName;
 
-    @JsonProperty("email")
-    private String email;
-
     @JsonProperty("amount")
     private BigDecimal amount;
 
@@ -32,10 +29,9 @@ public class GetDebtReminderForCreatorResponse {
     @JsonProperty("created_time")
     private LocalDateTime createdTime;
 
-    public GetDebtReminderForCreatorResponse(String debtAccountNumber, String debtName, String email, BigDecimal amount, String message, DebtReminderStatus status, LocalDateTime createdTime) {
+    public GetDebtReminderForCreatorResponse(String debtAccountNumber, String debtName, BigDecimal amount, String message, DebtReminderStatus status, LocalDateTime createdTime) {
         this.debtAccountNumber = debtAccountNumber;
         this.debtName = debtName;
-        this.email = email;
         this.amount = amount;
         this.message = message;
         this.status = status;

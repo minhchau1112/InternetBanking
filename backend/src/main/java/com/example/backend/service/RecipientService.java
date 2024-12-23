@@ -9,7 +9,9 @@ import com.example.backend.repository.RecipientRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class RecipientService {
@@ -28,19 +30,28 @@ public class RecipientService {
 
         Customer customer = customerRepository.findById(createRequest.getCustomerId()).get();
 
+        String aliasName = (!Objects.equals(createRequest.getAliasName(), null)) ? createRequest.getAliasName() : customer.getName();
+
         Recipient recipient = Recipient.builder()
+                .customer(customer)
                 .accountNumber(createRequest.getAccountNumber())
-                .aliasName(createRequest.getAliasName())
+                .aliasName(aliasName)
                 .bankCode(createRequest.getBankCode())
+                .createdAt(LocalDateTime.now())
                 .build();
 
+        System.out.println(recipient.getAccountNumber());
         return recipientRepository.save(recipient);
     }
 
     public Recipient updateRecipient(RecipientUpdateRequest updateRequest) {
 
         Recipient existingRecipient = recipientRepository.findById(updateRequest.getRecipientId()).get();
-        existingRecipient.setAliasName(updateRequest.getAliasName());
+
+        String aliasName = (!Objects.equals(updateRequest.getAliasName(), null)) ?
+                updateRequest.getAliasName() : existingRecipient.getCustomer().getName();
+
+        existingRecipient.setAliasName(aliasName);
         existingRecipient.setBankCode(updateRequest.getBankCode());
         existingRecipient.setAccountNumber(updateRequest.getAccountNumber());
 

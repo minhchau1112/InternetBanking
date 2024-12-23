@@ -37,6 +37,13 @@ public class RecipientController {
     @PostMapping("/recipients")
     public ResponseEntity<ApiResponse<Recipient>> createRecipient(@RequestBody RecipientCreateRequest createRequest) {
 
+        System.out.println(createRequest.toString());
+        if(!recipientService.customerExistsById(createRequest.getCustomerId())) {
+            ApiResponse<Recipient> apiResponse =
+                    new ApiResponse<>(500, "CUSTOMER_NOT_FOUND", "Customer not found.", null);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(apiResponse);
+        }
+
         try {
             Recipient recipient = recipientService.saveRecipient(createRequest);
             ApiResponse<Recipient> apiResponse =
@@ -52,9 +59,9 @@ public class RecipientController {
 
     @PutMapping("/recipients/{recipient_id}")
     public ResponseEntity<ApiResponse<Recipient>> updateRecipient(@PathVariable("recipient_id") Integer recipient_id, @RequestBody RecipientUpdateRequest updateRequest) {
-        if(!recipientService.recipientExistsById(recipient_id)) {
+        if(!recipientService.recipientExistsById(updateRequest.getRecipientId())) {
             ApiResponse<Recipient> apiResponse =
-                    new ApiResponse<>(500, "UPDATING_FAILED", "Failed to update recipient.", null);
+                    new ApiResponse<>(500, "RECIPIENT_NOT_FOUND", "Recipient not found.", null);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(apiResponse);
         }
 
@@ -75,14 +82,14 @@ public class RecipientController {
     public ResponseEntity<ApiResponse<Void>> deleteRecipient(@PathVariable("recipient_id") int recipient_id) {
         if(!recipientService.recipientExistsById(recipient_id)) {
             ApiResponse<Void> apiResponse =
-                    new ApiResponse<>(500, "DELETION_FAILED", "Failed to delete recipient.", null);
+                    new ApiResponse<>(500, "RECIPIENT_NOT_FOUND", "Recipient not found.", null);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(apiResponse);
         }
 
         try {
             recipientService.delete(recipient_id);
             ApiResponse<Void> apiResponse =
-                    new ApiResponse<>(201, null, "FRecipient deleted successfully.", null);
+                    new ApiResponse<>(201, null, "Recipient deleted successfully.", null);
             return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
         } catch (Exception e) {
             ApiResponse<Void> apiResponse =

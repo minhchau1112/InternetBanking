@@ -24,9 +24,6 @@ public class LoginJWTConfiguration {
     @Value("${login.jwt.base64-secret}")
     private String jwt_key;
 
-    @Value("${login.jwt.token-validity-in-second}")
-    private long jwtExpiration;
-
     @Bean
     public JwtEncoder jwtEncoder() {
         return new NimbusJwtEncoder(new ImmutableSecret<>(getSecretKey()));

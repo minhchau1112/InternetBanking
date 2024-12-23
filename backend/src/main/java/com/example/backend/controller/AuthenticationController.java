@@ -48,28 +48,28 @@ public class AuthenticationController {
         UsernamePasswordAuthenticationToken authenticationToken
                 = new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword());
         Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
-        String access_token = loginService.createToken(authentication);
+        String access_token = loginService.createAccessToken(authentication);
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         User user = userService.findByUsername(request.getUsername())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         LoginResponse loginResponse = new LoginResponse();
+
         loginResponse.setAccessToken(access_token);
         loginResponse.setRole(authentication.getAuthorities().iterator().next().getAuthority());
         loginResponse.setUsername(user.getUsername());
-        loginResponse.setExpiresIn(loginService.getJwtExpiration());
-        loginResponse.setRefreshExpiresIn(loginService.getRefreshExpiresIn());
+        loginResponse.setExpiresIn(loginService.getAccessTokenExpiration());
         loginResponse.setTokenType("Bearer");
 
         if ("ROLE_CUSTOMER".equals(loginResponse.getRole())) {
             Account account = accountService.findByCustomerId(user.getId())
-                    .orElseThrow(() -> new EntityNotFoundException("Account not found for customer_id: " + user.getId()));
+                    .orElseThrow(() -> new EntityNotFoundException("Account not found"));
             loginResponse.setAccountID(account.getId());
         } else {
             loginResponse.setAccountID(null);
         }
-
+        String refresh_token = loginService.createRefreshToken(request.getUsername(),loginResponse);
         return ResponseEntity.ok().body(loginResponse);
     }
 

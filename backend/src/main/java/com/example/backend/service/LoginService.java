@@ -1,5 +1,6 @@
 package com.example.backend.service;
 
+import com.example.backend.dto.response.LoginResponse;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Map;
 
 @Service
 @Getter
@@ -29,17 +31,17 @@ public class LoginService {
     @Value("${login.jwt.base64-secret}")
     private String jwt_key;
 
-    @Value("${login.jwt.access-token-validity-in-second}")
-    private long jwtExpiration;
+    @Value("${login.jwt.access_token_expires_in-second}")
+    private long accessTokenExpiration;
 
-    @Value("${login.refresh_expires_in-second}")
+    @Value("${login.refresh_token_expires_in-second}")
     private long refreshExpiresIn;
 
 
-    public String createToken(Authentication authentication) {
+    public String createAccessToken(Authentication authentication) {
 
         Instant now = Instant.now();
-        Instant validity = now.plus(this.jwtExpiration, ChronoUnit.SECONDS);
+        Instant validity = now.plus(this.accessTokenExpiration, ChronoUnit.SECONDS);
 
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuedAt(now)
@@ -50,6 +52,25 @@ public class LoginService {
 
         JwsHeader jwsHeader = JwsHeader.with(JWT_ALGORITHM).build();
 
+        return this.jwtEncoder.encode(JwtEncoderParameters.from(jwsHeader, claims)).getTokenValue();
+    }
+
+    public String createRefreshToken(String username, LoginResponse loginResponse) {
+        Instant now = Instant.now();
+        Instant validity = now.plus(this.refreshExpiresIn, ChronoUnit.SECONDS);
+        Map<String, Object> claimsMap = Map.of(
+                "username", loginResponse.getUsername(),
+                "role", loginResponse.getRole(),
+                "account_id", loginResponse.getAccountID()
+        );
+        JwtClaimsSet claims = JwtClaimsSet.builder()
+                .issuedAt(now)
+                .expiresAt(validity)
+                .subject(username)
+                .claim("User", claimsMap)
+                .build();
+
+        JwsHeader jwsHeader = JwsHeader.with(JWT_ALGORITHM).build();
         return this.jwtEncoder.encode(JwtEncoderParameters.from(jwsHeader, claims)).getTokenValue();
     }
 }

@@ -15,7 +15,5 @@ public class LoginResponse {
     private Integer accountID;
     private String accessToken;
     private Long expiresIn;
-    private String refreshToken;
-    private Long refreshExpiresIn;
     private String tokenType;
 }

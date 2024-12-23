@@ -12,9 +12,10 @@ import lombok.NoArgsConstructor;
 public class LoginResponse {
     private String username;
     private String role;
+    private Integer accountID;
     private String accessToken;
-    private String refreshToken;
     private Long expiresIn;
+    private String refreshToken;
+    private Long refreshExpiresIn;
     private String tokenType;
-    private Long refeshExpiresIn;
 }

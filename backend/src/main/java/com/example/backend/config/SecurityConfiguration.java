@@ -30,7 +30,7 @@ public class SecurityConfiguration {
                 .csrf(c -> c.disable())
                 .authorizeHttpRequests(
                         authz -> authz
-                                .requestMatchers("/","/api/auth/login").permitAll()
+                                .requestMatchers("/","/api/auth/login","/api/auth/refresh").permitAll()
                                 .requestMatchers("/admin/**").hasRole("ADMIN")
                                 .requestMatchers("/customer/**").hasRole("CUSTOMER")
                                 .requestMatchers("/employee/**").hasRole("EMPLOYEE")

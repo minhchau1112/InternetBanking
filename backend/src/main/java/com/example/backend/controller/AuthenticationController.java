@@ -2,7 +2,12 @@ package com.example.backend.controller;
 
 import com.example.backend.dto.request.LoginRequest;
 import com.example.backend.dto.response.LoginResponse;
+import com.example.backend.model.Account;
+import com.example.backend.model.User;
+import com.example.backend.service.AccountService;
 import com.example.backend.service.LoginService;
+import com.example.backend.service.UserService;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -10,11 +15,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
@@ -23,13 +25,23 @@ public class AuthenticationController {
 
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
 
+    private final AccountService accountService;
+
+    private final UserService userService;
+
     private final LoginService loginService;
 
-    public AuthenticationController(AuthenticationManagerBuilder authenticationManagerBuilder, LoginService securityService) {
+    public AuthenticationController(AuthenticationManagerBuilder authenticationManagerBuilder, LoginService securityService, AccountService accountService, UserService userService, LoginService loginService) {
         this.authenticationManagerBuilder = authenticationManagerBuilder;
         this.loginService = securityService;
+        this.accountService = accountService;
+        this.userService = userService;
     }
 
+    @GetMapping("/refresh")
+    public ResponseEntity<String> getRefreshToken(@CookieValue(name="refresh_token") String refresh_token) {
+        return ResponseEntity.ok().body(refresh_token);
+    }
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
@@ -39,18 +51,26 @@ public class AuthenticationController {
         String access_token = loginService.createToken(authentication);
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        User user = (User) authentication.getPrincipal();
+        User user = userService.findByUsername(request.getUsername())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         LoginResponse loginResponse = new LoginResponse();
-
         loginResponse.setAccessToken(access_token);
-        loginResponse.setRole(user.getAuthorities().iterator().next().getAuthority());
+        loginResponse.setRole(authentication.getAuthorities().iterator().next().getAuthority());
         loginResponse.setUsername(user.getUsername());
-        loginResponse.setRefreshToken(null);
         loginResponse.setExpiresIn(loginService.getJwtExpiration());
-        loginResponse.setRefeshExpiresIn(loginService.getRefreshExpiresIn());
+        loginResponse.setRefreshExpiresIn(loginService.getRefreshExpiresIn());
         loginResponse.setTokenType("Bearer");
+
+        if ("ROLE_CUSTOMER".equals(loginResponse.getRole())) {
+            Account account = accountService.findByCustomerId(user.getId())
+                    .orElseThrow(() -> new EntityNotFoundException("Account not found for customer_id: " + user.getId()));
+            loginResponse.setAccountID(account.getId());
+        } else {
+            loginResponse.setAccountID(null);
+        }
 
         return ResponseEntity.ok().body(loginResponse);
     }
+
 }

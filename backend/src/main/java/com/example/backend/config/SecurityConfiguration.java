@@ -25,9 +25,10 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, AuthenticationEntryPoint authenticationEntryPointConfiguration) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, AuthenticationEntryPointConfiguration authenticationEntryPointConfiguration) throws Exception {
         http
                 .csrf(c -> c.disable())
+                .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(
                         authz -> authz
                                 .requestMatchers("/","/api/auth/login","/api/auth/refresh").permitAll()
@@ -39,10 +40,6 @@ public class SecurityConfiguration {
                 .oauth2ResourceServer((oauth2)->oauth2.jwt(Customizer.withDefaults())
                         .authenticationEntryPoint(authenticationEntryPointConfiguration)
                 )
-                .exceptionHandling(
-                        exceptions -> exceptions
-                                .authenticationEntryPoint(new BearerTokenAuthenticationEntryPoint())
-                                .accessDeniedHandler(new BearerTokenAccessDeniedHandler()))
                 .formLogin(form -> form.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
         return http.build();

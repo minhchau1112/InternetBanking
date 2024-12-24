@@ -47,6 +47,7 @@ public class AuthenticationController {
 
     @GetMapping("/refresh")
     public ResponseEntity<String> getRefreshToken(@CookieValue(name="refresh_token") String refreshToken) {
+        loginService.checkValidRefreshToken(refreshToken);
         return ResponseEntity.ok().body(refreshToken);
     }
 

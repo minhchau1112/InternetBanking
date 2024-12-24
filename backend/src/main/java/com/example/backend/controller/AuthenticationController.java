@@ -80,6 +80,7 @@ public class AuthenticationController {
             loginResponse.setAccountID(null);
         }
         String refresh_token = loginService.createRefreshToken(request.getUsername(),loginResponse);
+        System.out.println(refresh_token);
         refreshTokenService.storeRefreshToken(request.getUsername(), refresh_token, loginService.getRefreshExpiresIn());
         return ResponseEntity.ok().body(loginResponse);
     }

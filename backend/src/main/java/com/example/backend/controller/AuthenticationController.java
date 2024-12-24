@@ -60,7 +60,7 @@ public class AuthenticationController {
         UsernamePasswordAuthenticationToken authenticationToken
                 = new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword());
         Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
-        String access_token = loginService.createAccessToken(authentication);
+
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         User user = userService.findByUsername(request.getUsername())
@@ -68,19 +68,25 @@ public class AuthenticationController {
 
         LoginResponse loginResponse = new LoginResponse();
 
-        loginResponse.setAccessToken(access_token);
-        loginResponse.setRole(authentication.getAuthorities().iterator().next().getAuthority());
-        loginResponse.setUsername(user.getUsername());
+        LoginResponse.UserInformation userInformation = new LoginResponse.UserInformation();
+
+        userInformation.setRole(authentication.getAuthorities().iterator().next().getAuthority());
+        userInformation.setUsername(user.getUsername());
+        if ("ROLE_CUSTOMER".equals(userInformation.getRole())) {
+            Account account = accountService.findByCustomerId(user.getId())
+                    .orElseThrow(() -> new EntityNotFoundException("Account not found"));
+            userInformation.setAccountID(account.getId());
+        } else {
+            userInformation.setAccountID(null);
+        }
+
+        loginResponse.setUser(userInformation);
         loginResponse.setExpiresIn(loginService.getAccessTokenExpiration());
         loginResponse.setTokenType("Bearer");
 
-        if ("ROLE_CUSTOMER".equals(loginResponse.getRole())) {
-            Account account = accountService.findByCustomerId(user.getId())
-                    .orElseThrow(() -> new EntityNotFoundException("Account not found"));
-            loginResponse.setAccountID(account.getId());
-        } else {
-            loginResponse.setAccountID(null);
-        }
+        String access_token = loginService.createAccessToken(authentication,loginResponse);
+        loginResponse.setAccessToken(access_token);
+
         String refresh_token = loginService.createRefreshToken(request.getUsername(),loginResponse);
         refreshTokenService.storeRefreshToken(request.getUsername(), refresh_token, loginService.getRefreshExpiresIn());
         ResponseCookie responseCookie = ResponseCookie

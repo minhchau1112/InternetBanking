@@ -38,7 +38,7 @@ public class LoginService {
     private long refreshExpiresIn;
 
 
-    public String createAccessToken(Authentication authentication) {
+    public String createAccessToken(Authentication authentication, LoginResponse loginResponse) {
 
         Instant now = Instant.now();
         Instant validity = now.plus(this.accessTokenExpiration, ChronoUnit.SECONDS);
@@ -47,7 +47,7 @@ public class LoginService {
                 .issuedAt(now)
                 .expiresAt(validity)
                 .subject(authentication.getName())
-                .claim("role", authentication)
+                .claim("user", loginResponse.getUser())
                 .build();
 
         JwsHeader jwsHeader = JwsHeader.with(JWT_ALGORITHM).build();
@@ -58,16 +58,11 @@ public class LoginService {
     public String createRefreshToken(String username, LoginResponse loginResponse) {
         Instant now = Instant.now();
         Instant validity = now.plus(this.refreshExpiresIn, ChronoUnit.SECONDS);
-        Map<String, Object> claimsMap = Map.of(
-                "username", loginResponse.getUsername(),
-                "role", loginResponse.getRole(),
-                "account_id", loginResponse.getAccountID()
-        );
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuedAt(now)
                 .expiresAt(validity)
                 .subject(username)
-                .claim("User", claimsMap)
+                .claim("User", loginResponse.getUser())
                 .build();
 
         JwsHeader jwsHeader = JwsHeader.with(JWT_ALGORITHM).build();

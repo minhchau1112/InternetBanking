@@ -2,8 +2,8 @@ package com.example.backend.controller;
 
 import com.example.backend.dto.request.LoginRequest;
 import com.example.backend.dto.response.LoginResponse;
-import com.example.backend.model.Account;
-import com.example.backend.model.User;
+import com.example.backend.exception.InvalidException;
+import com.example.backend.model.*;
 import com.example.backend.service.AccountService;
 import com.example.backend.service.LoginService;
 import com.example.backend.service.RefreshTokenService;
@@ -20,6 +20,7 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
@@ -46,9 +47,55 @@ public class AuthenticationController {
     }
 
     @GetMapping("/refresh")
-    public ResponseEntity<String> getRefreshToken(@CookieValue(name="refresh_token") String refreshToken) {
-        loginService.checkValidRefreshToken(refreshToken);
-        return ResponseEntity.ok().body(refreshToken);
+    public ResponseEntity<LoginResponse> getRefreshToken(@CookieValue(name="refresh_token") String refreshToken) throws InvalidException {
+        Jwt decodedToken = loginService.checkValidRefreshToken(refreshToken);
+        String username = decodedToken.getSubject();
+
+        // Check in redis by token and username
+        String storedToken = refreshTokenService.getRefreshToken(username);
+
+        if (storedToken == null || !storedToken.equals(refreshToken)) {
+            throw new InvalidException("Refresh Token không hợp lệ");
+        }
+
+        // Create new refresh_token
+
+        User user = userService.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        LoginResponse loginResponse = new LoginResponse();
+
+        LoginResponse.UserInformation userInformation = new LoginResponse.UserInformation();
+
+        userInformation.setRole(getRole(user));
+        userInformation.setUsername(user.getUsername());
+        if ("ROLE_CUSTOMER".equals(userInformation.getRole())) {
+            Account account = accountService.findByCustomerId(user.getId())
+                    .orElseThrow(() -> new EntityNotFoundException("Account not found"));
+            userInformation.setAccountID(account.getId());
+        } else {
+            userInformation.setAccountID(null);
+        }
+
+        loginResponse.setUser(userInformation);
+        loginResponse.setExpiresIn(loginService.getAccessTokenExpiration());
+        loginResponse.setTokenType("Bearer");
+
+        String access_token = loginService.createAccessToken(username,loginResponse);
+        loginResponse.setAccessToken(access_token);
+
+        String refresh_token = loginService.createRefreshToken(username,loginResponse);
+        refreshTokenService.storeRefreshToken(username, refresh_token, loginService.getRefreshExpiresIn());
+        ResponseCookie responseCookie = ResponseCookie
+                .from("refresh_token",refresh_token)
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(loginService.getRefreshExpiresIn())
+                .build();
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, responseCookie.toString())
+                .body(loginResponse);
     }
 
 
@@ -81,7 +128,7 @@ public class AuthenticationController {
         loginResponse.setExpiresIn(loginService.getAccessTokenExpiration());
         loginResponse.setTokenType("Bearer");
 
-        String access_token = loginService.createAccessToken(authentication,loginResponse);
+        String access_token = loginService.createAccessToken(user.getUsername(),loginResponse);
         loginResponse.setAccessToken(access_token);
 
         String refresh_token = loginService.createRefreshToken(request.getUsername(),loginResponse);
@@ -96,6 +143,19 @@ public class AuthenticationController {
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, responseCookie.toString())
                 .body(loginResponse);
+    }
+
+    public String getRole(User user) {
+        if (user instanceof Admin) {
+            return "ROLE_ADMIN";
+        }
+        if (user instanceof Customer) {
+            return "ROLE_CUSTOMER";
+        }
+        if (user instanceof Employee) {
+            return "ROLE_EMPLOYEE";
+        }
+        throw new IllegalStateException("Unknown user type: " + user.getClass().getName());
     }
 
 }

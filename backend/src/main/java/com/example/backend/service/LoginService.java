@@ -42,7 +42,7 @@ public class LoginService {
     private long refreshExpiresIn;
 
 
-    public String createAccessToken(Authentication authentication, LoginResponse loginResponse) {
+    public String createAccessToken(String username, LoginResponse loginResponse) {
 
         Instant now = Instant.now();
         Instant validity = now.plus(this.accessTokenExpiration, ChronoUnit.SECONDS);
@@ -50,7 +50,7 @@ public class LoginService {
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuedAt(now)
                 .expiresAt(validity)
-                .subject(authentication.getName())
+                .subject(username)
                 .claim("user", loginResponse.getUser())
                 .build();
 
@@ -72,6 +72,7 @@ public class LoginService {
         JwsHeader jwsHeader = JwsHeader.with(JWT_ALGORITHM).build();
         return this.jwtEncoder.encode(JwtEncoderParameters.from(jwsHeader, claims)).getTokenValue();
     }
+
     public static Optional<String> getCurrentUserLogin() {
         SecurityContext securityContext = SecurityContextHolder.getContext();
         return Optional.ofNullable(extractPrincipal(securityContext.getAuthentication()));
@@ -101,11 +102,11 @@ public class LoginService {
         return new SecretKeySpec(keyBytes, 0, keyBytes.length, JWT_ALGORITHM.getName());
     }
 
-    public void checkValidRefreshToken(String refreshToken) {
+    public Jwt checkValidRefreshToken(String refreshToken) {
         NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withSecretKey(
                 getSecretKey()).macAlgorithm(LoginService.JWT_ALGORITHM).build();
         try {
-            jwtDecoder.decode(refreshToken);
+            return jwtDecoder.decode(refreshToken);
         } catch (Exception e) {
             System.out.println(">>> Refresh Token error: " + e.getMessage());
             throw e;

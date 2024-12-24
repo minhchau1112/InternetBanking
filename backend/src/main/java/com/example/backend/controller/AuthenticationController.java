@@ -11,6 +11,7 @@ import com.example.backend.service.UserService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -43,9 +44,14 @@ public class AuthenticationController {
     }
 
     @GetMapping("/refresh")
-    public ResponseEntity<String> getRefreshToken(@CookieValue(name="refresh_token") String refresh_token) {
-        return ResponseEntity.ok().body(refresh_token);
+    public ResponseEntity<String> getRefreshToken(@RequestParam String username) {
+        String refreshToken = refreshTokenService.getRefreshToken(username);
+        if (refreshToken == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Refresh token not found or expired.");
+        }
+        return ResponseEntity.ok(refreshToken);
     }
+
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {

@@ -11,7 +11,9 @@ import com.example.backend.service.UserService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -80,9 +82,17 @@ public class AuthenticationController {
             loginResponse.setAccountID(null);
         }
         String refresh_token = loginService.createRefreshToken(request.getUsername(),loginResponse);
-        System.out.println(refresh_token);
         refreshTokenService.storeRefreshToken(request.getUsername(), refresh_token, loginService.getRefreshExpiresIn());
-        return ResponseEntity.ok().body(loginResponse);
+        ResponseCookie responseCookie = ResponseCookie
+                .from("refresh_token",refresh_token)
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(loginService.getRefreshExpiresIn())
+                .build();
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, responseCookie.toString())
+                .body(loginResponse);
     }
 
 }

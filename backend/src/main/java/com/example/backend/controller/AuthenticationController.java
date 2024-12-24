@@ -46,12 +46,8 @@ public class AuthenticationController {
     }
 
     @GetMapping("/refresh")
-    public ResponseEntity<String> getRefreshToken(@RequestParam String username) {
-        String refreshToken = refreshTokenService.getRefreshToken(username);
-        if (refreshToken == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Refresh token not found or expired.");
-        }
-        return ResponseEntity.ok(refreshToken);
+    public ResponseEntity<String> getRefreshToken(@CookieValue(name="refresh_token") String refreshToken) {
+        return ResponseEntity.ok().body(refreshToken);
     }
 
 

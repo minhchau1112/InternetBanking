@@ -23,6 +23,9 @@ public class RestResponseConfiguration implements ResponseBodyAdvice<Object> {
     public Object beforeBodyWrite(Object body, MethodParameter returnType, MediaType selectedContentType, Class<? extends HttpMessageConverter<?>> selectedConverterType, ServerHttpRequest request, ServerHttpResponse response) {
         HttpServletResponse servletResponse = ((ServletServerHttpResponse) response).getServletResponse();
         int status = servletResponse.getStatus();
+        if (body instanceof String) {
+            return body;
+        }
         if (status >= 400) {
             return body;
         }

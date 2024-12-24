@@ -6,6 +6,7 @@ import com.example.backend.model.Account;
 import com.example.backend.model.User;
 import com.example.backend.service.AccountService;
 import com.example.backend.service.LoginService;
+import com.example.backend.service.RefreshTokenService;
 import com.example.backend.service.UserService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
@@ -29,13 +30,16 @@ public class AuthenticationController {
 
     private final UserService userService;
 
+    private final RefreshTokenService refreshTokenService;
+
     private final LoginService loginService;
 
-    public AuthenticationController(AuthenticationManagerBuilder authenticationManagerBuilder, LoginService securityService, AccountService accountService, UserService userService, LoginService loginService) {
+    public AuthenticationController(RefreshTokenService refreshTokenService, AuthenticationManagerBuilder authenticationManagerBuilder, LoginService securityService, AccountService accountService, UserService userService, LoginService loginService) {
         this.authenticationManagerBuilder = authenticationManagerBuilder;
         this.loginService = securityService;
         this.accountService = accountService;
         this.userService = userService;
+        this.refreshTokenService = refreshTokenService;
     }
 
     @GetMapping("/refresh")
@@ -70,6 +74,7 @@ public class AuthenticationController {
             loginResponse.setAccountID(null);
         }
         String refresh_token = loginService.createRefreshToken(request.getUsername(),loginResponse);
+        refreshTokenService.storeRefreshToken(request.getUsername(), refresh_token, loginService.getRefreshExpiresIn());
         return ResponseEntity.ok().body(loginResponse);
     }
 

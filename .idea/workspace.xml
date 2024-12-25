@@ -3,8 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="e0eed544-89c0-42c9-896e-fc7e2e690907" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/example/backend/BackendApplication.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/example/backend/BackendApplication.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -34,7 +32,7 @@
     "WebServerToolWindowFactoryState": "false",
     "git-widget-placeholder": "MinhChau",
     "go.import.settings.migrated": "true",
-    "last_opened_file_path": "D:/code/WNC/final_project/InternetBanking/backend",
+    "last_opened_file_path": "D:/code/WNC/FinalProject/InternetBanking/backend",
     "nodejs_package_manager_path": "npm",
     "vue.rearranger.settings.migration": "true"
   }
@@ -49,6 +47,7 @@
       <updated>1733328172529</updated>
       <workItem from="1733328173518" duration="34000" />
       <workItem from="1734763210467" duration="170000" />
+      <workItem from="1735101406035" duration="16000" />
     </task>
     <servers />
   </component>

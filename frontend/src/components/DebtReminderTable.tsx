@@ -7,9 +7,11 @@ import {
 import { DataGrid, GridColDef } from '@mui/x-data-grid';
 import { DeleteOutline, CurrencyExchangeOutlined } from '@mui/icons-material';
 import { format } from 'date-fns';
-import { fetchDebtRemindersForCreator, fetchDebtRemindersForDebtor, cancelDebtReminder } from '../services/debtReminderService'; 
+import { fetchDebtRemindersForCreator, fetchDebtRemindersForDebtor, cancelDebtReminder, payDebtReminder } from '../services/debtReminderService'; 
+import { initiateTransfer } from '../services/internalTransferService';
 import { useSnackbar } from 'notistack';
 import CancelDialog from './CancelDialog';
+import OtpDialog from './OtpDialog';
 
 function capitalizeFirstLetter(str: string) {
 	if (!str) return '';
@@ -32,11 +34,11 @@ const DebtReminderTable: React.FC<DataTableProps> = ({ status = 'PENDING', type 
 	const [loading, setLoading] = useState(false);
 
 	const [open, setOpenDialog] = useState(false);
-	const [selectedDebtId, setSelectedReminderId] = useState<number | null>(null);
-	// const [reason, setReason] = useState<string>('');
+	const [selectedDebtId, setSelectedReminderId] = useState(-1);
 
 	const { enqueueSnackbar } = useSnackbar();
-	
+	const [openOtpDialog, setOpenOtpDialog] = useState(false);
+  	const [otpError, setOtpError] = useState('');	
 
 	const columns: GridColDef[] = [
 		{ 
@@ -64,7 +66,7 @@ const DebtReminderTable: React.FC<DataTableProps> = ({ status = 'PENDING', type 
 			),
 		},
 			{ 
-			field: 'debtAccountNumber', 
+			field: 'accountNumber', 
 			width: 150 ,
 			headerAlign: 'right',
 			headerClassName: 'theme--header',
@@ -88,7 +90,7 @@ const DebtReminderTable: React.FC<DataTableProps> = ({ status = 'PENDING', type 
 			),
 		},
 			{
-			field: 'debtName',
+			field: 'accountName',
 			width: 220,
 			headerAlign: 'right',
 			headerClassName: 'theme--header',
@@ -256,7 +258,8 @@ const DebtReminderTable: React.FC<DataTableProps> = ({ status = 'PENDING', type 
 						<>
 							<Button variant="contained" 
 									color="success" 
-									startIcon={<CurrencyExchangeOutlined />}>
+									startIcon={<CurrencyExchangeOutlined />}
+									onClick={() => handlePayClick(params.row.creatorAccountId, params.row.amount, params.row.message, params.row.debtReminderId)}>
 								Pay
 							</Button>
 							<Button variant="contained" 
@@ -305,6 +308,87 @@ const DebtReminderTable: React.FC<DataTableProps> = ({ status = 'PENDING', type 
 		}
 	};
 
+	const handlePayClick = async (destinationAccountId: number, amount: number, message: string, debtReminderId: number) => {
+		let otpString;
+		setSelectedReminderId(debtReminderId);
+		const internalTransferRequest = {
+			sourceAccountId: id,
+			destinationAccountId: destinationAccountId,
+			amount: amount,
+			message: message,
+			feePayer: "SENDER",
+		};
+
+		try {
+			const response = await initiateTransfer(internalTransferRequest);
+			if (response.success) {
+				otpString = response.data.otp;
+				setOpenOtpDialog(true); // Mở dialog nhập OTP
+		
+				// const handleOtpSubmit = async (otpString: string) => {
+				//   try {
+				// 	const response = await payDebtReminder(debtReminderId, otpString);
+				// 	if (response.success) {
+				// 	  enqueueSnackbar('Payment successful!', { variant: 'success', autoHideDuration: 1500 });
+				// 	  fetchRows(type, id, status, page, pageSize);
+				// 	  setOpenOtpDialog(false); // Đóng dialog khi thanh toán thành công
+				// 	} else {
+				// 	  setOtpError(response.message); // Hiển thị lỗi OTP
+				// 	}
+				//   } catch (error) {
+				// 	setOtpError('Failed to process OTP. Please try again.');
+				// 	console.error('Error paying debt reminder:', error);
+				//   }
+				// };
+			  }
+			} catch (error) {
+			  console.error('Error generate otp:', error);
+			}
+	};
+
+	const handleOtpSubmit = async (otp: string) => {
+		try {
+		  const response = await payDebtReminder(selectedDebtId, otp);
+		  if (response.success) {
+			enqueueSnackbar('Payment successful!', { variant: 'success', autoHideDuration: 1500 });
+			fetchRows(type, id, status, page, pageSize);
+			setOpenOtpDialog(false);
+		  } else {
+			setOtpError(response.message); 
+		  }
+		} catch (error) {
+		  setOtpError('Failed to process OTP. Please try again.');
+		  console.error('Error processing OTP:', error);
+		}
+	};
+
+	  
+	// const handleOtpConfirm = async (otp: string) => {
+	// 	if (selectedOtpData && otp) {
+	// 	  const { otpString, debtReminderId } = selectedOtpData;
+	// 	  if (otp === otpString) {
+	// 		setLoading(true);
+	// 		try {
+	// 		  const response = await payDebtReminder(debtReminderId, otpString);
+	// 		  if (response.success) {
+	// 			enqueueSnackbar('Payment successful!', { variant: 'success', autoHideDuration: 1500 });
+	// 			fetchRows(type, id, status, page, pageSize);
+	// 		  } else {
+	// 			enqueueSnackbar(response.message, { variant: 'error', autoHideDuration: 1500 });
+	// 		  }
+	// 		} catch (error) {
+	// 		  console.error('Error paying debt reminder:', error);
+	// 		  enqueueSnackbar('Failed to pay debt reminder!', { variant: 'error', autoHideDuration: 1500 });
+	// 		} finally {
+	// 		  setLoading(false);
+	// 		}
+	// 	  } else {
+	// 		enqueueSnackbar('OTP is incorrect!', { variant: 'error', autoHideDuration: 1500 });
+	// 	  }
+	// 	  setOtpDialogOpen(false); // Close the dialog
+	// 	}
+	//   };
+
 	const fetchRows = async (type: string, id: number, status: string, page: number, pageSize: number) => {
 		setLoading(true);
 		try {
@@ -312,23 +396,38 @@ const DebtReminderTable: React.FC<DataTableProps> = ({ status = 'PENDING', type 
 
 			if (type === 'Creator') {
 				data = await fetchDebtRemindersForCreator(id, status, page, pageSize);
+				console.log('data: ', data);
+				setRows(
+					data.content.map((item: any, index: number) => ({
+						id: index + 1 + page * pageSize,
+						accountNumber: item.debt_account_number,
+						accountName: item.debt_name,
+						amount: item.amount,
+						message: item.message,
+						status: capitalizeFirstLetter(item.status),
+						createdTime: item.created_time,
+						debtReminderId: item.debt_reminder_id,
+					}))
+				);
 			} else {
 				data = await fetchDebtRemindersForDebtor(id, status, page, pageSize);
+				console.log('data: ', data);
+
+				setRows(
+					data.content.map((item: any, index: number) => ({
+						id: index + 1 + page * pageSize,
+						creatorAccountId: item.creator_account_id,
+						accountNumber: item.creator_account_number,
+						accountName: item.creator_name,
+						amount: item.amount,
+						message: item.message,
+						status: capitalizeFirstLetter(item.status),
+						createdTime: item.created_time,
+						debtReminderId: item.debt_reminder_id,
+					}))
+				);
 			}
 
-			setRows(
-				data.content.map((item: any, index: number) => ({
-					id: index + 1 + page * pageSize,
-					debtAccountNumber: item.debt_account_number,
-					debtName: item.debt_name,
-					email: item.email,
-					amount: item.amount,
-					message: item.message,
-					status: capitalizeFirstLetter(item.status),
-					createdTime: item.created_time,
-					debtReminderId: item.debt_reminder_id,
-				}))
-			);
 			setRowCount(data.totalElements); 
 		} catch (error) {
 			console.error('Error fetching rows:', error);
@@ -374,6 +473,12 @@ const DebtReminderTable: React.FC<DataTableProps> = ({ status = 'PENDING', type 
 			/>
 
 			<CancelDialog open={open} onClose={handleCloseDialog} onConfirm={handleConfirmCancel} />
+			<OtpDialog
+        open={openOtpDialog}
+        onClose={() => setOpenOtpDialog(false)} 
+        onConfirm={handleOtpSubmit}
+        errorMessage={otpError} // Gửi lỗi nếu có
+      />
 		</Box>
 	);
 };

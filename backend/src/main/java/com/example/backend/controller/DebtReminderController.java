@@ -1,6 +1,7 @@
 package com.example.backend.controller;
 
 import com.example.backend.dto.request.CancelDebtReminderRequest;
+import com.example.backend.dto.request.ConfirmTransferRequest;
 import com.example.backend.dto.request.DebtReminderRequest;
 import com.example.backend.dto.response.ApiResponse;
 import com.example.backend.dto.response.GetDebtReminderForCreatorResponse;
@@ -8,6 +9,7 @@ import com.example.backend.enums.DebtReminderStatus;
 import com.example.backend.enums.StatusCode;
 import com.example.backend.model.DebtReminder;
 import com.example.backend.service.DebtReminderService;
+import com.example.backend.service.InternalTransferService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -24,10 +26,12 @@ public class DebtReminderController {
 
     private final DebtReminderService debtReminderService;
     private final NotificationHandler notificationHandler;
+    private final InternalTransferService internalTransferService;
 
-    public DebtReminderController(DebtReminderService debtReminderService, NotificationHandler notificationHandler) {
+    public DebtReminderController(DebtReminderService debtReminderService, NotificationHandler notificationHandler, InternalTransferService internalTransferService) {
         this.debtReminderService = debtReminderService;
         this.notificationHandler = notificationHandler;
+        this.internalTransferService = internalTransferService;
     }
 
     @PostMapping
@@ -78,6 +82,14 @@ public class DebtReminderController {
         debtReminderService.cancelDebtReminder(debtReminderId, request, requesterAccountId);
         ApiResponse<Void> apiResponse = new ApiResponse<>(true, StatusCode.SUCCESS.getCode(), null, "Cancel debt reminder success", LocalDateTime.now());
 
+        return ResponseEntity.ok(apiResponse);
+    }
+
+    @PostMapping("/{debtReminderId}/pay")
+    public ResponseEntity<ApiResponse<Void>> payDebtReminder(@PathVariable Integer debtReminderId, @RequestBody ConfirmTransferRequest request) {
+        internalTransferService.confirmTransfer(request);
+        debtReminderService.payDebtReminder(debtReminderId);
+        ApiResponse<Void> apiResponse = new ApiResponse<>(true, StatusCode.SUCCESS.getCode(), null, "Pay debt success!", LocalDateTime.now());
         return ResponseEntity.ok(apiResponse);
     }
 }

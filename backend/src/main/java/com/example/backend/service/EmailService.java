@@ -23,6 +23,6 @@ public class EmailService {
         message.setFrom(EnvUtils.get("EMAIL_USERNAME"));
         System.out.println("email sended from: " + message.getFrom());
         mailSender.send(message);
-        System.out.println("send email success");
+        System.out.println("send email success to: " + to + " with otp: " + body);
     }
 }

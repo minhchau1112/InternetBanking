@@ -80,5 +80,15 @@ public class DebtReminderService {
 
         debtReminderRepository.save(debtReminder);
     }
+
+    public void payDebtReminder(Integer debtReminderId) {
+        DebtReminder debtReminder = debtReminderRepository.findById(debtReminderId)
+                .orElseThrow(() -> new NotFoundException("Debt reminder not found"));
+
+        debtReminder.setStatus(DebtReminderStatus.PAID);
+        debtReminder.setUpdatedAt(LocalDateTime.now());
+
+        debtReminderRepository.save(debtReminder);
+    }
 }
 

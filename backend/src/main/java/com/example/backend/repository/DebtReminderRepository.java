@@ -43,8 +43,9 @@ public interface DebtReminderRepository extends JpaRepository<DebtReminder, Inte
     Page<GetDebtReminderForCreatorResponse> findByCreatorAccountIdAAndStatus(Integer creatorAccountId, DebtReminderStatus debtReminderStatus, Pageable pageable);
 
     @Query("""
-        SELECT new com.example.backend.dto.response.GetDebtReminderForCreatorResponse(
+        SELECT new com.example.backend.dto.response.GetDebtReminderForDebtorResponse(
             dr.id,
+            dr.creatorAccount.id,
             dr.creatorAccount.accountNumber,
             dr.creatorAccount.customer.name,
             dr.amount,
@@ -59,8 +60,9 @@ public interface DebtReminderRepository extends JpaRepository<DebtReminder, Inte
     Page<DebtReminder> findByDebtorAccountId(Integer debtorAccountId, Pageable pageable);
 
     @Query("""
-        SELECT new com.example.backend.dto.response.GetDebtReminderForCreatorResponse(
+        SELECT new com.example.backend.dto.response.GetDebtReminderForDebtorResponse(
             dr.id,
+            dr.creatorAccount.id,
             dr.creatorAccount.accountNumber,
             dr.creatorAccount.customer.name,
             dr.amount,

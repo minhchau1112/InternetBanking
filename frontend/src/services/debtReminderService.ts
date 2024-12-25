@@ -25,26 +25,30 @@ export const fetchDebtRemindersForDebtor = async (id: number, status: string, pa
 
 export const cancelDebtReminder = async (debtReminderId: number, requesterAccountId: number, reason: string) => {
 	try {
-		// const response = await axios.put(`${API_URL}/cancel/${debtReminderId}?requesterAccountId=${requesterAccountId}`);
-		// return response.data.data;
-		try {
-			const response = await axios.put(`${API_URL}/cancel/${debtReminderId}?requesterAccountId=${requesterAccountId}`, {
-				reason: reason,
-			}, {
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				withCredentials: true, 
-			});
-	
-			return response.data;
-		} catch (error) {
-			console.error('Error updating debt reminder status:', error);
-			throw error;
-		}
+		const response = await axios.put(`${API_URL}/cancel/${debtReminderId}?requesterAccountId=${requesterAccountId}`, {
+			reason: reason,
+		}, {
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			withCredentials: true, 
+		});
 
+		return response.data;
 	} catch (error) {
-		console.error('Error cancel debt reminder:', error);
+		console.error('Error cancel debt reminder: ', error);
 		throw error;
 	}
+};
+
+export const payDebtReminder = async (debtReminderId: number, otp: string) => {
+    try {
+        const response = await axios.post(`${API_URL}/${debtReminderId}/pay`, {
+            otp: otp,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error during payment:', error);
+        throw new Error('Payment failed');
+    }
 };

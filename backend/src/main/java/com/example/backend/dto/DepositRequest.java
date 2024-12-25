@@ -20,7 +20,9 @@ public class DepositRequest {
 
     // Validation to ensure one of username or accountNumber is provided
     public boolean isValid() {
-        return (username != null || accountNumber != null) && depositAmount > 0;
+        return ((username != null && !username.isEmpty() ) ||
+                (accountNumber != null && !accountNumber.isEmpty()) ) &&
+                depositAmount > 0;
     }
 }
 

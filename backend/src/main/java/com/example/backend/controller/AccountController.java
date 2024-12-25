@@ -2,6 +2,7 @@ package com.example.backend.controller;
 
 import com.example.backend.dto.AccountDetailsResponse;
 import com.example.backend.dto.DepositRequest;
+import com.example.backend.model.ApiResponse;
 import com.example.backend.model.Customer;
 import com.example.backend.model.Transaction;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -29,13 +30,21 @@ public class AccountController {
      * @return List of accounts belonging to the customer.
      */
     @GetMapping("/list/{customer_id}")
-    public ResponseEntity<List<AccountDetailsResponse>> getAccountsByCustomerId(@PathVariable("customer_id") String customerId) {
+    public ResponseEntity<ApiResponse<List<AccountDetailsResponse>>> getAccountsByCustomerId(@PathVariable(
+            "customer_id") String customerId) {
         List<Account> accounts = accountService.getAccountsByCustomerId(customerId);
         // map list of accounts to AccountDetailsReponse
         List<AccountDetailsResponse> accountDetailsResponses = accounts.stream()
                 .map(AccountDetailsResponse::new) // Create a new AccountDetailsResponse for each Account
                 .toList();
-        return ResponseEntity.ok(accountDetailsResponses);
+        ApiResponse<List<AccountDetailsResponse>> response = new ApiResponse<>(
+                200,                           // Status code
+                null,                          // No error
+                "Accounts fetched successfully", // Success message
+                accountDetailsResponses        // Data
+        );
+
+        return ResponseEntity.ok(response);
 
     }
 
@@ -45,7 +54,7 @@ public class AccountController {
      * @return Created account.
      */
     @PostMapping
-    public ResponseEntity<Customer> createAccount(@RequestBody Map<String, String> requestBody) {
+    public ResponseEntity<ApiResponse<Customer>> createAccount(@RequestBody Map<String, String> requestBody) {
         String role = requestBody.get("role");
         String name = requestBody.get("name");
         String email = requestBody.get("email");
@@ -57,7 +66,13 @@ public class AccountController {
         }
 
         Customer createdAccount = accountService.createAccount(username, name, email, phone);
-        return ResponseEntity.ok(createdAccount);
+        ApiResponse<Customer> response = new ApiResponse<>(
+                201,                           // Status code
+                null,                          // No error
+                "Account created successfully", // Success message
+                createdAccount        // Data
+        );
+        return ResponseEntity.ok(response);
     }
 
     /**
@@ -85,9 +100,16 @@ public class AccountController {
      * @return Account details including balance.
      */
     @GetMapping("/{account_number}")
-    public ResponseEntity<AccountDetailsResponse> getAccountDetails(@PathVariable("account_number") String accountNumber) {
+    public ResponseEntity<ApiResponse<AccountDetailsResponse>> getAccountDetails(@PathVariable(
+            "account_number") String accountNumber) {
         Account accountDetails = accountService.getAccountDetails(accountNumber);
-        return ResponseEntity.ok(new AccountDetailsResponse(accountDetails));
+        ApiResponse<AccountDetailsResponse> response = new ApiResponse<>(
+                200,                           // Status code
+                null,                          // No error
+                "Account details fetched successfully", // Success message
+                new AccountDetailsResponse(accountDetails)        // Data
+        );
+        return ResponseEntity.ok(response);
     }
 
     /**
@@ -97,7 +119,7 @@ public class AccountController {
      * @return Success or error response.
      */
     @PostMapping("/deposit")
-    public ResponseEntity<Map<String, Object>> deposit(@RequestBody DepositRequest depositRequest) {
+    public ResponseEntity<ApiResponse<Transaction>> deposit(@RequestBody DepositRequest depositRequest) {
         String username = depositRequest.getUsername();
         String depositAmount = String.valueOf(depositRequest.getDepositAmount());
         String accountNumber = depositRequest.getAccountNumber();
@@ -105,12 +127,22 @@ public class AccountController {
 //        System.out.println("depositAmount: " + depositAmount);
 //        System.out.println("accountNumber: " + accountNumber);
         if (!depositRequest.isValid()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Either username or account number is required"));
+            return ResponseEntity.badRequest().body(new ApiResponse<>(
+                    400,                           // Status code
+                    "Invalid request",             // Error message
+                    "Invalid deposit request",     // Success message
+                    null                           // No data
+            ));
         }
 
         Transaction transaction = accountService.deposit(depositRequest);
         // temp return
-        return ResponseEntity.ok(Map.of("message", "Deposit successful", "transaction", transaction));
+        return ResponseEntity.ok(new ApiResponse<>(
+                201,                           // Status code
+                null,                          // No error
+                "Deposit successful",          // Success message
+                transaction                    // Data
+        ));
     }
 }
 

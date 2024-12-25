@@ -78,6 +78,7 @@ public class AccountService {
             accountNumber.append(random.nextInt(10)); // Appends a digit (0-9)
         }
         return accountNumber.toString();
+
     }
 
 }

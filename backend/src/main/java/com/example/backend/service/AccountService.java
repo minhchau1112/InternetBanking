@@ -4,7 +4,6 @@ import com.example.backend.enums.AccountType;
 import com.example.backend.helper.PasswordGenerator;
 import com.example.backend.model.Account;
 import com.example.backend.model.Customer;
-import com.example.backend.model.User;
 import com.example.backend.repository.AccountRepository;
 import com.example.backend.repository.CustomerRepository;
 import com.example.backend.repository.UserRepository;

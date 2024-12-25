@@ -5,7 +5,9 @@ import { useFormik } from "formik";
 import * as yup from "yup";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";  // Import ToastContainer và toast
-import "react-toastify/dist/ReactToastify.css";  // Import style cho Toast
+import "react-toastify/dist/ReactToastify.css";
+import {useDispatch} from "react-redux";
+import {loginFailure, loginSuccess} from "../../redux/slices/userSlice.ts";  // Import style cho Toast
 
 const validationSchema = yup.object({
     username: yup.string().required("Tên đăng nhập là bắt buộc"),
@@ -14,6 +16,7 @@ const validationSchema = yup.object({
 
 const Login: React.FC = () => {
     const [showPassword, setShowPassword] = useState<boolean>(false);
+    const dispatch = useDispatch();
 
     const formik = useFormik({
         initialValues: {
@@ -33,13 +36,19 @@ const Login: React.FC = () => {
                 { username: values.username, password: values.password },
                 { withCredentials: true }
             );
+
             localStorage.setItem('access_token', response.data.data.accessToken);
-            localStorage.setItem("accountId",response.data.data.user.accountID);
-            toast.success("Đăng nhập thành công.")
+            localStorage.setItem("accountId", response.data.data.user.accountID);
+
+            dispatch(loginSuccess(response.data.data.user));
+
+            toast.success("Đăng nhập thành công.");
         } catch (error) {
             if (axios.isAxiosError(error)) {
+                dispatch(loginFailure());
                 toast.error("Đăng nhập thất bại, vui lòng kiểm tra lại thông tin.");
             } else {
+                dispatch(loginFailure());
                 toast.error("Có lỗi xảy ra, vui lòng thử lại.");
             }
         }

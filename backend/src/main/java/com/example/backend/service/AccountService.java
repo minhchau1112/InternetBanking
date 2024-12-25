@@ -81,4 +81,11 @@ public class AccountService {
 
     }
 
+    public Account getAccountDetails(String accountNumber) {
+        // also return error if account does not exist
+        if (!accountRepository.existsByAccountNumber(accountNumber)) {
+            throw new IllegalArgumentException("Account does not exist");
+        }
+        return accountRepository.findByAccountNumber((accountNumber)).get(0);
+    }
 }

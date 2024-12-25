@@ -1,5 +1,6 @@
 package com.example.backend.controller;
 
+import com.example.backend.dto.AccountDetailsResponse;
 import com.example.backend.model.Customer;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -73,13 +74,13 @@ public class AccountController {
 
     /**
      * Get detailed account information by account ID.
-     * @param accountId ID of the account.
+     * @param accountNumber ID of the account.
      * @return Account details including balance.
      */
-//    @GetMapping("/{account_id}")
-//    public ResponseEntity<Account> getAccountDetails(@PathVariable("account_id") String accountId) {
-//        Account accountDetails = accountService.getAccountDetails(accountId);
-//        return accountDetails != null ? ResponseEntity.ok(accountDetails) : ResponseEntity.notFound().build();
-//    }
+    @GetMapping("/{account_number}")
+    public ResponseEntity<AccountDetailsResponse> getAccountDetails(@PathVariable("account_number") String accountNumber) {
+        Account accountDetails = accountService.getAccountDetails(accountNumber);
+        return ResponseEntity.ok(new AccountDetailsResponse(accountDetails));
+    }
 }
 

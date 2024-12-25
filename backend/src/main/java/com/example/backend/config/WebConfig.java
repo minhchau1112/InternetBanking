@@ -1,6 +1,5 @@
 package com.example.backend.config;
 
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -10,11 +9,11 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**") // Cho phép tất cả các đường dẫn
-                .allowedOrigins("http://localhost:5173") // Địa chỉ front-end
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS") // Các method HTTP cho phép
-                .allowedHeaders("*") // Các header cho phép
-                .allowCredentials(true); // Cho phép gửi cookie
+        registry.addMapping("/**")
+                .allowedOrigins("http://localhost:5173")
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedHeaders("*")
+                .allowCredentials(true);
     }
 }
 

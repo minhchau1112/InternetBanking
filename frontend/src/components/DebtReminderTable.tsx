@@ -254,10 +254,15 @@ const DebtReminderTable: React.FC<DataTableProps> = ({ status = 'PENDING', type 
 						</Button>
 					) : (
 						<>
-							<Button variant="contained" color="success" startIcon={<CurrencyExchangeOutlined />}>
+							<Button variant="contained" 
+									color="success" 
+									startIcon={<CurrencyExchangeOutlined />}>
 								Pay
 							</Button>
-							<Button variant="contained" color="error" startIcon={<DeleteOutline />}>
+							<Button variant="contained" 
+									color="error" 
+									startIcon={<DeleteOutline />}
+									onClick={() => handleCancelClick(params.row.debtReminderId)}>
 								Cancel
 							</Button>
 						</>
@@ -268,17 +273,6 @@ const DebtReminderTable: React.FC<DataTableProps> = ({ status = 'PENDING', type 
 	  
   	];
 
-	// const handleOpenPopup = (debtReminderId: number) => {
-	// 	setSelectedDebtId(debtReminderId);
-	// 	setReason('');
-	// 	setOpen(true);
-	// };
-
-	// const handleClosePopup = () => {
-	// 	setOpen(false);
-	// 	setSelectedDebtId(null);
-	// 	setReason('');
-	// };
 	const handleCancelClick = (debtReminderId: number) => {
 		setSelectedReminderId(debtReminderId);
 		setOpenDialog(true);
@@ -380,28 +374,6 @@ const DebtReminderTable: React.FC<DataTableProps> = ({ status = 'PENDING', type 
 			/>
 
 			<CancelDialog open={open} onClose={handleCloseDialog} onConfirm={handleConfirmCancel} />
-
-			{/* <Dialog open={open} onClose={handleClosePopup} fullWidth maxWidth="md">
-				<DialogTitle>Cancel Debt Reminder</DialogTitle>
-				<DialogContent>
-					<TextField
-						label="Reason"
-						fullWidth
-						multiline
-						rows={5}
-						value={reason}
-						onChange={(e) => setReason(e.target.value)}
-					/>
-				</DialogContent>
-				<DialogActions>
-					<Button onClick={handleClosePopup} color="secondary">
-						Cancel
-					</Button>
-					<Button onClick={handleConfirmCancel} color="primary" variant="contained" disabled={!reason.trim()}>
-						Confirm
-					</Button>
-				</DialogActions>
-			</Dialog> */}
 		</Box>
 	);
 };

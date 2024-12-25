@@ -109,7 +109,10 @@ public class AccountService {
             if (!userRepository.existsByUsername(depositRequest.getUsername())) {
                 throw new IllegalArgumentException("User does not exist");
             }
-//            account = accountRepository.findByCustomerUsername(depositRequest.getUsername()).get(0);
+            // get the first customer class of the user
+            Customer customer = customerRepository.findByUsername(depositRequest.getUsername());
+            // get account class associated with the customer
+            account = accountRepository.findByCustomerId(customer.getId()).get(0);
         }
         else {
             throw new IllegalArgumentException("Account number or username is required");

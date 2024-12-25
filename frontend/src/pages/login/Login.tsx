@@ -3,6 +3,9 @@ import { Box, Button, TextField, Typography, IconButton, InputAdornment, Link } 
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { useFormik } from "formik";
 import * as yup from "yup";
+import axios from "axios";
+import { toast, ToastContainer } from "react-toastify";  // Import ToastContainer và toast
+import "react-toastify/dist/ReactToastify.css";  // Import style cho Toast
 
 const validationSchema = yup.object({
     username: yup.string().required("Tên đăng nhập là bắt buộc"),
@@ -19,9 +22,26 @@ const Login: React.FC = () => {
         },
         validationSchema: validationSchema,
         onSubmit: (values) => {
-            console.log("Dữ liệu Form", values);
+            handleLogin(values);
         },
     });
+
+    const handleLogin = async (values: { username: string; password: string }) => {
+        try {
+            const response = await axios.post("http://localhost:8888/api/auth/login", {
+                username: values.username,
+                password: values.password,
+            });
+            toast.success("Đăng nhập thành công.")
+            console.log(response)
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                toast.error("Đăng nhập thất bại, vui lòng kiểm tra lại thông tin.");
+            } else {
+                toast.error("Có lỗi xảy ra, vui lòng thử lại.");
+            }
+        }
+    };
 
     return (
         <Box
@@ -84,7 +104,10 @@ const Login: React.FC = () => {
                                 fontSize: "12px",
                                 color: "#f44336",
                                 marginTop: "5px",
-                                marginLeft: "0px"
+                                marginLeft: "0px",
+                            },
+                            "& .MuiOutlinedInput-root": {
+                                borderRadius: "8px",
                             },
                         }}
                     />
@@ -96,7 +119,7 @@ const Login: React.FC = () => {
                             textAlign: "left",
                             color: "#919499",
                             mb: 0,
-                            mt: 1
+                            mt: 1,
                         }}
                     >
                         Mật khẩu
@@ -127,7 +150,10 @@ const Login: React.FC = () => {
                                 fontSize: "12px",
                                 color: "#f44336",
                                 marginTop: "5px",
-                                marginLeft: "0px"
+                                marginLeft: "0px",
+                            },
+                            "& .MuiOutlinedInput-root": {
+                                borderRadius: "8px",
                             },
                         }}
                     />
@@ -162,9 +188,10 @@ const Login: React.FC = () => {
                     >
                         Đăng nhập
                     </Button>
-
                 </Box>
             </Box>
+
+            <ToastContainer />
         </Box>
     );
 };

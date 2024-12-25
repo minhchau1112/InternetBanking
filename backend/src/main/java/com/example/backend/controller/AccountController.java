@@ -28,11 +28,16 @@ public class AccountController {
      * @param customerId ID of the customer.
      * @return List of accounts belonging to the customer.
      */
-//    @GetMapping("/{customer_id}")
-//    public ResponseEntity<List<Account>> getAccountsByCustomerId(@PathVariable("customer_id") String customerId) {
-//        List<Account> accounts = accountService.getAccountsByCustomerId(customerId);
-//        return ResponseEntity.ok(accounts);
-//    }
+    @GetMapping("/list/{customer_id}")
+    public ResponseEntity<List<AccountDetailsResponse>> getAccountsByCustomerId(@PathVariable("customer_id") String customerId) {
+        List<Account> accounts = accountService.getAccountsByCustomerId(customerId);
+        // map list of accounts to AccountDetailsReponse
+        List<AccountDetailsResponse> accountDetailsResponses = accounts.stream()
+                .map(AccountDetailsResponse::new) // Create a new AccountDetailsResponse for each Account
+                .toList();
+        return ResponseEntity.ok(accountDetailsResponses);
+
+    }
 
     /**
      * Create a new account for a customer.

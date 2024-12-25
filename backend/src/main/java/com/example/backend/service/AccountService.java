@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class AccountService {
@@ -136,12 +137,16 @@ public class AccountService {
         transactionRepository.save(transaction);
 
         // update account balance
-        System.out.println("account balance before: " + account.getBalance());
+//        System.out.println("account balance before: " + account.getBalance());
         account.setBalance(account.getBalance().add(transaction.getAmount()));
         accountRepository.save(account);
-        System.out.println("account balance after: " + account.getBalance());
+//        System.out.println("account balance after: " + account.getBalance());
 
         return transaction;
 
+    }
+
+    public List<Account> getAccountsByCustomerId(String customerId) {
+        return accountRepository.findByCustomerId(Integer.parseInt(customerId));
     }
 }

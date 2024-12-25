@@ -28,12 +28,14 @@ const Login: React.FC = () => {
 
     const handleLogin = async (values: { username: string; password: string }) => {
         try {
-            const response = await axios.post("http://localhost:8888/api/auth/login", {
-                username: values.username,
-                password: values.password,
-            });
+            const response = await axios.post(
+                "http://localhost:8888/api/auth/login",
+                { username: values.username, password: values.password },
+                { withCredentials: true }
+            );
+            localStorage.setItem('access_token', response.data.data.accessToken);
+            localStorage.setItem("accountId",response.data.data.user.accountID);
             toast.success("Đăng nhập thành công.")
-            console.log(response)
         } catch (error) {
             if (axios.isAxiosError(error)) {
                 toast.error("Đăng nhập thất bại, vui lòng kiểm tra lại thông tin.");

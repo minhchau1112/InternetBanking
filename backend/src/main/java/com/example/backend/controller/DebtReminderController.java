@@ -1,5 +1,6 @@
 package com.example.backend.controller;
 
+import com.example.backend.dto.request.CancelDebtReminderRequest;
 import com.example.backend.dto.request.DebtReminderRequest;
 import com.example.backend.dto.response.ApiResponse;
 import com.example.backend.dto.response.GetDebtReminderForCreatorResponse;
@@ -16,15 +17,17 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 
-@CrossOrigin(origins = "http://localhost:5173")
+//@CrossOrigin(origins = "http://localhost:5173")
 @RestController
 @RequestMapping("/api/debt-reminders")
 public class DebtReminderController {
 
     private final DebtReminderService debtReminderService;
+    private final NotificationHandler notificationHandler;
 
-    public DebtReminderController(DebtReminderService debtReminderService) {
+    public DebtReminderController(DebtReminderService debtReminderService, NotificationHandler notificationHandler) {
         this.debtReminderService = debtReminderService;
+        this.notificationHandler = notificationHandler;
     }
 
     @PostMapping
@@ -35,6 +38,8 @@ public class DebtReminderController {
                 request.getAmount(),
                 request.getMessage()
         );
+
+        notificationHandler.sendNotification("New debt reminder created: " + reminder.getMessage(), String.valueOf(request.getCreatorAccountId()));
 
         ApiResponse<DebtReminder> apiResponse = new ApiResponse<>(true, StatusCode.SUCCESS.getCode(), reminder, "Create debt reminder success", LocalDateTime.now());
         return ResponseEntity.status(HttpStatus.CREATED).body(apiResponse);
@@ -66,9 +71,13 @@ public class DebtReminderController {
         return ResponseEntity.ok(apiResponse);
     }
 
-    @PutMapping("/cancel/{reminderId}")
-    public ResponseEntity<Void> cancelDebtReminder(@PathVariable Integer reminderId, @RequestParam String reason) {
-        debtReminderService.cancelDebtReminder(reminderId, reason);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    @PutMapping("/cancel/{debtReminderId}")
+    public ResponseEntity<ApiResponse<Void>> cancelDebtReminder(@PathVariable Integer debtReminderId,
+                                                   @RequestParam Integer requesterAccountId,
+                                                   @RequestBody CancelDebtReminderRequest request) {
+        debtReminderService.cancelDebtReminder(debtReminderId, request, requesterAccountId);
+        ApiResponse<Void> apiResponse = new ApiResponse<>(true, StatusCode.SUCCESS.getCode(), null, "Cancel debt reminder success", LocalDateTime.now());
+
+        return ResponseEntity.ok(apiResponse);
     }
 }

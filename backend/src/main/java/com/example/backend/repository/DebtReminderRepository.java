@@ -13,6 +13,7 @@ import org.springframework.stereotype.Repository;
 public interface DebtReminderRepository extends JpaRepository<DebtReminder, Integer> {
     @Query("""
         SELECT new com.example.backend.dto.response.GetDebtReminderForCreatorResponse(
+            dr.id,
             dr.debtorAccount.accountNumber,
             dr.debtorAccount.customer.name,
             dr.amount,
@@ -27,6 +28,7 @@ public interface DebtReminderRepository extends JpaRepository<DebtReminder, Inte
     Page<GetDebtReminderForCreatorResponse> findByCreatorAccountId(Integer creatorAccountId, Pageable pageable);
     @Query("""
         SELECT new com.example.backend.dto.response.GetDebtReminderForCreatorResponse(
+            dr.id,
             dr.debtorAccount.accountNumber,
             dr.debtorAccount.customer.name,
             dr.amount,
@@ -42,6 +44,7 @@ public interface DebtReminderRepository extends JpaRepository<DebtReminder, Inte
 
     @Query("""
         SELECT new com.example.backend.dto.response.GetDebtReminderForCreatorResponse(
+            dr.id,
             dr.creatorAccount.accountNumber,
             dr.creatorAccount.customer.name,
             dr.amount,
@@ -57,6 +60,7 @@ public interface DebtReminderRepository extends JpaRepository<DebtReminder, Inte
 
     @Query("""
         SELECT new com.example.backend.dto.response.GetDebtReminderForCreatorResponse(
+            dr.id,
             dr.creatorAccount.accountNumber,
             dr.creatorAccount.customer.name,
             dr.amount,

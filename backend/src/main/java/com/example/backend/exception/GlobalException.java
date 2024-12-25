@@ -46,4 +46,16 @@ public class GlobalException {
         );
         return ResponseEntity.ok(response);
     }
+
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<ApiResponse<?>> handleUnauthorizedException(UnauthorizedException ex) {
+        ApiResponse<?> response = new ApiResponse<>(
+                false,
+                StatusCode.FAILED.getCode(),
+                null,
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.ok(response);
+    }
 }

@@ -2,23 +2,21 @@ package com.example.backend.dto.response;
 
 import com.example.backend.enums.DebtReminderStatus;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
-public class GetDebtReminderForCreatorResponse {
+public class GetDebtReminderForDebtorResponse {
     @JsonProperty("debt_reminder_id")
     private Integer debtReminderId;
 
     @JsonProperty("debt_account_number")
-    private String debtAccountNumber;
+    private String creatorAccountNumber;
 
     @JsonProperty("debt_name")
-    private String debtName;
+    private String creatorName;
 
     @JsonProperty("amount")
     private BigDecimal amount;
@@ -32,10 +30,10 @@ public class GetDebtReminderForCreatorResponse {
     @JsonProperty("created_time")
     private LocalDateTime createdTime;
 
-    public GetDebtReminderForCreatorResponse(Integer debtReminderId, String debtAccountNumber, String debtName, BigDecimal amount, String message, DebtReminderStatus status, LocalDateTime createdTime) {
+    public GetDebtReminderForDebtorResponse(Integer debtReminderId, String creatorAccountNumber, String creatorName, BigDecimal amount, String message, DebtReminderStatus status, LocalDateTime createdTime) {
         this.debtReminderId = debtReminderId;
-        this.debtAccountNumber = debtAccountNumber;
-        this.debtName = debtName;
+        this.creatorAccountNumber = creatorAccountNumber;
+        this.creatorName = creatorName;
         this.amount = amount;
         this.message = message;
         this.status = status;

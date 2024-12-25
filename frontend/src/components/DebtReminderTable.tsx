@@ -7,7 +7,9 @@ import {
 import { DataGrid, GridColDef } from '@mui/x-data-grid';
 import { DeleteOutline, CurrencyExchangeOutlined } from '@mui/icons-material';
 import { format } from 'date-fns';
-import { fetchDebtRemindersForCreator, fetchDebtRemindersForDebtor } from '../services/debtReminderService'; 
+import { fetchDebtRemindersForCreator, fetchDebtRemindersForDebtor, cancelDebtReminder } from '../services/debtReminderService'; 
+import { useSnackbar } from 'notistack';
+import CancelDialog from './CancelDialog';
 
 function capitalizeFirstLetter(str: string) {
 	if (!str) return '';
@@ -28,6 +30,13 @@ const DebtReminderTable: React.FC<DataTableProps> = ({ status = 'PENDING', type 
 	const [pageSize, setPageSize] = useState(10);
 	const [rowCount, setRowCount] = useState(0); 
 	const [loading, setLoading] = useState(false);
+
+	const [open, setOpenDialog] = useState(false);
+	const [selectedDebtId, setSelectedReminderId] = useState<number | null>(null);
+	// const [reason, setReason] = useState<string>('');
+
+	const { enqueueSnackbar } = useSnackbar();
+	
 
 	const columns: GridColDef[] = [
 		{ 
@@ -234,10 +243,13 @@ const DebtReminderTable: React.FC<DataTableProps> = ({ status = 'PENDING', type 
 					Actions
 				</strong>
 			),
-			renderCell: () => (
+			renderCell: (params) => (
 				<Box display="flex" justifyContent={'center'} gap={1} sx={{ display: 'flex', alignItems: 'center', height: '100%', width: '100%' }}>
 					{type === 'Creator' ? (
-						<Button variant="contained" color="error" startIcon={<DeleteOutline />}>
+						<Button variant="contained" 
+								color="error" 
+								startIcon={<DeleteOutline />}
+								onClick={() => handleCancelClick(params.row.debtReminderId)}>
 							Cancel
 						</Button>
 					) : (
@@ -255,6 +267,49 @@ const DebtReminderTable: React.FC<DataTableProps> = ({ status = 'PENDING', type 
 		},
 	  
   	];
+
+	// const handleOpenPopup = (debtReminderId: number) => {
+	// 	setSelectedDebtId(debtReminderId);
+	// 	setReason('');
+	// 	setOpen(true);
+	// };
+
+	// const handleClosePopup = () => {
+	// 	setOpen(false);
+	// 	setSelectedDebtId(null);
+	// 	setReason('');
+	// };
+	const handleCancelClick = (debtReminderId: number) => {
+		setSelectedReminderId(debtReminderId);
+		setOpenDialog(true);
+	};
+
+	const handleCloseDialog = () => {
+		setOpenDialog(false);
+	};
+
+	const handleConfirmCancel = async (reason: string) => {
+		if (selectedDebtId && reason.trim()) {
+			setLoading(true);
+			try {
+				const response = await cancelDebtReminder(selectedDebtId, id, reason.trim());
+				console.log("success");
+				if (response.success) {
+					enqueueSnackbar(response.message, { variant: 'success', autoHideDuration: 1500 });
+					console.log("fetch");
+					fetchRows(type, id, status, page, pageSize);
+				} else {
+					enqueueSnackbar(response.message, { variant: 'error', autoHideDuration: 1500 });
+					console.error(response.message);
+				}
+			} catch (error) {
+				console.error('Error cancelling debt reminder:', error);
+				enqueueSnackbar('Failed to cancel debt reminder!', { variant: 'error', autoHideDuration: 1500 });
+			} finally {
+				setLoading(false);
+			}
+		}
+	};
 
 	const fetchRows = async (type: string, id: number, status: string, page: number, pageSize: number) => {
 		setLoading(true);
@@ -277,6 +332,7 @@ const DebtReminderTable: React.FC<DataTableProps> = ({ status = 'PENDING', type 
 					message: item.message,
 					status: capitalizeFirstLetter(item.status),
 					createdTime: item.created_time,
+					debtReminderId: item.debt_reminder_id,
 				}))
 			);
 			setRowCount(data.totalElements); 
@@ -322,6 +378,30 @@ const DebtReminderTable: React.FC<DataTableProps> = ({ status = 'PENDING', type 
 				pageSizeOptions={[5, 10, 20]} 
 				checkboxSelection
 			/>
+
+			<CancelDialog open={open} onClose={handleCloseDialog} onConfirm={handleConfirmCancel} />
+
+			{/* <Dialog open={open} onClose={handleClosePopup} fullWidth maxWidth="md">
+				<DialogTitle>Cancel Debt Reminder</DialogTitle>
+				<DialogContent>
+					<TextField
+						label="Reason"
+						fullWidth
+						multiline
+						rows={5}
+						value={reason}
+						onChange={(e) => setReason(e.target.value)}
+					/>
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={handleClosePopup} color="secondary">
+						Cancel
+					</Button>
+					<Button onClick={handleConfirmCancel} color="primary" variant="contained" disabled={!reason.trim()}>
+						Confirm
+					</Button>
+				</DialogActions>
+			</Dialog> */}
 		</Box>
 	);
 };

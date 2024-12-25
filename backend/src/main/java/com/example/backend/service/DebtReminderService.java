@@ -1,8 +1,10 @@
 package com.example.backend.service;
 
+import com.example.backend.dto.request.CancelDebtReminderRequest;
 import com.example.backend.dto.response.GetDebtReminderForCreatorResponse;
 import com.example.backend.enums.DebtReminderStatus;
 import com.example.backend.exception.NotFoundException;
+import com.example.backend.exception.UnauthorizedException;
 import com.example.backend.model.Account;
 import com.example.backend.model.DebtReminder;
 import com.example.backend.repository.AccountRepository;
@@ -65,14 +67,18 @@ public class DebtReminderService {
         return debtReminderRepository.findByDebtorAccountIdAAndStatus(debtorAccountId, status, pageable);
     }
 
-    public void cancelDebtReminder(Integer reminderId, String reason) {
-        DebtReminder reminder = debtReminderRepository.findById(reminderId)
-                .orElseThrow(() -> new RuntimeException("Debt reminder not found"));
+    public void cancelDebtReminder(Integer debtReminderId, CancelDebtReminderRequest request, Integer requesterAccountId) {
+        DebtReminder debtReminder = debtReminderRepository.findById(debtReminderId)
+                .orElseThrow(() -> new NotFoundException("Debt reminder not found"));
 
-        reminder.setStatus(DebtReminderStatus.CANCELLED);
-        reminder.setUpdatedAt(LocalDateTime.now());
+        if (!debtReminder.getCreatorAccount().getId().equals(requesterAccountId) && !debtReminder.getDebtorAccount().getId().equals(requesterAccountId)) {
+            throw new UnauthorizedException("You are not authorized to cancel this debt reminder");
+        }
 
-        debtReminderRepository.save(reminder);
+        debtReminder.setStatus(DebtReminderStatus.CANCELLED);
+        debtReminder.setUpdatedAt(LocalDateTime.now());
+
+        debtReminderRepository.save(debtReminder);
     }
 }
 

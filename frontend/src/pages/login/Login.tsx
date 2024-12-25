@@ -6,8 +6,6 @@ import * as yup from "yup";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";  // Import ToastContainer và toast
 import "react-toastify/dist/ReactToastify.css";
-import {useDispatch} from "react-redux";
-import {loginFailure, loginSuccess} from "../../redux/slices/userSlice.ts";  // Import style cho Toast
 
 const validationSchema = yup.object({
     username: yup.string().required("Tên đăng nhập là bắt buộc"),
@@ -16,7 +14,6 @@ const validationSchema = yup.object({
 
 const Login: React.FC = () => {
     const [showPassword, setShowPassword] = useState<boolean>(false);
-    const dispatch = useDispatch();
 
     const formik = useFormik({
         initialValues: {
@@ -40,15 +37,11 @@ const Login: React.FC = () => {
             localStorage.setItem('access_token', response.data.data.accessToken);
             localStorage.setItem("accountId", response.data.data.user.accountID);
 
-            dispatch(loginSuccess(response.data.data.user));
-
             toast.success("Đăng nhập thành công.");
         } catch (error) {
             if (axios.isAxiosError(error)) {
-                dispatch(loginFailure());
                 toast.error("Đăng nhập thất bại, vui lòng kiểm tra lại thông tin.");
             } else {
-                dispatch(loginFailure());
                 toast.error("Có lỗi xảy ra, vui lòng thử lại.");
             }
         }
@@ -186,10 +179,6 @@ const Login: React.FC = () => {
                             padding: "12px 0",
                             borderRadius: "8px",
                             backgroundColor: "#F8AD15",
-                            "&:hover": {
-                                backgroundColor: "#FB8C00",
-                                boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)",
-                            },
                             "&:focus": {
                                 outline: "none",
                                 boxShadow: "none",

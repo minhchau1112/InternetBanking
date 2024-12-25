@@ -51,6 +51,10 @@ public class AuthenticationController {
         Jwt decodedToken = loginService.checkValidRefreshToken(refreshToken);
         String username = decodedToken.getSubject();
 
+        if (refreshToken==null){
+            throw new InvalidException("Refresh Token không hợp lệ");
+        }
+
         // Check in redis by token and username
         String storedToken = refreshTokenService.getRefreshToken(username);
 

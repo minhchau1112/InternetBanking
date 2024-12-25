@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 public class AccountService {
@@ -78,6 +79,9 @@ public class AccountService {
             accountNumber.append(random.nextInt(10)); // Appends a digit (0-9)
         }
         return accountNumber.toString();
+    }
+    public Optional<Account> findByCustomerId(Integer customerId) {
+        return accountRepository.findByCustomerId(customerId);
     }
 
 }

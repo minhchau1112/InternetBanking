@@ -1,7 +1,9 @@
 package com.example.backend.controller;
 
 import com.example.backend.dto.AccountDetailsResponse;
+import com.example.backend.dto.DepositRequest;
 import com.example.backend.model.Customer;
+import com.example.backend.model.Transaction;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -82,5 +84,29 @@ public class AccountController {
         Account accountDetails = accountService.getAccountDetails(accountNumber);
         return ResponseEntity.ok(new AccountDetailsResponse(accountDetails));
     }
+
+    /**
+     * Deposit money into account.
+     * @param depositRequest Request body containing deposit details include username,
+     *                        depositAmount and accountNumber.
+     * @return Success or error response.
+     */
+    @PostMapping("/deposit")
+    public ResponseEntity<Map<String, Object>> deposit(@RequestBody DepositRequest depositRequest) {
+        String username = depositRequest.getUsername();
+        String depositAmount = String.valueOf(depositRequest.getDepositAmount());
+        String accountNumber = depositRequest.getAccountNumber();
+//        System.out.println("username: " + username);
+//        System.out.println("depositAmount: " + depositAmount);
+//        System.out.println("accountNumber: " + accountNumber);
+        if (!depositRequest.isValid()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Either username or account number is required"));
+        }
+
+        Transaction transaction = accountService.deposit(depositRequest);
+        // temp return
+        return ResponseEntity.ok(Map.of("message", "Deposit successful", "transaction", transaction));
+    }
 }
+
 

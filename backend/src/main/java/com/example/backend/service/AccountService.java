@@ -1,12 +1,17 @@
 package com.example.backend.service;
 
+import com.example.backend.dto.DepositRequest;
 import com.example.backend.enums.AccountType;
+import com.example.backend.enums.FeePayer;
+import com.example.backend.enums.TransactionType;
 import com.example.backend.helper.PasswordGenerator;
 import com.example.backend.model.Account;
 import com.example.backend.model.Customer;
+import com.example.backend.model.Transaction;
 import com.example.backend.model.User;
 import com.example.backend.repository.AccountRepository;
 import com.example.backend.repository.CustomerRepository;
+import com.example.backend.repository.TransactionRepository;
 import com.example.backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -26,6 +31,9 @@ public class AccountService {
 
     @Autowired
     private CustomerRepository customerRepository;
+
+    @Autowired
+    private TransactionRepository transactionRepository;
 
     private final SecureRandom random = new SecureRandom();
 
@@ -87,5 +95,50 @@ public class AccountService {
             throw new IllegalArgumentException("Account does not exist");
         }
         return accountRepository.findByAccountNumber((accountNumber)).get(0);
+    }
+
+    public Transaction deposit(DepositRequest depositRequest){
+        Account account = null;
+        if (depositRequest.getAccountNumber() != null) {
+            if (!accountRepository.existsByAccountNumber(depositRequest.getAccountNumber())) {
+                throw new IllegalArgumentException("Account does not exist");
+            }
+            account = accountRepository.findByAccountNumber(depositRequest.getAccountNumber()).get(0);
+        }
+        else if (depositRequest.getUsername() != null) {
+            if (!userRepository.existsByUsername(depositRequest.getUsername())) {
+                throw new IllegalArgumentException("User does not exist");
+            }
+//            account = accountRepository.findByCustomerUsername(depositRequest.getUsername()).get(0);
+        }
+        else {
+            throw new IllegalArgumentException("Account number or username is required");
+        }
+
+        // create transaction
+        Transaction transaction = new Transaction();
+        transaction.setSourceAccount(account);
+        transaction.setDestinationAccount(account);
+        transaction.setBankCode(null);
+        transaction.setAmount(BigDecimal.valueOf(depositRequest.getDepositAmount()));
+        transaction.setFee(BigDecimal.valueOf(0.0));
+        transaction.setFeePayer(FeePayer.SENDER);
+        transaction.setMessage("Deposit");
+        transaction.setStatus("COMPLETED");
+        transaction.setOtpVerified(true);
+        transaction.setType(TransactionType.DEPOSIT);
+        transaction.setCreatedAt(LocalDateTime.now());
+        transaction.setCompletedAt(LocalDateTime.now());
+        // save transaction
+        transactionRepository.save(transaction);
+
+        // update account balance
+        System.out.println("account balance before: " + account.getBalance());
+        account.setBalance(account.getBalance().add(transaction.getAmount()));
+        accountRepository.save(account);
+        System.out.println("account balance after: " + account.getBalance());
+
+        return transaction;
+
     }
 }

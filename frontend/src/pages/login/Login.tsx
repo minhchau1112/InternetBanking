@@ -1,32 +1,31 @@
 import React, { useState } from "react";
 import { Box, Button, TextField, Typography, IconButton, InputAdornment, Link } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
-import { useFormik } from "formik";
-import * as yup from "yup";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-const validationSchema = yup.object({
-    username: yup.string().required("Tên đăng nhập là bắt buộc"),
-    password: yup.string().min(6, "Mật khẩu phải có ít nhất 6 ký tự").required("Mật khẩu là bắt buộc"),
+const validationSchema = z.object({
+    username: z.string().min(1, "Tên đăng nhập là bắt buộc"),
+    password: z
+        .string()
+        .min(6, "Mật khẩu phải có ít nhất 6 ký tự")
+        .min(1, "Mật khẩu là bắt buộc"),
 });
+
+type FormValues = z.infer<typeof validationSchema>;
 
 const Login: React.FC = () => {
     const [showPassword, setShowPassword] = useState<boolean>(false);
 
-    const formik = useFormik({
-        initialValues: {
-            username: "",
-            password: "",
-        },
-        validationSchema: validationSchema,
-        onSubmit: (values) => {
-            handleLogin(values);
-        },
+    const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({
+        resolver: zodResolver(validationSchema),
     });
 
-    const handleLogin = async (values: { username: string; password: string }) => {
+    const handleLogin = async (values: FormValues) => {
         try {
             const response = await axios.post(
                 "http://localhost:8888/api/auth/login",
@@ -34,7 +33,7 @@ const Login: React.FC = () => {
                 { withCredentials: true }
             );
 
-            localStorage.setItem('access_token', response.data.data.accessToken);
+            localStorage.setItem("access_token", response.data.data.accessToken);
             localStorage.setItem("accountId", response.data.data.user.accountID);
 
             toast.success("Đăng nhập thành công.");
@@ -55,54 +54,57 @@ const Login: React.FC = () => {
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
-                backgroundColor: "#f9f9f9",
+                backgroundColor: "#FFF",
+                color: "#000",
             }}
         >
             <Box
                 sx={{
-                    width: 640,
+                    width: 480,
                     padding: 4,
-                    backgroundColor: "white",
+                    backgroundColor: "#FFF",
                     boxShadow: 3,
                     borderRadius: 2,
                     textAlign: "center",
+                    border: "1px solid #E0E0E0",
                 }}
             >
                 <Typography
                     variant="h5"
                     sx={{
                         fontWeight: 700,
-                        mb: 2,
+                        mb: 3,
                         fontSize: "30px",
                         lineHeight: "45px",
-                        color: "#034B5E",
+                        color: "#333",
+                        fontFamily: "'Roboto', sans-serif",
                     }}
                 >
                     Đăng nhập
                 </Typography>
 
-                <Box component="form" onSubmit={formik.handleSubmit} noValidate>
+                <form onSubmit={handleSubmit(handleLogin)} noValidate>
                     <Typography
                         sx={{
-                            fontWeight: 500,
+                            fontWeight: "bold",
                             fontSize: "14px",
                             lineHeight: "21px",
                             textAlign: "left",
-                            color: "#919499",
+                            color: "#555",
                             mb: 0,
                         }}
                     >
                         Tên đăng nhập
                     </Typography>
                     <TextField
-                        placeholder={"Tên đăng nhập"}
+                        placeholder="Tên đăng nhập"
                         type="text"
                         fullWidth
                         variant="outlined"
                         margin="normal"
-                        {...formik.getFieldProps("username")}
-                        error={formik.touched.username && Boolean(formik.errors.username)}
-                        helperText={formik.touched.username && formik.errors.username}
+                        {...register("username")}
+                        error={Boolean(errors.username)}
+                        helperText={errors.username?.message}
                         sx={{
                             "& .MuiFormHelperText-root": {
                                 fontSize: "12px",
@@ -112,38 +114,38 @@ const Login: React.FC = () => {
                             },
                             "& .MuiOutlinedInput-root": {
                                 borderRadius: "8px",
+                                borderColor: "#BDBDBD",
                             },
                         }}
                     />
+
                     <Typography
                         sx={{
-                            fontWeight: 500,
+                            fontWeight: "bold",
                             fontSize: "14px",
                             lineHeight: "21px",
                             textAlign: "left",
-                            color: "#919499",
+                            color: "#555",
                             mb: 0,
-                            mt: 1,
+                            mt: 1
                         }}
+
                     >
                         Mật khẩu
                     </Typography>
                     <TextField
-                        placeholder={"Mật khẩu"}
+                        placeholder="Mật khẩu"
                         type={showPassword ? "text" : "password"}
                         fullWidth
                         variant="outlined"
                         margin="normal"
-                        {...formik.getFieldProps("password")}
-                        error={formik.touched.password && Boolean(formik.errors.password)}
-                        helperText={formik.touched.password && formik.errors.password}
+                        {...register("password")}
+                        error={Boolean(errors.password)}
+                        helperText={errors.password?.message}
                         InputProps={{
                             endAdornment: (
                                 <InputAdornment position="end">
-                                    <IconButton
-                                        onClick={() => setShowPassword(!showPassword)}
-                                        edge="end"
-                                    >
+                                    <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
                                         {showPassword ? <VisibilityOff /> : <Visibility />}
                                     </IconButton>
                                 </InputAdornment>
@@ -158,6 +160,7 @@ const Login: React.FC = () => {
                             },
                             "& .MuiOutlinedInput-root": {
                                 borderRadius: "8px",
+                                borderColor: "#BDBDBD",
                             },
                         }}
                     />
@@ -170,7 +173,7 @@ const Login: React.FC = () => {
                     <Button
                         fullWidth
                         variant="contained"
-                        color="warning"
+                        color="primary"
                         sx={{
                             mt: 3,
                             textTransform: "none",
@@ -178,7 +181,7 @@ const Login: React.FC = () => {
                             fontSize: "16px",
                             padding: "12px 0",
                             borderRadius: "8px",
-                            backgroundColor: "#F8AD15",
+                            backgroundColor: "#333",
                             "&:focus": {
                                 outline: "none",
                                 boxShadow: "none",
@@ -188,7 +191,7 @@ const Login: React.FC = () => {
                     >
                         Đăng nhập
                     </Button>
-                </Box>
+                </form>
             </Box>
 
             <ToastContainer />

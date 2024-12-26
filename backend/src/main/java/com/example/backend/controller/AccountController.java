@@ -1,7 +1,7 @@
 package com.example.backend.controller;
 
-import com.example.backend.dto.AccountDetailsResponse;
-import com.example.backend.dto.DepositRequest;
+import com.example.backend.dto.response.AccountDetailsResponse;
+import com.example.backend.dto.request.DepositRequest;
 import com.example.backend.model.ApiResponse;
 import com.example.backend.model.Customer;
 import com.example.backend.model.Transaction;
@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/accounts")
@@ -32,7 +33,7 @@ public class AccountController {
     @GetMapping("/list/{customer_id}")
     public ResponseEntity<ApiResponse<List<AccountDetailsResponse>>> getAccountsByCustomerId(@PathVariable(
             "customer_id") String customerId) {
-        List<Account> accounts = accountService.getAccountsByCustomerId(customerId);
+        Optional<Account> accounts = accountService.findByCustomerId(Integer.valueOf(customerId));
         // map list of accounts to AccountDetailsReponse
         List<AccountDetailsResponse> accountDetailsResponses = accounts.stream()
                 .map(AccountDetailsResponse::new) // Create a new AccountDetailsResponse for each Account

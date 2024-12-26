@@ -1,6 +1,6 @@
 package com.example.backend.service;
 
-import com.example.backend.dto.DepositRequest;
+import com.example.backend.dto.request.DepositRequest;
 import com.example.backend.enums.AccountType;
 import com.example.backend.enums.FeePayer;
 import com.example.backend.enums.TransactionType;
@@ -8,7 +8,6 @@ import com.example.backend.helper.PasswordGenerator;
 import com.example.backend.model.Account;
 import com.example.backend.model.Customer;
 import com.example.backend.model.Transaction;
-import com.example.backend.model.User;
 import com.example.backend.repository.AccountRepository;
 import com.example.backend.repository.CustomerRepository;
 import com.example.backend.repository.TransactionRepository;
@@ -19,7 +18,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.Optional;
 
 @Service
 public class AccountService {
@@ -95,16 +94,16 @@ public class AccountService {
         if (!accountRepository.existsByAccountNumber(accountNumber)) {
             throw new IllegalArgumentException("Account does not exist");
         }
-        return accountRepository.findByAccountNumber((accountNumber)).get(0);
+        return accountRepository.findByAccountNumber((accountNumber)).get();
     }
 
     public Transaction deposit(DepositRequest depositRequest){
-        Account account = null;
+        Optional<Account> account = null;
         if (depositRequest.getAccountNumber() != null) {
             if (!accountRepository.existsByAccountNumber(depositRequest.getAccountNumber())) {
                 throw new IllegalArgumentException("Account does not exist");
             }
-            account = accountRepository.findByAccountNumber(depositRequest.getAccountNumber()).get(0);
+            account = accountRepository.findByAccountNumber(depositRequest.getAccountNumber());
         }
         else if (depositRequest.getUsername() != null) {
             if (!userRepository.existsByUsername(depositRequest.getUsername())) {
@@ -113,16 +112,26 @@ public class AccountService {
             // get the first customer class of the user
             Customer customer = customerRepository.findByUsername(depositRequest.getUsername());
             // get account class associated with the customer
-            account = accountRepository.findByCustomerId(customer.getId()).get(0);
+            account = accountRepository.findByCustomerId(customer.getId());
         }
         else {
             throw new IllegalArgumentException("Account number or username is required");
         }
 
+        Account newAccount = null;
+        // check if account is present
+        if (account.isEmpty()) {
+            throw new IllegalArgumentException("Account does not exist");
+        }
+        else{
+            // cast account to Account class
+            newAccount = account.get();
+        }
+
         // create transaction
         Transaction transaction = new Transaction();
-        transaction.setSourceAccount(account);
-        transaction.setDestinationAccount(account);
+        transaction.setSourceAccount(newAccount);
+        transaction.setDestinationAccount(newAccount);
         transaction.setBankCode(null);
         transaction.setAmount(BigDecimal.valueOf(depositRequest.getDepositAmount()));
         transaction.setFee(BigDecimal.valueOf(0.0));
@@ -138,15 +147,15 @@ public class AccountService {
 
         // update account balance
 //        System.out.println("account balance before: " + account.getBalance());
-        account.setBalance(account.getBalance().add(transaction.getAmount()));
-        accountRepository.save(account);
+        newAccount.setBalance(newAccount.getBalance().add(transaction.getAmount()));
+        accountRepository.save(newAccount);
 //        System.out.println("account balance after: " + account.getBalance());
 
         return transaction;
 
     }
-
-    public List<Account> getAccountsByCustomerId(String customerId) {
-        return accountRepository.findByCustomerId(Integer.parseInt(customerId));
+    public Optional<Account> findByCustomerId(Integer customerId) {
+        return accountRepository.findByCustomerId(customerId);
     }
+
 }

@@ -93,8 +93,8 @@ public class AuthenticationController {
         ResponseCookie responseCookie = ResponseCookie
                 .from("refresh_token",refresh_token)
                 .httpOnly(true)
-                .secure(true)
                 .path("/")
+                .sameSite("None")
                 .maxAge(loginService.getRefreshExpiresIn())
                 .build();
         return ResponseEntity.ok()
@@ -140,8 +140,8 @@ public class AuthenticationController {
         ResponseCookie responseCookie = ResponseCookie
                 .from("refresh_token",refresh_token)
                 .httpOnly(true)
-                .secure(true)
                 .path("/")
+                .sameSite("None")
                 .maxAge(loginService.getRefreshExpiresIn())
                 .build();
         return ResponseEntity.ok()

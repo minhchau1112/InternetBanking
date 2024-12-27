@@ -1,6 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button"
 import {
     Form,
@@ -24,6 +25,8 @@ const formSchema = z.object({
 })
 
 export function LoginForm() {
+    const navigate = useNavigate();
+
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -40,6 +43,11 @@ export function LoginForm() {
             localStorage.setItem("accountId", data.user.accountID);
 
             toast.success("Đăng nhập thành công.");
+
+            setTimeout(() => {
+                navigate("/");
+            }, 3000);
+
         } catch (error) {
             if (axios.isAxiosError(error)) {
                 toast.error("Đăng nhập thất bại, vui lòng kiểm tra lại thông tin.");
@@ -58,7 +66,7 @@ export function LoginForm() {
                             Internet Banking
                         </h1>
                         <p className="text-sm text-gray-500">
-                            Đăng nhập để tiếp tục sử dụng dịch vụ
+                            Chào mừng, đăng nhập để tiếp tục.
                         </p>
                     </div>
 

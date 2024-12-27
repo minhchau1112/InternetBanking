@@ -39,7 +39,6 @@ export function LoginForm() {
     })
     const onForgotPassword = async () => {
         try {
-            // await axios.post("/api/auth/forgot-password");
             navigate("/forgot-password");
         } catch (error) {
             console.log(error);

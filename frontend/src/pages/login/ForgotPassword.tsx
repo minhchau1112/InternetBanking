@@ -4,6 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { FiEdit } from "react-icons/fi";
+import {verifyEmail} from "@/api/emailAPI.ts";
+import {toast, ToastContainer} from "react-toastify";
 
 const ForgotPassword: React.FC = () => {
     const [email, setEmail] = useState("");
@@ -13,10 +15,20 @@ const ForgotPassword: React.FC = () => {
 
     const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-    const handleEmailSubmit = () => {
-        console.log("Email được gửi tới API:", email);
-        setIsEmailSubmitted(true);
+    const handleEmailSubmit = async () => {
+        try {
+            const data = await verifyEmail(email);
+            if (data && data.data != null) {
+                setIsEmailSubmitted(true);
+            } else {
+                toast.error("Email không hợp lệ hoặc không tồn tại.");
+            }
+        } catch (error) {
+            console.error("Error during email verification:", error);
+        }
     };
+
+
 
     const handleOTPSubmit = (enteredOtp: string) => {
         console.log("OTP được gửi tới API:", enteredOtp);
@@ -83,7 +95,7 @@ const ForgotPassword: React.FC = () => {
                     {isEmailSubmitted ? (
                         <>
                             <Label htmlFor="OTP">Nhập OTP</Label>
-                            <div className="flex justify-center items-center space-x-2">
+                            <div className="flex justify-center items-center space-x-2 pb-5">
                                 {OTP.map((digit, index) => (
                                     <Input
                                         key={index}
@@ -120,6 +132,7 @@ const ForgotPassword: React.FC = () => {
                     )}
                 </CardContent>
             </Card>
+            <ToastContainer></ToastContainer>
         </div>
     );
 };

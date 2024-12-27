@@ -1,9 +1,11 @@
 package com.example.backend.config;
 
 import com.example.backend.dto.response.RestResponse;
+import com.example.backend.utils.annotation.APIMessage;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.MediaType;
+import org.springframework.core.io.Resource;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
@@ -20,15 +22,33 @@ public class RestResponseConfiguration implements ResponseBodyAdvice<Object> {
     }
 
     @Override
-    public Object beforeBodyWrite(Object body, MethodParameter returnType, MediaType selectedContentType, Class<? extends HttpMessageConverter<?>> selectedConverterType, ServerHttpRequest request, ServerHttpResponse response) {
+    public Object beforeBodyWrite(
+            Object body,
+            MethodParameter returnType,
+            MediaType selectedContentType,
+            Class selectedConverterType,
+            ServerHttpRequest request,
+            ServerHttpResponse response) {
         HttpServletResponse servletResponse = ((ServletServerHttpResponse) response).getServletResponse();
         int status = servletResponse.getStatus();
-        if (body instanceof String) {
+
+        RestResponse<Object> res = new RestResponse<Object>();
+        res.setStatus(status);
+
+        if (body instanceof String || body instanceof Resource) {
             return body;
         }
+
+
         if (status >= 400) {
             return body;
+        } else {
+            res.setData(body);
+            APIMessage message = returnType.getMethodAnnotation(APIMessage.class);
+            res.setMessage(message != null ? message.value() : "CALL API SUCCESS");
         }
-        return RestResponse.builder().status(status).error(null).message("CALL API SUCCESS").data(body).build();
+
+        return res;
     }
+
 }

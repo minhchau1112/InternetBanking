@@ -8,11 +8,11 @@ import com.example.backend.service.AccountService;
 import com.example.backend.service.LoginService;
 import com.example.backend.service.RefreshTokenService;
 import com.example.backend.service.UserService;
+import com.example.backend.utils.annotation.APIMessage;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -103,7 +103,6 @@ public class AuthenticationController {
                 .body(loginResponse);
     }
 
-
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
         UsernamePasswordAuthenticationToken authenticationToken
@@ -149,6 +148,32 @@ public class AuthenticationController {
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, responseCookie.toString())
                 .body(loginResponse);
+    }
+
+    @PostMapping("/logout")
+    @APIMessage("Logout User")
+    public ResponseEntity<Void> logout() throws InvalidException {
+
+        String username = LoginService.getCurrentUserLogin().isPresent()?LoginService.getCurrentUserLogin().get():null;
+
+        if (username == null) {
+            throw new InvalidException("Access Token is not valid");
+        }
+
+        refreshTokenService.deleteRefreshToken("refresh_token:" + username);
+
+        ResponseCookie deleteCookie = ResponseCookie
+                .from("refresh_token", null)
+                .httpOnly(true)
+                .secure(false)
+                .path("/")
+                .maxAge(0)
+                .build();
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, deleteCookie.toString())
+                .body(null);
+
     }
 
     public String getRole(User user) {

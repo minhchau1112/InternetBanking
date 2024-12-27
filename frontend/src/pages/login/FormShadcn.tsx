@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import axios from "axios";
-import {toast} from "react-toastify";
+import {toast, ToastContainer} from "react-toastify";
 
 const formSchema = z.object({
     username: z.string().min(1, "Tên đăng nhập là bắt buộc"),
@@ -84,6 +84,8 @@ export function LoginForm() {
                     <Button className="w-full" type="submit">Đăng nhập</Button>
                 </form>
             </div>
+            <ToastContainer/>
         </Form>
+
     )
 }

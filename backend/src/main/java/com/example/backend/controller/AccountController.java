@@ -101,16 +101,22 @@ public class AccountController {
      * @return Account details including balance.
      */
     @GetMapping("/{account_number}")
-    public ResponseEntity<ApiResponse<AccountDetailsResponse>> getAccountDetails(@PathVariable(
+    public AccountDetailsResponse getAccountDetails(@PathVariable(
             "account_number") String accountNumber) {
         Account accountDetails = accountService.getAccountDetails(accountNumber);
-        ApiResponse<AccountDetailsResponse> response = new ApiResponse<>(
-                200,                           // Status code
-                null,                          // No error
-                "Account details fetched successfully", // Success message
-                new AccountDetailsResponse(accountDetails)        // Data
-        );
-        return ResponseEntity.ok(response);
+        return new AccountDetailsResponse(accountDetails);  // Convert Account to AccountDetailsResponse
+    }
+
+    /**
+     * Get detailed account information by account ID.
+     * @param accountNumber ID of the account.
+     * @return Account details including balance.
+     */
+    @GetMapping("/username/{username}")
+    public AccountDetailsResponse getAccountDetailsByUsername(@PathVariable(
+            "username") String username) {
+        Account accountDetails = accountService.getAccountDetailsByUsername(username);
+        return new AccountDetailsResponse(accountDetails);  // Convert Account to AccountDetailsResponse
     }
 
     /**
@@ -124,9 +130,9 @@ public class AccountController {
         String username = depositRequest.getUsername();
         String depositAmount = String.valueOf(depositRequest.getDepositAmount());
         String accountNumber = depositRequest.getAccountNumber();
-//        System.out.println("username: " + username);
-//        System.out.println("depositAmount: " + depositAmount);
-//        System.out.println("accountNumber: " + accountNumber);
+        System.out.println("username: " + username);
+        System.out.println("depositAmount: " + depositAmount);
+        System.out.println("accountNumber: " + accountNumber);
         if (!depositRequest.isValid()) {
             return ResponseEntity.badRequest().body(new ApiResponse<>(
                     400,                           // Status code

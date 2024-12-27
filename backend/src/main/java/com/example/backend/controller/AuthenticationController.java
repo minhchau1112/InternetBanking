@@ -1,6 +1,7 @@
 package com.example.backend.controller;
 
 import com.example.backend.dto.request.LoginRequest;
+import com.example.backend.dto.response.EmailVerifyResponse;
 import com.example.backend.dto.response.LoginResponse;
 import com.example.backend.exception.EmailNotFoundException;
 import com.example.backend.exception.InvalidException;
@@ -183,10 +184,19 @@ public class AuthenticationController {
 
     @PostMapping("/verify-email")
     @APIMessage("Customer is found")
-    public ResponseEntity<Customer> findCustomerByEmail(@RequestBody Map<String, String> requestBody) throws EmailNotFoundException {
+    public ResponseEntity<EmailVerifyResponse> findCustomerByEmail(@RequestBody Map<String, String> requestBody) throws EmailNotFoundException {
         String email = requestBody.get("email");
         return customerService.findByEmail(email)
-                .map(ResponseEntity::ok)
+                .map(customer -> {
+                    EmailVerifyResponse emailVerifyResponse = new EmailVerifyResponse(
+                            customer.getId(),
+                            customer.getUsername(),
+                            customer.getName(),
+                            customer.getEmail(),
+                            customer.getPhone()
+                    );
+                    return ResponseEntity.ok(emailVerifyResponse);
+                })
                 .orElseThrow(() -> new EmailNotFoundException("NOT_FOUND_EMAIL"));
     }
 

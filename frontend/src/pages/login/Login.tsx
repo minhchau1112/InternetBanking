@@ -15,6 +15,8 @@ import { Input } from "@/components/ui/input"
 import axios from "axios";
 import {toast, ToastContainer} from "react-toastify";
 import {login} from "@/api/authAPI.ts";
+import {useDispatch} from "react-redux";
+import {setUser} from "@/redux/slices/authSlice.ts";
 
 const formSchema = z.object({
     username: z.string().min(1, "Tên đăng nhập là bắt buộc"),
@@ -26,6 +28,7 @@ const formSchema = z.object({
 
 export function LoginForm() {
     const navigate = useNavigate();
+    const dispatch = useDispatch();
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -39,15 +42,18 @@ export function LoginForm() {
         try {
             const data = await login(values.username, values.password);
 
+            console.log(data);
+
             localStorage.setItem("access_token", data.accessToken);
             localStorage.setItem("accountId", data.user.accountID);
+
+            dispatch(setUser(data.user));
 
             toast.success("Đăng nhập thành công.");
 
             setTimeout(() => {
                 navigate("/");
             }, 3000);
-
         } catch (error) {
             if (axios.isAxiosError(error)) {
                 toast.error("Đăng nhập thất bại, vui lòng kiểm tra lại thông tin.");

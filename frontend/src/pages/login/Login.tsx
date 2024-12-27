@@ -64,7 +64,7 @@ export function LoginForm() {
     };
     return (
         <Form {...form}>
-            <div className="flex items-center justify-center w-screen bg-white h-screen">
+            <div className="flex items-center justify-center w-screen bg-gray-100 h-screen">
                 <form onSubmit={form.handleSubmit(onSubmit)}
                       className="space-y-8 w-[480px] bg-white p-8 rounded-lg shadow-lg">
                     <div className="text-center space-y-2">

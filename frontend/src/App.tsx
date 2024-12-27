@@ -3,12 +3,13 @@ import CustomerDashboard from "./pages/customer/CustomerDashboard";
 import Sidebar from "./components/Sidebar";
 import AccountCreation from "./pages/employee/AccountCreation";
 import DepositPage from "./pages/employee/Deposit";
+import Recipient from "./pages/customer/Recipient.tsx";
 
 function App() {
   const userType = "employee";
 
   return (
-    <div className="flex">
+    <div className="flex w-screen">
       <Sidebar userType={userType} />
       <div className="flex-grow">
         <Routes>
@@ -16,6 +17,7 @@ function App() {
           <Route path="/customer" element={<CustomerDashboard />} />
           <Route path="/customers" element={<AccountCreation/>} />
           <Route path="/deposit" element={<DepositPage />} />
+            <Route path="/recipient" element={<Recipient />} />
         </Routes>
       </div>
     </div>

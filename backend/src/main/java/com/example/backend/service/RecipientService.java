@@ -1,7 +1,7 @@
 package com.example.backend.service;
 
-import com.example.backend.dto.RecipientCreateRequest;
-import com.example.backend.dto.RecipientUpdateRequest;
+import com.example.backend.dto.request.RecipientCreateRequest;
+import com.example.backend.dto.request.RecipientUpdateRequest;
 import com.example.backend.model.Customer;
 import com.example.backend.model.Recipient;
 import com.example.backend.repository.CustomerRepository;

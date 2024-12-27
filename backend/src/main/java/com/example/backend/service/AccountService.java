@@ -97,6 +97,13 @@ public class AccountService {
         return accountRepository.findByAccountNumber((accountNumber)).get();
     }
 
+    public Account getAccountDetailsByUsername(String username) {
+        // get customer class by username
+        Customer customer = customerRepository.findByUsername(username);
+        // get account class associated with the customer
+        return accountRepository.findByCustomerId(customer.getId()).get();
+    }
+
     public Transaction deposit(DepositRequest depositRequest){
         Optional<Account> account = null;
         if (depositRequest.getAccountNumber() != null) {

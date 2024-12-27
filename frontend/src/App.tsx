@@ -12,14 +12,14 @@ import ForgotPassword from "@/pages/login/ForgotPassword.tsx";
 function App() {
     const navigate = useNavigate();
     const token = localStorage.getItem("access_token");
+    const location = useLocation();
     useEffect(() => {
-        if (!token) {
+        if (!token && location.pathname !== "/login" && location.pathname !== "/forgot-password") {
             navigate("/login");
         }
-    }, [navigate, token]);
+    }, [navigate, token, location.pathname]);
 
     const user = useSelector((state: RootState) => state.auth.user);
-    const location = useLocation();
 
     const userType: "ROLE_CUSTOMER" | "ROLE_EMPLOYEE" | "ROLE_ADMIN" | null =
         user?.role === "ROLE_CUSTOMER" || user?.role === "ROLE_EMPLOYEE" || user?.role === "ROLE_ADMIN"

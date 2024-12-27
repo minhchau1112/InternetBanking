@@ -16,7 +16,6 @@ public class AccountDetailsResponse {
     private String balance;
     private String createdAt;
     private String ownerName;
-    // initialize the fields using the constructor passing Account class
     public AccountDetailsResponse(Account account) {
         this.accountNumber = account.getAccountNumber();
         this.accountType = account.getType().name();

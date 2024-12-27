@@ -94,6 +94,7 @@ public class AuthenticationController {
                 .from("refresh_token",refresh_token)
                 .httpOnly(true)
                 .path("/")
+                .secure(false)
                 .sameSite("None")
                 .maxAge(loginService.getRefreshExpiresIn())
                 .build();
@@ -141,6 +142,7 @@ public class AuthenticationController {
                 .from("refresh_token",refresh_token)
                 .httpOnly(true)
                 .path("/")
+                .secure(false)
                 .sameSite("None")
                 .maxAge(loginService.getRefreshExpiresIn())
                 .build();

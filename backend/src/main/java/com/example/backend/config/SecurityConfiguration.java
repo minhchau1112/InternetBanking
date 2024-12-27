@@ -31,11 +31,13 @@ public class SecurityConfiguration {
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(
                         authz -> authz
-                                .requestMatchers("/","/api/auth/login","/api/auth/refresh").permitAll()
-                                .requestMatchers("/admin/**").hasRole("ADMIN")
-                                .requestMatchers("/customer/**").hasRole("CUSTOMER")
-                                .requestMatchers("/employee/**").hasRole("EMPLOYEE")
-                                .anyRequest().authenticated()
+//                                .requestMatchers("/","/api/auth/login","/api/auth/refresh").permitAll()
+//                                .requestMatchers("/admin/**").hasRole("ADMIN")
+//                                .requestMatchers("/customer/**").hasRole("CUSTOMER")
+//                                .requestMatchers("/employee/**").hasRole("EMPLOYEE")
+//                                .anyRequest().authenticated()
+                        // Allow all requests
+                        .anyRequest().permitAll()
                 )
                 .oauth2ResourceServer((oauth2)->oauth2.jwt(Customizer.withDefaults())
                         .authenticationEntryPoint(authenticationEntryPointConfiguration)

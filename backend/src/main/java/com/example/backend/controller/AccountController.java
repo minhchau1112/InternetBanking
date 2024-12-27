@@ -109,7 +109,7 @@ public class AccountController {
 
     /**
      * Get detailed account information by account ID.
-     * @param accountNumber ID of the account.
+     * @param username ID of the account.
      * @return Account details including balance.
      */
     @GetMapping("/username/{username}")

@@ -2,15 +2,14 @@ package com.example.backend.controller;
 
 import com.example.backend.dto.request.LoginRequest;
 import com.example.backend.dto.response.LoginResponse;
+import com.example.backend.exception.EmailNotFoundException;
 import com.example.backend.exception.InvalidException;
 import com.example.backend.model.*;
-import com.example.backend.service.AccountService;
-import com.example.backend.service.LoginService;
-import com.example.backend.service.RefreshTokenService;
-import com.example.backend.service.UserService;
+import com.example.backend.service.*;
 import com.example.backend.utils.annotation.APIMessage;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Email;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
@@ -20,8 +19,11 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -38,12 +40,15 @@ public class AuthenticationController {
 
     private final LoginService loginService;
 
-    public AuthenticationController(RefreshTokenService refreshTokenService, AuthenticationManagerBuilder authenticationManagerBuilder, LoginService securityService, AccountService accountService, UserService userService, LoginService loginService) {
+    private final CustomerService customerService;
+
+    public AuthenticationController(RefreshTokenService refreshTokenService, AuthenticationManagerBuilder authenticationManagerBuilder, LoginService securityService, AccountService accountService, UserService userService, LoginService loginService, CustomerService customerService) {
         this.authenticationManagerBuilder = authenticationManagerBuilder;
         this.loginService = securityService;
         this.accountService = accountService;
         this.userService = userService;
         this.refreshTokenService = refreshTokenService;
+        this.customerService = customerService;
     }
 
     @GetMapping("/refresh")
@@ -175,6 +180,17 @@ public class AuthenticationController {
                 .body(null);
 
     }
+
+    @PostMapping("/verify-email")
+    @APIMessage("Customer is found")
+    public ResponseEntity<Customer> findCustomerByEmail(@RequestBody Map<String, String> requestBody) throws EmailNotFoundException {
+        String email = requestBody.get("email");
+        return customerService.findByEmail(email)
+                .map(ResponseEntity::ok)
+                .orElseThrow(() -> new EmailNotFoundException("NOT_FOUND_EMAIL"));
+    }
+
+
 
     public String getRole(User user) {
         if (user instanceof Admin) {

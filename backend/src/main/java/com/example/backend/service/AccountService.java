@@ -1,19 +1,24 @@
 package com.example.backend.service;
 
+import com.example.backend.dto.request.DepositRequest;
 import com.example.backend.enums.AccountType;
+import com.example.backend.enums.FeePayer;
+import com.example.backend.enums.TransactionType;
 import com.example.backend.helper.PasswordGenerator;
 import com.example.backend.model.Account;
 import com.example.backend.model.Customer;
-import com.example.backend.model.User;
+import com.example.backend.model.Transaction;
 import com.example.backend.repository.AccountRepository;
 import com.example.backend.repository.CustomerRepository;
+import com.example.backend.repository.TransactionRepository;
 import com.example.backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.repository.core.support.TransactionalRepositoryFactoryBeanSupport;
 import org.springframework.stereotype.Service;
-
 import java.math.BigDecimal;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 public class AccountService {
@@ -26,6 +31,9 @@ public class AccountService {
 
     @Autowired
     private CustomerRepository customerRepository;
+
+    @Autowired
+    private TransactionRepository transactionRepository;
 
     private final SecureRandom random = new SecureRandom();
 
@@ -75,9 +83,83 @@ public class AccountService {
     private String generateAccountNumber() {
         StringBuilder accountNumber = new StringBuilder();
         for (int i = 0; i < 12; i++) {
-            accountNumber.append(random.nextInt(10)); // Appends a digit (0-9)
+            accountNumber.append(random.nextInt(10));
         }
         return accountNumber.toString();
+
+    }
+
+    public Account getAccountDetails(String accountNumber) {
+        // also return error if account does not exist
+        if (!accountRepository.existsByAccountNumber(accountNumber)) {
+            throw new IllegalArgumentException("Account does not exist");
+        }
+        return accountRepository.findByAccountNumber((accountNumber)).get();
+    }
+
+    public Account getAccountDetailsByUsername(String username) {
+        // get customer class by username
+        Customer customer = customerRepository.findByUsername(username);
+        // get account class associated with the customer
+        return accountRepository.findByCustomerId(customer.getId()).get();
+    }
+
+    public Transaction deposit(DepositRequest depositRequest){
+        Optional<Account> account = null;
+        if (depositRequest.getAccountNumber() != null) {
+            if (!accountRepository.existsByAccountNumber(depositRequest.getAccountNumber())) {
+                throw new IllegalArgumentException("Account does not exist");
+            }
+            account = accountRepository.findByAccountNumber(depositRequest.getAccountNumber());
+        }
+        else if (depositRequest.getUsername() != null) {
+            if (!userRepository.existsByUsername(depositRequest.getUsername())) {
+                throw new IllegalArgumentException("User does not exist");
+            }
+            Customer customer = customerRepository.findByUsername(depositRequest.getUsername());
+            account = accountRepository.findByCustomerId(customer.getId());
+        }
+        else {
+            throw new IllegalArgumentException("Account number or username is required");
+        }
+
+        Account newAccount = null;
+        if (account.isEmpty()) {
+            throw new IllegalArgumentException("Account does not exist");
+        }
+        else{
+            // cast account to Account class
+            newAccount = account.get();
+        }
+
+        // create transaction
+        Transaction transaction = new Transaction();
+        transaction.setSourceAccount(newAccount);
+        transaction.setDestinationAccount(newAccount);
+        transaction.setBankCode(null);
+        transaction.setAmount(BigDecimal.valueOf(depositRequest.getDepositAmount()));
+        transaction.setFee(BigDecimal.valueOf(0.0));
+        transaction.setFeePayer(FeePayer.SENDER);
+        transaction.setMessage("Deposit");
+        transaction.setStatus("COMPLETED");
+        transaction.setOtpVerified(true);
+        transaction.setType(TransactionType.DEPOSIT);
+        transaction.setCreatedAt(LocalDateTime.now());
+        transaction.setCompletedAt(LocalDateTime.now());
+        // save transaction
+        transactionRepository.save(transaction);
+
+        // update account balance
+//        System.out.println("account balance before: " + account.getBalance());
+        newAccount.setBalance(newAccount.getBalance().add(transaction.getAmount()));
+        accountRepository.save(newAccount);
+//        System.out.println("account balance after: " + account.getBalance());
+
+        return transaction;
+
+    }
+    public Optional<Account> findByCustomerId(Integer customerId) {
+        return accountRepository.findByCustomerId(customerId);
     }
 
 }

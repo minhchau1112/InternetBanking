@@ -1,6 +1,10 @@
 package com.example.backend.controller;
 
+import com.example.backend.dto.request.DepositRequest;
+import com.example.backend.dto.response.AccountDetailsResponse;
+import com.example.backend.model.ApiResponse;
 import com.example.backend.model.Customer;
+import com.example.backend.model.Transaction;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -12,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/accounts")
@@ -25,11 +30,24 @@ public class AccountController {
      * @param customerId ID of the customer.
      * @return List of accounts belonging to the customer.
      */
-//    @GetMapping("/{customer_id}")
-//    public ResponseEntity<List<Account>> getAccountsByCustomerId(@PathVariable("customer_id") String customerId) {
-//        List<Account> accounts = accountService.getAccountsByCustomerId(customerId);
-//        return ResponseEntity.ok(accounts);
-//    }
+    @GetMapping("/list/{customer_id}")
+    public ResponseEntity<ApiResponse<List<AccountDetailsResponse>>> getAccountsByCustomerId(@PathVariable(
+            "customer_id") String customerId) {
+        Optional<Account> accounts = accountService.findByCustomerId(Integer.valueOf(customerId));
+        // map list of accounts to AccountDetailsReponse
+        List<AccountDetailsResponse> accountDetailsResponses = accounts.stream()
+                .map(AccountDetailsResponse::new) // Create a new AccountDetailsResponse for each Account
+                .toList();
+        ApiResponse<List<AccountDetailsResponse>> response = new ApiResponse<>(
+                200,                           // Status code
+                null,                          // No error
+                "Accounts fetched successfully", // Success message
+                accountDetailsResponses        // Data
+        );
+
+        return ResponseEntity.ok(response);
+
+    }
 
     /**
      * Create a new account for a customer.
@@ -37,7 +55,7 @@ public class AccountController {
      * @return Created account.
      */
     @PostMapping
-    public ResponseEntity<Customer> createAccount(@RequestBody Map<String, String> requestBody) {
+    public ResponseEntity<ApiResponse<Customer>> createAccount(@RequestBody Map<String, String> requestBody) {
         String role = requestBody.get("role");
         String name = requestBody.get("name");
         String email = requestBody.get("email");
@@ -49,7 +67,13 @@ public class AccountController {
         }
 
         Customer createdAccount = accountService.createAccount(username, name, email, phone);
-        return ResponseEntity.ok(createdAccount);
+        ApiResponse<Customer> response = new ApiResponse<>(
+                201,                           // Status code
+                null,                          // No error
+                "Account created successfully", // Success message
+                createdAccount        // Data
+        );
+        return ResponseEntity.ok(response);
     }
 
     /**
@@ -73,13 +97,60 @@ public class AccountController {
 
     /**
      * Get detailed account information by account ID.
-     * @param accountId ID of the account.
+     * @param accountNumber ID of the account.
      * @return Account details including balance.
      */
-//    @GetMapping("/{account_id}")
-//    public ResponseEntity<Account> getAccountDetails(@PathVariable("account_id") String accountId) {
-//        Account accountDetails = accountService.getAccountDetails(accountId);
-//        return accountDetails != null ? ResponseEntity.ok(accountDetails) : ResponseEntity.notFound().build();
-//    }
+    @GetMapping("/{account_number}")
+    public AccountDetailsResponse getAccountDetails(@PathVariable(
+            "account_number") String accountNumber) {
+        Account accountDetails = accountService.getAccountDetails(accountNumber);
+        return new AccountDetailsResponse(accountDetails);  // Convert Account to AccountDetailsResponse
+    }
+
+    /**
+     * Get detailed account information by account ID.
+     * @param accountNumber ID of the account.
+     * @return Account details including balance.
+     */
+    @GetMapping("/username/{username}")
+    public AccountDetailsResponse getAccountDetailsByUsername(@PathVariable(
+            "username") String username) {
+        Account accountDetails = accountService.getAccountDetailsByUsername(username);
+        return new AccountDetailsResponse(accountDetails);  // Convert Account to AccountDetailsResponse
+    }
+
+    /**
+     * Deposit money into account.
+     * @param depositRequest Request body containing deposit details include username,
+     *                        depositAmount and accountNumber.
+     * @return Success or error response.
+     */
+    @PostMapping("/deposit")
+    public ResponseEntity<ApiResponse<Transaction>> deposit(@RequestBody DepositRequest depositRequest) {
+        String username = depositRequest.getUsername();
+        String depositAmount = String.valueOf(depositRequest.getDepositAmount());
+        String accountNumber = depositRequest.getAccountNumber();
+        System.out.println("username: " + username);
+        System.out.println("depositAmount: " + depositAmount);
+        System.out.println("accountNumber: " + accountNumber);
+        if (!depositRequest.isValid()) {
+            return ResponseEntity.badRequest().body(new ApiResponse<>(
+                    400,                           // Status code
+                    "Invalid request",             // Error message
+                    "Invalid deposit request",     // Success message
+                    null                           // No data
+            ));
+        }
+
+        Transaction transaction = accountService.deposit(depositRequest);
+        // temp return
+        return ResponseEntity.ok(new ApiResponse<>(
+                201,                           // Status code
+                null,                          // No error
+                "Deposit successful",          // Success message
+                transaction                    // Data
+        ));
+    }
 }
+
 

@@ -24,7 +24,8 @@ public class SecurityConfiguration {
             "/api/auth/login",
             "/api/auth/refresh",
             "/api/auth/verify-email",
-            "api/email/**"
+            "api/email/**",
+            "/api/auth/forgot-password"
     };
 
     @Bean

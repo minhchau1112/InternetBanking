@@ -3,6 +3,7 @@ package com.example.backend.controller;
 import com.example.backend.dto.request.LoginRequest;
 import com.example.backend.dto.response.EmailVerifyResponse;
 import com.example.backend.dto.response.LoginResponse;
+import com.example.backend.dto.response.RestResponse;
 import com.example.backend.exception.EmailNotFoundException;
 import com.example.backend.exception.InvalidException;
 import com.example.backend.model.*;
@@ -20,11 +21,12 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 @Slf4j
 @RestController
@@ -43,13 +45,21 @@ public class AuthenticationController {
 
     private final CustomerService customerService;
 
-    public AuthenticationController(RefreshTokenService refreshTokenService, AuthenticationManagerBuilder authenticationManagerBuilder, LoginService securityService, AccountService accountService, UserService userService, LoginService loginService, CustomerService customerService) {
+    private final EmailService emailService;
+
+    private final Random random = new Random();
+
+    private final OTPService otpService;
+
+    public AuthenticationController(RefreshTokenService refreshTokenService, AuthenticationManagerBuilder authenticationManagerBuilder, LoginService securityService, AccountService accountService, UserService userService, LoginService loginService, CustomerService customerService, EmailService emailService, OTPService otpService) {
         this.authenticationManagerBuilder = authenticationManagerBuilder;
         this.loginService = securityService;
         this.accountService = accountService;
         this.userService = userService;
         this.refreshTokenService = refreshTokenService;
         this.customerService = customerService;
+        this.emailService = emailService;
+        this.otpService = otpService;
     }
 
     @GetMapping("/refresh")
@@ -200,7 +210,24 @@ public class AuthenticationController {
                 .orElseThrow(() -> new EmailNotFoundException("NOT_FOUND_EMAIL"));
     }
 
+    @PostMapping("/forgot-password")
+    @APIMessage("Handle forgot password")
+    public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> request) {
+        String email = request.get("email");
+        if (email == null || email.isBlank()) {
+            return ResponseEntity.badRequest().body("Invalid email");
+        }
 
+        String otp = String.format("%06d", random.nextInt(999999));
+
+        otpService.saveOtp(email, otp, 1);
+
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("OTP_CODE", otp);
+        emailService.sendEmailFromTemplateSync(email, "Reset Your Password", "verify-email", variables);
+
+        return ResponseEntity.ok().body("Sent OTP successfully");
+    }
 
     public String getRole(User user) {
         if (user instanceof Admin) {

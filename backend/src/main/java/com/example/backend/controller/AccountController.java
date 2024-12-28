@@ -31,21 +31,14 @@ public class AccountController {
      * @return List of accounts belonging to the customer.
      */
     @GetMapping("/list/{customer_id}")
-    public ResponseEntity<ApiResponse<List<AccountDetailsResponse>>> getAccountsByCustomerId(@PathVariable(
+    public ResponseEntity<List<AccountDetailsResponse>> getAccountsByCustomerId(@PathVariable(
             "customer_id") String customerId) {
         Optional<Account> accounts = accountService.findByCustomerId(Integer.valueOf(customerId));
         // map list of accounts to AccountDetailsReponse
         List<AccountDetailsResponse> accountDetailsResponses = accounts.stream()
                 .map(AccountDetailsResponse::new) // Create a new AccountDetailsResponse for each Account
                 .toList();
-        ApiResponse<List<AccountDetailsResponse>> response = new ApiResponse<>(
-                200,                           // Status code
-                null,                          // No error
-                "Accounts fetched successfully", // Success message
-                accountDetailsResponses        // Data
-        );
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(accountDetailsResponses);
 
     }
 
@@ -55,7 +48,7 @@ public class AccountController {
      * @return Created account.
      */
     @PostMapping
-    public ResponseEntity<ApiResponse<Customer>> createAccount(@RequestBody Map<String, String> requestBody) {
+    public ResponseEntity<Customer> createAccount(@RequestBody Map<String, String> requestBody) {
         String role = requestBody.get("role");
         String name = requestBody.get("name");
         String email = requestBody.get("email");
@@ -63,17 +56,10 @@ public class AccountController {
         String username = requestBody.get("username");
         System.out.println("role: " + role);
         if (!"customer".equals(role)) {
-            return ResponseEntity.badRequest().body(null); // Only customers are allowed.
+            throw new IllegalArgumentException("Invalid role");
         }
 
-        Customer createdAccount = accountService.createAccount(username, name, email, phone);
-        ApiResponse<Customer> response = new ApiResponse<>(
-                201,                           // Status code
-                null,                          // No error
-                "Account created successfully", // Success message
-                createdAccount        // Data
-        );
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(accountService.createAccount(username, name, email, phone));
     }
 
     /**
@@ -101,22 +87,24 @@ public class AccountController {
      * @return Account details including balance.
      */
     @GetMapping("/{account_number}")
-    public AccountDetailsResponse getAccountDetails(@PathVariable(
+    public ResponseEntity<AccountDetailsResponse> getAccountDetails(@PathVariable(
             "account_number") String accountNumber) {
         Account accountDetails = accountService.getAccountDetails(accountNumber);
-        return new AccountDetailsResponse(accountDetails);  // Convert Account to AccountDetailsResponse
+        return ResponseEntity.ok(new AccountDetailsResponse(accountDetails));  // Convert Account
+        // to AccountDetailsResponse
     }
 
     /**
      * Get detailed account information by account ID.
-     * @param username ID of the account.
+     * @param username username of the customer.
      * @return Account details including balance.
      */
     @GetMapping("/username/{username}")
-    public AccountDetailsResponse getAccountDetailsByUsername(@PathVariable(
+    public ResponseEntity<AccountDetailsResponse> getAccountDetailsByUsername(@PathVariable(
             "username") String username) {
         Account accountDetails = accountService.getAccountDetailsByUsername(username);
-        return new AccountDetailsResponse(accountDetails);  // Convert Account to AccountDetailsResponse
+        return ResponseEntity.ok(new AccountDetailsResponse(accountDetails));  // Convert Account
+        // into AccountDetailsResponse
     }
 
     /**
@@ -126,7 +114,7 @@ public class AccountController {
      * @return Success or error response.
      */
     @PostMapping("/deposit")
-    public ResponseEntity<ApiResponse<Transaction>> deposit(@RequestBody DepositRequest depositRequest) {
+    public ResponseEntity<Transaction> deposit(@RequestBody DepositRequest depositRequest) {
         String username = depositRequest.getUsername();
         String depositAmount = String.valueOf(depositRequest.getDepositAmount());
         String accountNumber = depositRequest.getAccountNumber();
@@ -134,22 +122,12 @@ public class AccountController {
         System.out.println("depositAmount: " + depositAmount);
         System.out.println("accountNumber: " + accountNumber);
         if (!depositRequest.isValid()) {
-            return ResponseEntity.badRequest().body(new ApiResponse<>(
-                    400,                           // Status code
-                    "Invalid request",             // Error message
-                    "Invalid deposit request",     // Success message
-                    null                           // No data
-            ));
+            return ResponseEntity.badRequest().body(null);
         }
 
         Transaction transaction = accountService.deposit(depositRequest);
         // temp return
-        return ResponseEntity.ok(new ApiResponse<>(
-                201,                           // Status code
-                null,                          // No error
-                "Deposit successful",          // Success message
-                transaction                    // Data
-        ));
+        return ResponseEntity.ok(transaction);
     }
 }
 

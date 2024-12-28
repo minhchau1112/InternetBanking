@@ -8,6 +8,9 @@ import { RootState } from "./redux/store/index.ts";
 import DepositPage from "./pages/employee/Deposit";
 import Recipient from "./pages/customer/Recipient.tsx";
 import ForgotPassword from "@/pages/login/ForgotPassword.tsx";
+import AccountCreation from "./pages/employee/AccountCreation.tsx";
+import TransactionHistory from "./pages/employee/TransactionHistory.tsx";
+
 
 function App() {
     const navigate = useNavigate();
@@ -30,16 +33,17 @@ function App() {
 
     return (
         <div className="flex w-screen">
-            {!noSidebarPages.includes(location.pathname) && <Sidebar userType={userType} />}
-
-            <div className={`flex-grow ${noSidebarPages.includes(location.pathname) ? "":""}`}>
+            {!noSidebarPages.includes(location.pathname) && <Sidebar userType={userType}/>}
+            <div className={`flex-grow`}>
                 <Routes>
-                    <Route path="/" element={<h1>Welcome to Internet Banking</h1>} />
-                    <Route path="/customer" element={<CustomerDashboard />} />
-                    <Route path="/login" element={<LoginForm />} />
-                    <Route path="/forgot-password" element={<ForgotPassword />} />
-                    <Route path="/deposit" element={<DepositPage />} />
-                    <Route path="/recipient" element={<Recipient />} />
+                    <Route path="/" element={<h1>Welcome to Internet Banking</h1>}/>
+                    <Route path="/customer" element={<CustomerDashboard/>}/>
+                    <Route path="/login" element={<LoginForm/>}/>
+                    <Route path="/deposit" element={<DepositPage/>}/>
+                    <Route path="/recipient" element={<Recipient/>}/>
+                    <Route path="/customers" element={< AccountCreation/>}/>
+                    <Route path="/history" element={< TransactionHistory/>}/>
+                    <Route path="/forgot-password" element={<ForgotPassword/>}/>
                 </Routes>
             </div>
         </div>

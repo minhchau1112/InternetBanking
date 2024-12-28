@@ -6,6 +6,9 @@ import { Button } from "@/components/ui/button";
 import { FiEdit, FiArrowLeft } from "react-icons/fi";
 import { toast, ToastContainer } from "react-toastify";
 import { sendForgotPasswordEmail, verifyOTP } from "@/api/emailAPI.ts";
+import {useNavigate} from "react-router-dom";
+import {useDispatch} from "react-redux";
+import { verifyOTP as verifyOTPAction } from "@/redux/slices/otpSlice";
 
 const ForgotPassword: React.FC = () => {
     const [email, setEmail] = useState("");
@@ -15,6 +18,8 @@ const ForgotPassword: React.FC = () => {
     const [timer, setTimer] = useState(60);
     const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
+    const navigate = useNavigate();
+    const dispatch = useDispatch();
 
     useEffect(() => {
         if (isEmailSubmitted) {
@@ -71,11 +76,13 @@ const ForgotPassword: React.FC = () => {
             const response = await verifyOTP(email, enteredOtp);
             if (response.status === 200) {
                 setIsValidOTP(true);
+                dispatch(verifyOTPAction());
                 if (intervalRef.current) {
                     clearInterval(intervalRef.current);
                     intervalRef.current = null;
                 }
                 toast.success("OTP xác nhận thành công!");
+                setTimeout(() => navigate("/reset-password"), 2000);
             } else {
                 setIsValidOTP(false);
                 toast.error("OTP không hợp lệ.");

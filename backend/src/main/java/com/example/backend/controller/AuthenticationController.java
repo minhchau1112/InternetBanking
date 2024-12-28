@@ -213,12 +213,18 @@ public class AuthenticationController {
     @PostMapping("/forgot-password")
     @APIMessage("Handle forgot password")
     public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> request) {
+        RestResponse<?> res = new RestResponse<>();
+
         String email = request.get("email");
         if (email == null || email.isBlank()) {
-            return ResponseEntity.badRequest().body("Invalid email");
+            res.setStatus(400);
+            res.setMessage("Invalid email");
+            res.setError("INVALID_EMAIL");
+            res.setData(null);
+            return ResponseEntity.badRequest().body(res);
         }
 
-        String otp = String.format("%06d", random.nextInt(999999));
+        String otp = String.format("%06d", new Random().nextInt(999999));
 
         otpService.saveOtp(email, otp, 1);
 
@@ -226,8 +232,15 @@ public class AuthenticationController {
         variables.put("OTP_CODE", otp);
         emailService.sendEmailFromTemplateSync(email, "Reset Your Password", "verify-email", variables);
 
-        return ResponseEntity.ok().body("Sent OTP successfully");
+        res.setStatus(200);
+        res.setMessage("Sent OTP code successfully");
+        res.setError(null);
+        res.setData(null);
+
+        return ResponseEntity.ok().body(res);
     }
+
+
 
     public String getRole(User user) {
         if (user instanceof Admin) {

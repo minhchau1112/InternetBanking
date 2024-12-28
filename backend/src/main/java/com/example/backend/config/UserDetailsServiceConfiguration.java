@@ -1,10 +1,12 @@
 package com.example.backend.config;
 
+import com.example.backend.exception.InvalidException;
 import com.example.backend.model.Admin;
 import com.example.backend.model.Customer;
 import com.example.backend.model.Employee;
 import com.example.backend.model.User;
 import com.example.backend.service.UserService;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -25,7 +27,8 @@ public class UserDetailsServiceConfiguration implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) {
         User user = userService.handleGetUserByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with username"));
+                .orElseThrow(() -> new BadCredentialsException("User not found!"));;
+
         return new org.springframework.security.core.userdetails.User(
                 user.getUsername(),
                 user.getPassword(),

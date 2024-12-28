@@ -1,7 +1,7 @@
 package com.example.backend.controller;
 
-import com.example.backend.dto.response.AccountDetailsResponse;
 import com.example.backend.dto.request.DepositRequest;
+import com.example.backend.dto.response.AccountDetailsResponse;
 import com.example.backend.model.ApiResponse;
 import com.example.backend.model.Customer;
 import com.example.backend.model.Transaction;

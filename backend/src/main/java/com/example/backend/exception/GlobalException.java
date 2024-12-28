@@ -20,7 +20,6 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 public class GlobalException {
     @ExceptionHandler(value = {
-            UsernameNotFoundException.class,
             BadCredentialsException.class,
             InvalidException.class
     })
@@ -28,9 +27,10 @@ public class GlobalException {
         RestResponse<Object> res = new RestResponse<Object>();
         res.setStatus(HttpStatus.BAD_REQUEST.value());
         res.setError(ex.getMessage());
-        res.setMessage("Exception occurs...");
+        res.setMessage("Exception occurs");
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(res);
     }
+
 
     @ExceptionHandler(value = {
             NoResourceFoundException.class,

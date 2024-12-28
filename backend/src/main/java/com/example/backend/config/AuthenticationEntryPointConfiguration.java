@@ -38,7 +38,7 @@ public class AuthenticationEntryPointConfiguration implements org.springframewor
                 .map(Throwable::getMessage)
                 .orElse(authException.getMessage());
             res.setError(errorMessage);
-            res.setMessage("Token không hợp lệ !");
+            res.setMessage("Xác thực không hợp lệ !");
 
             mapper.writeValue(response.getWriter(), res);
     }

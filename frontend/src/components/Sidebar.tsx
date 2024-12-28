@@ -12,7 +12,7 @@ import {
 import logo from "../logoBank.png";
 
 interface SidebarProps {
-  userType: "customer" | "employee" | "admin";
+  userType: "ROLE_CUSTOMER" | "ROLE_EMPLOYEE" | "ROLE_ADMIN" | null  | undefined;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ userType }) => {
@@ -41,7 +41,7 @@ const Sidebar: React.FC<SidebarProps> = ({ userType }) => {
             <DashboardOutlined /> Dashboard
           </NavLink>
 
-          {userType === "customer" && (
+          {userType === "ROLE_CUSTOMER" && (
             <>
               <NavLink to="/payments" className={getNavLinkClass}>
                 <PaymentOutlined /> Payments
@@ -61,7 +61,7 @@ const Sidebar: React.FC<SidebarProps> = ({ userType }) => {
             </>
           )}
 
-          {userType === "employee" && (
+          {userType === "ROLE_EMPLOYEE" && (
             <>
               <NavLink to="/customers" className={getNavLinkClass}>
                 <PaymentOutlined /> Accounts
@@ -75,7 +75,7 @@ const Sidebar: React.FC<SidebarProps> = ({ userType }) => {
             </>
           )}
 
-          {userType === "admin" && (
+          {userType === "ROLE_ADMIN" && (
             <>
               <NavLink to="/employees" className={getNavLinkClass}>
                 <PaymentOutlined /> Employees

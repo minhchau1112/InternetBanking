@@ -14,8 +14,8 @@ import com.example.backend.repository.TransactionRepository;
 import com.example.backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.data.repository.core.support.TransactionalRepositoryFactoryBeanSupport;
 import org.springframework.stereotype.Service;
-
 import java.math.BigDecimal;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
@@ -125,9 +125,7 @@ public class AccountService {
             if (!customerRepository.existsByUsername(depositRequest.getUsername())) {
                 throw new IllegalArgumentException("User does not exist");
             }
-            // get the first customer class of the user
             Customer customer = customerRepository.findByUsername(depositRequest.getUsername());
-            // get account class associated with the customer
             account = accountRepository.findByCustomerId(customer.getId());
         }
         else {
@@ -135,7 +133,6 @@ public class AccountService {
         }
 
         Account newAccount = null;
-        // check if account is present
         if (account.isEmpty()) {
             throw new IllegalArgumentException("Account does not exist");
         }

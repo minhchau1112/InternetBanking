@@ -8,4 +8,10 @@ public interface CustomerRepository extends JpaRepository<Customer, Integer> {
     boolean existsById(Integer id);
 
     Customer findByUsername(String username);
+
+    boolean existsByUsername(String username);
+
+    boolean existsByEmail(String email);
+
+    boolean existsByPhone(String phone);
 }

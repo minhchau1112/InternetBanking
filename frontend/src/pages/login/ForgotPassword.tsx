@@ -4,9 +4,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { FiEdit } from "react-icons/fi";
-import {verifyEmail} from "@/api/emailAPI.ts";
 import {toast, ToastContainer} from "react-toastify";
 import {FiArrowLeft} from  "react-icons/fi"
+import {sendForgotPasswordEmail, verifyOTP} from "@/api/emailAPI.ts";
 
 const ForgotPassword: React.FC = () => {
     const [email, setEmail] = useState("");
@@ -17,27 +17,11 @@ const ForgotPassword: React.FC = () => {
     const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
 
     const handleEmailSubmit = async () => {
-        try {
-            const data = await verifyEmail(email);
-            if (data && data.data != null) {
-                setIsEmailSubmitted(true);
-            } else {
-                toast.error("Email không hợp lệ hoặc không tồn tại.");
-            }
-        } catch (error) {
-            console.error("Error during email verification:", error);
-        }
-    };
-
-
-
-    const handleOTPSubmit = (enteredOtp: string) => {
-        console.log("OTP được gửi tới API:", enteredOtp);
-        if (enteredOtp === "123456") {
-            setIsValidOTP(true);
-            alert("OTP xác nhận thành công! Một liên kết để đặt lại mật khẩu đã được gửi.");
+        const result = await sendForgotPasswordEmail(email);
+        if (result.success) {
+            setIsEmailSubmitted(true);
         } else {
-            setIsValidOTP(false);
+            toast.error(result.message);
         }
     };
 
@@ -46,6 +30,26 @@ const ForgotPassword: React.FC = () => {
         setOTP(Array(6).fill(""));
         setIsValidOTP(null);
     };
+
+
+    const handleOTPSubmit = async (enteredOtp: string) => {
+        try {
+            const response = await verifyOTP(email, enteredOtp);
+            console.log(response);
+            if (response.status === 200) {
+                setIsValidOTP(true);
+                toast.success("OTP xác nhận thành công!");
+            } else {
+                setIsValidOTP(false);
+                toast.error(response.message || "OTP không hợp lệ.");
+            }
+        } catch (error) {
+            console.error("Error verifying OTP:", error);
+            toast.error("Lỗi kết nối với server.");
+        }
+    };
+
+
 
     const handleOTPChange = (value: string, index: number) => {
         if (isNaN(Number(value))) return;

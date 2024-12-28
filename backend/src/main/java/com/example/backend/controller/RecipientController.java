@@ -37,16 +37,26 @@ public class RecipientController {
         return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
     }
     @GetMapping("/v2/recipients/{customerId}")
-    public ResponseEntity<com.example.backend.dto.response.ApiResponse<List<GetRecipientsResponse>>> getRecipientsByCustomerId(@PathVariable int customerId) {
+    public ResponseEntity<ApiResponse<List<GetRecipientsResponse>>> getRecipientsByCustomerId(@PathVariable int customerId) {
         if(!recipientService.customerExistsById(customerId)) {
-            com.example.backend.dto.response.ApiResponse<List<GetRecipientsResponse>> apiResponse =
-                    new com.example.backend.dto.response.ApiResponse<>(false, StatusCode.NOT_FOUND.getCode(), null, "Customer does not exist", LocalDateTime.now());
+            ApiResponse<List<GetRecipientsResponse>> apiResponse = new ApiResponse<>(
+                    StatusCode.NOT_FOUND.getCode(),
+                    StatusCode.NOT_FOUND.getMessage(),
+                    "Customer does not exist",
+                    null
+            );
+
             return ResponseEntity.ok(apiResponse);
         }
 
         List<GetRecipientsResponse> recipients = recipientService.getRecipientsByCustomerId(customerId);
-        com.example.backend.dto.response.ApiResponse<List<GetRecipientsResponse>> apiResponse =
-                new com.example.backend.dto.response.ApiResponse<>(true, StatusCode.SUCCESS.getCode(), recipients, "Recipient fetched successfully.", LocalDateTime.now());
+
+        ApiResponse<List<GetRecipientsResponse>> apiResponse = new ApiResponse<>(
+               StatusCode.SUCCESS.getCode(),
+               null,
+               "Recipient fetched successfully",
+               recipients
+        );
 
         return ResponseEntity.ok(apiResponse);
     }

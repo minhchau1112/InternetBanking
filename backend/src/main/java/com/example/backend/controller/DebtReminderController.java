@@ -3,10 +3,11 @@ package com.example.backend.controller;
 import com.example.backend.dto.request.CancelDebtReminderRequest;
 import com.example.backend.dto.request.ConfirmTransferRequest;
 import com.example.backend.dto.request.DebtReminderRequest;
-import com.example.backend.dto.response.ApiResponse;
+//import com.example.backend.dto.response.ApiResponse;
 import com.example.backend.dto.response.GetDebtReminderForCreatorResponse;
 import com.example.backend.enums.DebtReminderStatus;
 import com.example.backend.enums.StatusCode;
+import com.example.backend.model.ApiResponse;
 import com.example.backend.model.DebtReminder;
 import com.example.backend.service.DebtReminderService;
 import com.example.backend.service.InternalTransferService;
@@ -45,7 +46,13 @@ public class DebtReminderController {
 
         notificationHandler.sendNotification("New debt reminder created: " + reminder.getMessage(), String.valueOf(request.getCreatorAccountId()));
 
-        ApiResponse<DebtReminder> apiResponse = new ApiResponse<>(true, StatusCode.SUCCESS.getCode(), reminder, "Create debt reminder success", LocalDateTime.now());
+        ApiResponse<DebtReminder> apiResponse = new ApiResponse<>(
+                StatusCode.SUCCESS.getCode(),
+                null,
+                "Create debt reminder success",
+                reminder
+        );
+
         return ResponseEntity.status(HttpStatus.CREATED).body(apiResponse);
     }
 
@@ -59,7 +66,13 @@ public class DebtReminderController {
 
         Page<GetDebtReminderForCreatorResponse> reminders = debtReminderService.getDebtRemindersForCreator(creatorAccountId, status, pageable);
 
-        ApiResponse<Page<GetDebtReminderForCreatorResponse>> apiResponse = new ApiResponse<>(true, StatusCode.SUCCESS.getCode(), reminders, "Get debt reminders for creator success", LocalDateTime.now());
+        ApiResponse<Page<GetDebtReminderForCreatorResponse>> apiResponse = new ApiResponse<>(
+                StatusCode.SUCCESS.getCode(),
+                null,
+                "Get debt reminders for creator success",
+                reminders
+        );
+
         return ResponseEntity.ok(apiResponse);
     }
 
@@ -70,7 +83,13 @@ public class DebtReminderController {
                                                                                      @RequestParam(defaultValue = "10") int size) {
         Pageable pageable = PageRequest.of(page, size);
         Page<DebtReminder> reminders = debtReminderService.getDebtRemindersForDebtor(debtorAccountId, status, pageable);
-        ApiResponse<Page<DebtReminder>> apiResponse = new ApiResponse<>(true, StatusCode.SUCCESS.getCode(), reminders, "Get debt reminders for debtor success", LocalDateTime.now());
+
+        ApiResponse<Page<DebtReminder>> apiResponse = new ApiResponse<>(
+                StatusCode.SUCCESS.getCode(),
+                null,
+                "Get debt reminders for debtor success",
+                reminders
+        );
 
         return ResponseEntity.ok(apiResponse);
     }
@@ -80,7 +99,13 @@ public class DebtReminderController {
                                                    @RequestParam Integer requesterAccountId,
                                                    @RequestBody CancelDebtReminderRequest request) {
         debtReminderService.cancelDebtReminder(debtReminderId, request, requesterAccountId);
-        ApiResponse<Void> apiResponse = new ApiResponse<>(true, StatusCode.SUCCESS.getCode(), null, "Cancel debt reminder success", LocalDateTime.now());
+
+        ApiResponse<Void> apiResponse = new ApiResponse<>(
+                StatusCode.SUCCESS.getCode(),
+                null,
+                "Cancel debt reminder success",
+                null
+        );
 
         return ResponseEntity.ok(apiResponse);
     }
@@ -89,7 +114,14 @@ public class DebtReminderController {
     public ResponseEntity<ApiResponse<Void>> payDebtReminder(@PathVariable Integer debtReminderId, @RequestBody ConfirmTransferRequest request) {
         internalTransferService.confirmTransfer(request);
         debtReminderService.payDebtReminder(debtReminderId);
-        ApiResponse<Void> apiResponse = new ApiResponse<>(true, StatusCode.SUCCESS.getCode(), null, "Pay debt success!", LocalDateTime.now());
+
+        ApiResponse<Void> apiResponse = new ApiResponse<>(
+                StatusCode.SUCCESS.getCode(),
+                null,
+                "Pay debt success!",
+                null
+        );
+
         return ResponseEntity.ok(apiResponse);
     }
 }

@@ -2,9 +2,24 @@ import axios from 'axios';
 
 const API_URL = 'http://localhost:8888/api/debt-reminders';
 
-export const fetchDebtRemindersForCreator = async (id: number, status: string, page: number, pageSize: number) => {
+// Fetch debt reminders for creator
+export const fetchDebtRemindersForCreator = async (
+	id: number,
+	status: string,
+	page: number,
+	pageSize: number,
+	accessToken: string
+) => {
 	try {
-		const response = await axios.get(`${API_URL}/creator/${id}?status=${status}&page=${page}&size=${pageSize}`);
+		const response = await axios.get(
+			`${API_URL}/creator/${id}?status=${status}&page=${page}&size=${pageSize}`,
+			{
+				headers: {
+					Authorization: `Bearer ${accessToken}`,
+				},
+			}
+		);
+
 		return response.data.data;
 	} catch (error) {
 		console.error('Error fetching debt reminders:', error);
@@ -12,10 +27,25 @@ export const fetchDebtRemindersForCreator = async (id: number, status: string, p
 	}
 };
 
-
-export const fetchDebtRemindersForDebtor = async (id: number, status: string, page: number, pageSize: number) => {
+// Fetch debt reminders for debtor
+export const fetchDebtRemindersForDebtor = async (
+	id: number,
+	status: string,
+	page: number,
+	pageSize: number,
+	accessToken: string
+) => {
 	try {
-		const response = await axios.get(`${API_URL}/debtor/${id}?status=${status}&page=${page}&size=${pageSize}`);
+		const response = await axios.get(
+			`${API_URL}/debtor/${id}?status=${status}&page=${page}&size=${pageSize}`,
+			{
+				headers: {
+					Authorization: `Bearer ${accessToken}`,
+				},
+			}
+		);
+
+		console.log("Fetch 2:", response.data.data);
 		return response.data.data;
 	} catch (error) {
 		console.error('Error fetching debt reminders:', error);
@@ -23,16 +53,27 @@ export const fetchDebtRemindersForDebtor = async (id: number, status: string, pa
 	}
 };
 
-export const cancelDebtReminder = async (debtReminderId: number, requesterAccountId: number, reason: string) => {
+// Cancel debt reminder
+export const cancelDebtReminder = async (
+	debtReminderId: number,
+	requesterAccountId: number,
+	reason: string,
+	accessToken: string
+) => {
 	try {
-		const response = await axios.put(`${API_URL}/cancel/${debtReminderId}?requesterAccountId=${requesterAccountId}`, {
-			reason: reason,
-		}, {
-			headers: {
-				'Content-Type': 'application/json',
+		const response = await axios.put(
+			`${API_URL}/cancel/${debtReminderId}?requesterAccountId=${requesterAccountId}`,
+			{
+				reason: reason,
 			},
-			withCredentials: true, 
-		});
+			{
+				headers: {
+					Authorization: `Bearer ${accessToken}`,
+					'Content-Type': 'application/json',
+				},
+				withCredentials: true,
+			}
+		);
 
 		return response.data;
 	} catch (error) {
@@ -41,14 +82,27 @@ export const cancelDebtReminder = async (debtReminderId: number, requesterAccoun
 	}
 };
 
-export const payDebtReminder = async (debtReminderId: number, otp: string) => {
-    try {
-        const response = await axios.post(`${API_URL}/${debtReminderId}/pay`, {
-            otp: otp,
-        });
-        return response.data;
-    } catch (error) {
-        console.error('Error during payment:', error);
-        throw new Error('Payment failed');
-    }
+// Pay debt reminder
+export const payDebtReminder = async (
+	debtReminderId: number,
+	otp: string,
+	accessToken: string
+) => {
+	try {
+		const response = await axios.post(
+			`${API_URL}/${debtReminderId}/pay`,
+			{
+				otp: otp,
+			},
+			{
+				headers: {
+					Authorization: `Bearer ${accessToken}`,
+				},
+			}
+		);
+		return response.data;
+	} catch (error) {
+		console.error('Error during payment:', error);
+		throw new Error('Payment failed');
+	}
 };

@@ -10,7 +10,10 @@ interface InternalTransferRequest {
 	feePayer: string,
 }
 
-export const initiateTransfer = async ({sourceAccountId, destinationAccountId, amount, message, feePayer}: InternalTransferRequest) => {
+export const initiateTransfer = async (
+	{sourceAccountId, destinationAccountId, amount, message, feePayer}: InternalTransferRequest,
+	accessToken: string
+) => {
     try {
 		const request = {
 			source_account_id: sourceAccountId,
@@ -20,7 +23,13 @@ export const initiateTransfer = async ({sourceAccountId, destinationAccountId, a
 			fee_payer: feePayer
 		}
 		console.log("Request: ", request);
-        const response = await axios.post(`${API_URL}`, request);
+        const response = await axios.post(`${API_URL}`, request, {
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+                'Content-Type': 'application/json',
+            },
+            withCredentials: true,
+        });
 
 		console.log("response: ", response);
         return response.data;

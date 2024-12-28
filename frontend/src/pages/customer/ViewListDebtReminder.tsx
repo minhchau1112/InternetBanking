@@ -20,6 +20,7 @@ interface Debtor {
 }
 
 const ViewListDebtReminder = () => {
+	const accessToken = localStorage.getItem('access_token') || '';
   const [tab, setTab] = useState(0);
   const [filter, setFilter] = useState("PENDING");
   const [openDialog, setOpenDialog] = useState(false);
@@ -50,15 +51,15 @@ const ViewListDebtReminder = () => {
 
   const fetchDebtors = async (customerId: number): Promise<Debtor[]> => {
     try {
-      const response = await fetchRecipients(customerId);
-	  console.log("response: ", response);
+      const response = await fetchRecipients(customerId, accessToken);
+	    console.log("response: ", response);
 
-      if (response.success) {
+      if (response.status == 200) {
         console.log("response: ", response);
-        return response.data.map((item: any, index: number) => ({
-			name: item.name,
-			accountNumber: item.account_number
-		}))
+        return response.data.data.map((item: any, index: number) => ({
+          name: item.name,
+          accountNumber: item.account_number
+        }))
       } else {
         console.error("Không thành công: ", response.message);
         return [];

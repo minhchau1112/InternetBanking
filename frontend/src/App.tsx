@@ -23,6 +23,7 @@ function App() {
         }
     }, [navigate, token]);
     const user = useSelector((state: RootState) => state.auth.user);
+    console.log("user", user);
 
     const location = useLocation();
     const isLoginPage = location.pathname === "/login";
@@ -31,6 +32,8 @@ function App() {
         user?.role === "ROLE_CUSTOMER" || user?.role === "ROLE_EMPLOYEE" || user?.role === "ROLE_ADMIN"
             ? user?.role
             : null;
+
+    console.log("userType", userType);
 
     return (
         <div className="flex w-screen">

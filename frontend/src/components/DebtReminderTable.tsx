@@ -25,6 +25,8 @@ interface DataTableProps {
 
 const DebtReminderTable: React.FC<DataTableProps> = ({ status = 'PENDING', type = 'Creator' }) => {
 	const accountId = localStorage.getItem('accountId') || '3';
+	const accessToken = localStorage.getItem('access_token') || '';
+
 	const id = parseInt(accountId, 10);
 
 	const [rows, setRows] = useState<any[]>([]);
@@ -289,7 +291,7 @@ const DebtReminderTable: React.FC<DataTableProps> = ({ status = 'PENDING', type 
 		if (selectedDebtId && reason.trim()) {
 			setLoading(true);
 			try {
-				const response = await cancelDebtReminder(selectedDebtId, id, reason.trim());
+				const response = await cancelDebtReminder(selectedDebtId, id, reason.trim(), accessToken);
 				console.log("success");
 				if (response.success) {
 					enqueueSnackbar(response.message, { variant: 'success', autoHideDuration: 1500 });
@@ -320,7 +322,7 @@ const DebtReminderTable: React.FC<DataTableProps> = ({ status = 'PENDING', type 
 		};
 
 		try {
-			const response = await initiateTransfer(internalTransferRequest);
+			const response = await initiateTransfer(internalTransferRequest, accessToken);
 			if (response.success) {
 				otpString = response.data.otp;
 				setOpenOtpDialog(true); 
@@ -332,7 +334,7 @@ const DebtReminderTable: React.FC<DataTableProps> = ({ status = 'PENDING', type 
 
 	const handleOtpSubmit = async (otp: string) => {
 		try {
-		  const response = await payDebtReminder(selectedDebtId, otp);
+		  const response = await payDebtReminder(selectedDebtId, otp, accessToken);
 		  if (response.success) {
 			enqueueSnackbar('Payment successful!', { variant: 'success', autoHideDuration: 1500 });
 			fetchRows(type, id, status, page, pageSize);
@@ -350,42 +352,51 @@ const DebtReminderTable: React.FC<DataTableProps> = ({ status = 'PENDING', type 
 		setLoading(true);
 		try {
 			let data = null;
-
+	
 			if (type === 'Creator') {
-				data = await fetchDebtRemindersForCreator(id, status, page, pageSize);
+				let response = await fetchDebtRemindersForCreator(id, status, page, pageSize, accessToken);
+				let data = response.data;
+
 				console.log('data: ', data);
-				setRows(
-					data.content.map((item: any, index: number) => ({
-						id: index + 1 + page * pageSize,
-						accountNumber: item.debt_account_number,
-						accountName: item.debt_name,
-						amount: item.amount,
-						message: item.message,
-						status: capitalizeFirstLetter(item.status),
-						createdTime: item.created_time,
-						debtReminderId: item.debt_reminder_id,
-					}))
-				);
+
+				if (data && data.content) { 
+					setRows(
+						data.content.map((item: any, index: number) => ({
+							id: index + 1 + page * pageSize,
+							accountNumber: item.debt_account_number,
+							accountName: item.debt_name,
+							amount: item.amount,
+							message: item.message,
+							status: capitalizeFirstLetter(item.status),
+							createdTime: item.created_time,
+							debtReminderId: item.debt_reminder_id,
+						}))
+					);
+					setRowCount(data.totalElements); 
+				}
 			} else {
-				data = await fetchDebtRemindersForDebtor(id, status, page, pageSize);
+				let response = await fetchDebtRemindersForDebtor(id, status, page, pageSize, accessToken);
+				let data = response.data;
+
 				console.log('data: ', data);
-
-				setRows(
-					data.content.map((item: any, index: number) => ({
-						id: index + 1 + page * pageSize,
-						creatorAccountId: item.creator_account_id,
-						accountNumber: item.creator_account_number,
-						accountName: item.creator_name,
-						amount: item.amount,
-						message: item.message,
-						status: capitalizeFirstLetter(item.status),
-						createdTime: item.created_time,
-						debtReminderId: item.debt_reminder_id,
-					}))
-				);
+				
+				if (data && data.content) { 
+					setRows(
+						data.content.map((item: any, index: number) => ({
+							id: index + 1 + page * pageSize,
+							creatorAccountId: item.creator_account_id,
+							accountNumber: item.creator_account_number,
+							accountName: item.creator_name,
+							amount: item.amount,
+							message: item.message,
+							status: capitalizeFirstLetter(item.status),
+							createdTime: item.created_time,
+							debtReminderId: item.debt_reminder_id,
+						}))
+					);
+					setRowCount(data.totalElements); 
+				}
 			}
-
-			setRowCount(data.totalElements); 
 		} catch (error) {
 			console.error('Error fetching rows:', error);
 		} finally {

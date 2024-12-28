@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { FiEdit } from "react-icons/fi";
 import {verifyEmail} from "@/api/emailAPI.ts";
 import {toast, ToastContainer} from "react-toastify";
+import {FiArrowLeft} from  "react-icons/fi"
 
 const ForgotPassword: React.FC = () => {
     const [email, setEmail] = useState("");
@@ -128,6 +129,18 @@ const ForgotPassword: React.FC = () => {
                             <Button onClick={handleEmailSubmit} className="w-full">
                                 Gửi mã OTP
                             </Button>
+                            <div
+                                className="text-sm flex items-center text-gray-600 bg-transparent border-none p-0 m-0 focus:outline-none hover:no-underline">
+                                <FiArrowLeft className="mr-1 text-gray-600" />
+                                <a
+                                    href="/"
+                                    className="text-gray-600 hover:no-underline hover:text-gray-800"
+                                >
+                                    Quay về trang chủ
+                                </a>
+                            </div>
+
+
                         </>
                     )}
                 </CardContent>

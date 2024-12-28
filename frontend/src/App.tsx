@@ -7,6 +7,8 @@ import {useSelector} from "react-redux";
 import { RootState } from "./redux/store/index.ts";
 import DepositPage from "./pages/employee/Deposit";
 import Recipient from "./pages/customer/Recipient.tsx";
+import AccountCreation from "./pages/employee/AccountCreation.tsx";
+import TransactionHistory from "./pages/employee/TransactionHistory.tsx";
 
 function App() {
 
@@ -30,13 +32,16 @@ function App() {
     return (
         <div className="flex w-screen">
             {!isLoginPage && <Sidebar userType={userType}/>}
-            <div className={`flex-grow ${isLoginPage ? "" : "ml-64"}`}>
+            {/* <Sidebar userType={"ROLE_EMPLOYEE"}/> */}
+            <div className={`flex-grow`}>
                 <Routes>
                     <Route path="/" element={<h1>Welcome to Internet Banking</h1>}/>
                     <Route path="/customer" element={<CustomerDashboard/>}/>
                     <Route path="/login" element={<LoginForm/>}/>
                     <Route path="/deposit" element={<DepositPage/>}/>
                     <Route path="/recipient" element={<Recipient/>}/>
+                    <Route path="/customers" element={< AccountCreation/>}/>
+                    <Route path="/history" element={< TransactionHistory/>}/>
                 </Routes>
             </div>
         </div>

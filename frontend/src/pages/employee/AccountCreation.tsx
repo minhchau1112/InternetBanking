@@ -1,17 +1,24 @@
 import React, { useState } from 'react';
 import { useForm, SubmitHandler } from 'react-hook-form';
+import {toast, ToastContainer} from "react-toastify";
+import accountImage from '../../assets/image/account.png';
+
+type FormData = {
+    username: string;
+    email: string;
+    name: string;
+    phone: string;
+};
+
+type AccountInfo = {
+    username: string;
+    password: string;
+};
 
 const AccountCreation = () => {
     const { register, handleSubmit, formState: { errors } } = useForm<FormData>();
-    const [accountInfo, setAccountInfo] = useState<Partial<FormData> | null>(null);
+    const [accountInfo, setAccountInfo] = useState<AccountInfo | null>(null);
     const [errorMessage, setErrorMessage] = useState<string>('');
-
-    type FormData = {
-        username: string;
-        email: string;
-        name: string;
-        phone: string;
-    };
 
     const onSubmit: SubmitHandler<FormData> = (data) => {
         console.log(data);
@@ -20,7 +27,8 @@ const AccountCreation = () => {
             fetch('http://localhost:8888/api/accounts', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
                 },
                 body: JSON.stringify({
                     username: data.username,
@@ -35,10 +43,12 @@ const AccountCreation = () => {
                 if (data.error) {
                     setErrorMessage(data.error);
                     setAccountInfo(null);
+                    toast.error(data.error);
                 } else {
                     setAccountInfo(data.data);
                     setErrorMessage('');  // Clear error if account creation is successful
                     // alert('Account created successfully');
+                    toast.success("Account created successfully.");
                     console.log('Success:', data);
                 }
             });
@@ -128,8 +138,14 @@ const AccountCreation = () => {
                     </form>
                     {/* Account Info / Error Display */}
                     <div className="space-y-6 flex flex-col justify-center items-center p-6 rounded-lg">
-                        <div className="w-full max-w-xs">
+                        <div className="w-full">
                             {/* Success Message */}
+                            {!accountInfo && !errorMessage && (
+                                <div className="flex-grow w-full p-4 rounded-lg mb-4">
+                                    {/* // image from assets/image/account.png */}
+                                    <img src={accountImage} alt="Account created" className="w-full h-full mx-auto"/>
+                                </div>
+                            )}
                             {accountInfo && !errorMessage && (
                                 <div className="bg-green-100 p-4 rounded-lg shadow-md mb-4">
                                     <p className="text-green-600 text-center font-semibold">Account created successfully!</p>
@@ -156,6 +172,7 @@ const AccountCreation = () => {
                     </div>
                 </div>
             </div>
+            <ToastContainer/>
         </div>
     );
 };

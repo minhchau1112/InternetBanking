@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import NoDataImage from '@/assets/image/nodata.png';
 
 type Transaction = {
     id: number;
@@ -74,7 +75,7 @@ const TransactionHistory = () => {
     };
 
     return (
-        <div className="min-h-screen w-[calc(100vw-256px)] max-w-full bg-gray-50 p-6">
+        <div className="min-h-screen w-[calc(100vw-300px)] max-w-full bg-gray-50 p-6">
             <div className="w-full mx-auto bg-white shadow-lg rounded-lg">
                 {/* Input Row */}
                 <div className="p-6 flex flex-col sm:flex-row items-center gap-4">
@@ -154,7 +155,10 @@ const TransactionHistory = () => {
                             </div>
                         ))
                     ) : (
-                        <p className="text-gray-500 text-center">Không có giao dịch trong thời gian đã chọn.</p>
+                        // <p className="text-gray-500 text-center">Không có giao dịch trong thời gian đã chọn.</p>
+                        <div className="flex flex-col items-center">
+                            <img src={NoDataImage} alt="No data" className="w-1/3" />
+                        </div>
                     )}
                 </div>
             </div>

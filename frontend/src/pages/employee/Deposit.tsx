@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
-import { useForm, SubmitHandler, set } from 'react-hook-form';
+import { useForm, SubmitHandler} from 'react-hook-form';
+import {toast, ToastContainer} from "react-toastify";
 import debounce from 'lodash.debounce';
 
 function formatAccountNumber(accountNumber: string): string {
@@ -15,15 +16,15 @@ const DepositPage = () => {
 
     const [usernameSearchResult, setUsernameSearchResult] = useState<string | null>(null);
     const [accountSearchResult, setAccountSearchResult] = useState<string | null>(null);
-    const [isDepositUsernameSuccess, setIsDepositSuccess] = useState<boolean | null>(null);
-    const [isDepositAccountSuccess, setIsDepositAccountSuccess] = useState<boolean | null>(null);
     const [rawAccountNumber, setRawAccountNumber] = useState<string>('');
     const searchByUsername = async (username: string) => {
         console.log('Searching username:', username);
         try {
             const response = await fetch(`http://localhost:8888/api/accounts/username/${username}`, {
                 method: 'GET',
-                // Add any headers or body data if required
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                }
             });
             if (response.ok) {
                 const data = await response.json();
@@ -47,7 +48,9 @@ const DepositPage = () => {
         try {
             const response = await fetch(`http://localhost:8888/api/accounts/${accountNumber}`, {
                 method: 'GET',
-                // Add any headers or body data if required
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                }
             });
             if (response.ok) {
                 const data = await response.json();
@@ -91,6 +94,7 @@ const DepositPage = () => {
                 // Add any headers or body data if required
                 headers: {
                     'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
                 },
                 // manually add the username and deposit amount to the body
                 body: JSON.stringify({
@@ -102,11 +106,11 @@ const DepositPage = () => {
                 const data = await response.json();
                 // Process the response data
                 console.log('Data:', data);
-                setIsDepositSuccess(true);
+                toast.success("Deposit successful.");
             } else {
                 // Handle error response
                 console.error('Error:', response);
-
+                toast.error("Deposit failed.");
             }
         } catch (error) {
             // Handle network or other errors
@@ -124,6 +128,7 @@ const DepositPage = () => {
                 // Add any headers or body data if required
                 headers: {
                     'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
                 },
                 // manually add the username and deposit amount to the body
                 body: JSON.stringify({
@@ -135,7 +140,6 @@ const DepositPage = () => {
                 const data = await response.json();
                 // Process the response data
                 console.log('Data:', data);
-                setIsDepositAccountSuccess(true);
             } else {
                 // Handle error response
                 console.error('Error:', response);
@@ -157,7 +161,7 @@ const DepositPage = () => {
     };
 
     return (
-        <div className="flex-row flex flex-grow w-[calc(100vw-256px)] max-w-full">
+        <div className="flex-row flex flex-grow w-[calc(100vw-300px)] max-w-full">
             <div className="w-full h-screen bg-gray-100 flex flex-col items-center py-8 pl-12">
                 <h1 className="text-3xl font-bold mb-6 text-gray-800">Deposit Page</h1>
                 <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -210,9 +214,6 @@ const DepositPage = () => {
                             >
                                 Deposit
                             </button>
-                            {isDepositUsernameSuccess && (
-                                <p className="text-green-500 text-sm mt-2">Deposit successful!</p>
-                            )} 
                         </form>
                     </div>
 
@@ -266,13 +267,11 @@ const DepositPage = () => {
                             >
                                 Deposit
                             </button>
-                            {isDepositAccountSuccess && (
-                                <p className="text-green-500 text-sm mt-2">Deposit successful!</p>
-                            )}
                         </form>
                     </div>
                 </div>
             </div>
+            <ToastContainer/>
         </div>
     );
 };

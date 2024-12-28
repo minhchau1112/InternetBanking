@@ -1,25 +1,57 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { FiEdit } from "react-icons/fi";
-import {toast, ToastContainer} from "react-toastify";
-import {FiArrowLeft} from  "react-icons/fi"
-import {sendForgotPasswordEmail, verifyOTP} from "@/api/emailAPI.ts";
+import { FiEdit, FiArrowLeft } from "react-icons/fi";
+import { toast, ToastContainer } from "react-toastify";
+import { sendForgotPasswordEmail, verifyOTP } from "@/api/emailAPI.ts";
 
 const ForgotPassword: React.FC = () => {
     const [email, setEmail] = useState("");
     const [OTP, setOTP] = useState<string[]>(Array(6).fill(""));
     const [isEmailSubmitted, setIsEmailSubmitted] = useState(false);
     const [isValidOTP, setIsValidOTP] = useState<boolean | null>(null);
-
+    const [timer, setTimer] = useState(60);
     const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
+    const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+    useEffect(() => {
+        if (isEmailSubmitted) {
+            setTimer(60);
+            intervalRef.current = setInterval(() => {
+                setTimer((prev) => {
+                    if (prev === 1 && intervalRef.current) {
+                        clearInterval(intervalRef.current);
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+        }
+        return () => {
+            if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+            }
+        };
+    }, [isEmailSubmitted]);
 
     const handleEmailSubmit = async () => {
         const result = await sendForgotPasswordEmail(email);
         if (result.success) {
             setIsEmailSubmitted(true);
+            setTimer(60);
+            if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+            }
+            intervalRef.current = setInterval(() => {
+                setTimer((prev) => {
+                    if (prev === 1 && intervalRef.current) {
+                        clearInterval(intervalRef.current);
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+            toast.success("Mã OTP đã được gửi đến email của bạn.");
         } else {
             toast.error(result.message);
         }
@@ -29,27 +61,30 @@ const ForgotPassword: React.FC = () => {
         setIsEmailSubmitted(false);
         setOTP(Array(6).fill(""));
         setIsValidOTP(null);
+        if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+        }
     };
-
 
     const handleOTPSubmit = async (enteredOtp: string) => {
         try {
             const response = await verifyOTP(email, enteredOtp);
-            console.log(response);
             if (response.status === 200) {
                 setIsValidOTP(true);
+                if (intervalRef.current) {
+                    clearInterval(intervalRef.current);
+                    intervalRef.current = null;
+                }
                 toast.success("OTP xác nhận thành công!");
             } else {
                 setIsValidOTP(false);
-                toast.error(response.message || "OTP không hợp lệ.");
+                toast.error("OTP không hợp lệ.");
             }
         } catch (error) {
             console.error("Error verifying OTP:", error);
             toast.error("Lỗi kết nối với server.");
         }
     };
-
-
 
     const handleOTPChange = (value: string, index: number) => {
         if (isNaN(Number(value))) return;
@@ -118,6 +153,20 @@ const ForgotPassword: React.FC = () => {
                             {isValidOTP === false && (
                                 <p className="text-sm text-red-500 mt-2">OTP không hợp lệ. Vui lòng thử lại.</p>
                             )}
+                            <div className="text-center mt-4">
+                                {timer > 0 ? (
+                                    <div className="inline-flex items-center space-x-2">
+                                        <span className="text-gray-500 text-sm">Mã OTP sẽ hết hạn sau {timer}s</span>
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col items-center space-y-4">
+                                        <p className="text-red-500 text-sm font-semibold">Mã OTP đã hết hạn.</p>
+                                        <Button onClick={handleEmailSubmit} className="w-full hover:border-none">
+                                            Gửi lại mã OTP
+                                        </Button>
+                                    </div>
+                                )}
+                            </div>
                         </>
                     ) : (
                         <>
@@ -137,19 +186,17 @@ const ForgotPassword: React.FC = () => {
                                 className="text-sm flex items-center text-gray-600 bg-transparent border-none p-0 m-0 focus:outline-none hover:no-underline">
                                 <FiArrowLeft className="mr-1 text-gray-600" />
                                 <a
-                                    href="/"
+                                    href="/login"
                                     className="text-gray-600 hover:no-underline hover:text-gray-800"
                                 >
-                                    Quay về trang chủ
+                                    Quay về trang đăng nhập
                                 </a>
                             </div>
-
-
                         </>
                     )}
                 </CardContent>
             </Card>
-            <ToastContainer></ToastContainer>
+            <ToastContainer />
         </div>
     );
 };

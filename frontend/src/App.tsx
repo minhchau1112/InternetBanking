@@ -32,7 +32,7 @@ function App() {
         <div className="flex w-screen">
             {!noSidebarPages.includes(location.pathname) && <Sidebar userType={userType} />}
 
-            <div className={`flex-grow ${noSidebarPages.includes(location.pathname) ? "" : "ml-64"}`}>
+            <div className={`flex-grow ${noSidebarPages.includes(location.pathname) ? "":""}`}>
                 <Routes>
                     <Route path="/" element={<h1>Welcome to Internet Banking</h1>} />
                     <Route path="/customer" element={<CustomerDashboard />} />

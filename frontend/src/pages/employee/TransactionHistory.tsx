@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import NoDataImage from '@/assets/image/nodata.png';
 
 type Transaction = {

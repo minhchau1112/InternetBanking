@@ -32,13 +32,15 @@ public class RestResponseConfiguration implements ResponseBodyAdvice<Object> {
         HttpServletResponse servletResponse = ((ServletServerHttpResponse) response).getServletResponse();
         int status = servletResponse.getStatus();
 
-        RestResponse<Object> res = new RestResponse<Object>();
+        RestResponse<Object> res = new RestResponse<>();
         res.setStatus(status);
 
         if (body instanceof String || body instanceof Resource) {
             return body;
         }
-
+        if (body instanceof RestResponse) {
+            return body;
+        }
 
         if (status >= 400) {
             return body;
@@ -50,5 +52,6 @@ public class RestResponseConfiguration implements ResponseBodyAdvice<Object> {
 
         return res;
     }
+
 
 }

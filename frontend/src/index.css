@@ -135,3 +135,6 @@ button:focus-visible {
     @apply bg-background text-foreground;
   }
 }
+.Toastify__toast {
+  width: 380px !important;
+}

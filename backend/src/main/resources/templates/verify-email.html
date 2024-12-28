@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mã OTP Khôi Phục Mật Khẩu</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+            color: #333333;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .email-header {
+            background-color: #000000;
+            color: #ffffff;
+            padding: 20px;
+            text-align: left;
+        }
+        .email-body {
+            padding: 20px;
+            color: #333333;
+            line-height: 1.6;
+        }
+        .email-body h2 {
+            margin: 0 0 10px;
+            color: #000000;
+        }
+        .email-footer {
+            text-align: center;
+            padding: 15px;
+            background-color: #f4f4f4;
+            font-size: 12px;
+            color: #777777;
+        }
+        .otp-code {
+            font-size: 24px;
+            color: #000000;
+            font-weight: bold;
+            margin: 20px 0;
+            text-align: center;
+        }
+        p{
+            color: #000000;
+        }
+    </style>
+</head>
+<body>
+<div class="email-container">
+    <div class="email-header">
+        <h1>Khôi Phục Mật Khẩu</h1>
+    </div>
+    <div class="email-body">
+        <p>Xin chào,</p>
+        <p>Chúng tôi đã nhận được yêu cầu khôi phục mật khẩu của bạn. Vui lòng sử dụng mã OTP bên dưới để xác minh danh tính của bạn:</p>
+        <p class="otp-code" th:text="${OTP_CODE}"></p>
+        <p>Nếu bạn không yêu cầu khôi phục mật khẩu, vui lòng bỏ qua email này hoặc liên hệ bộ phận hỗ trợ nếu bạn có bất kỳ lo ngại nào.</p>
+        <p>Mã OTP có hiệu lực trong vòng 1 phút.</p>
+    </div>
+    <div class="email-footer">
+        <p>&copy; 2024 Internet Banking. All rights reserved.</p>
+    </div>
+</div>
+</body>
+</html>

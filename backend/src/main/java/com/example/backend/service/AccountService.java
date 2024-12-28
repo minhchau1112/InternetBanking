@@ -13,6 +13,7 @@ import com.example.backend.repository.CustomerRepository;
 import com.example.backend.repository.TransactionRepository;
 import com.example.backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.data.repository.core.support.TransactionalRepositoryFactoryBeanSupport;
 import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
@@ -27,13 +28,13 @@ public class AccountService {
     private AccountRepository accountRepository;
 
     @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
     private CustomerRepository customerRepository;
 
     @Autowired
     private TransactionRepository transactionRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     private final SecureRandom random = new SecureRandom();
 
@@ -43,15 +44,20 @@ public class AccountService {
 
     public Customer createAccount(String username, String name, String email, String phone) {
         // check if username already exists
-        if (userRepository.existsByUsername(username)) {
+        if (customerRepository.existsByUsername(username)) {
             throw new IllegalArgumentException("Username already exists");
+        }else if (customerRepository.existsByEmail(email)) {
+            throw new IllegalArgumentException("Email already exists");
+        }else if (customerRepository.existsByPhone(phone)) {
+            throw new IllegalArgumentException("Phone number already exists");
         }
         // create new customer since it extends user
         Customer customer = new Customer();
         customer.setUsername(username);
         // generate password
-        String password = PasswordGenerator.generateRandomPassword();
-        customer.setPassword(password);
+        String rawPassword = PasswordGenerator.generateRandomPassword();
+        String encodedPassword = passwordEncoder.encode(rawPassword); // Encode the password
+        customer.setPassword(encodedPassword);
 
         customer.setCreatedAt(LocalDateTime.now());
         customer.setName(name);
@@ -59,7 +65,7 @@ public class AccountService {
         customer.setPhone(phone);
 
         // Save the customer first to ensure it has an ID
-        customer = userRepository.save(customer);
+        customer = customerRepository.save(customer);
 
         // now create and save the associated account
         Account account = new Account();
@@ -77,13 +83,16 @@ public class AccountService {
 
         accountRepository.save(account);
 
+        // first time create account, return actual password
+        customer.setPassword(rawPassword);
+
         return customer;  // Return the saved customer
     }
 
     private String generateAccountNumber() {
         StringBuilder accountNumber = new StringBuilder();
         for (int i = 0; i < 12; i++) {
-            accountNumber.append(random.nextInt(10));
+            accountNumber.append(random.nextInt(10)); // Appends a digit (0-9)
         }
         return accountNumber.toString();
 
@@ -113,7 +122,7 @@ public class AccountService {
             account = accountRepository.findByAccountNumber(depositRequest.getAccountNumber());
         }
         else if (depositRequest.getUsername() != null) {
-            if (!userRepository.existsByUsername(depositRequest.getUsername())) {
+            if (!customerRepository.existsByUsername(depositRequest.getUsername())) {
                 throw new IllegalArgumentException("User does not exist");
             }
             Customer customer = customerRepository.findByUsername(depositRequest.getUsername());

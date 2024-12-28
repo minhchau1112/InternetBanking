@@ -54,4 +54,12 @@ public class GlobalException {
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(res);
     }
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<RestResponse<Object>> handleIllegalArgumentException(IllegalArgumentException ex) {
+        RestResponse<Object> res = new RestResponse<Object>();
+        res.setStatus(HttpStatus.BAD_REQUEST.value());
+        res.setError(ex.getMessage());
+        res.setMessage("Invalid argument...");
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(res);
+    }
 }

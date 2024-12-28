@@ -2,8 +2,12 @@ package com.example.backend.service;
 
 import com.example.backend.dto.RecipientCreateRequest;
 import com.example.backend.dto.RecipientUpdateRequest;
+import com.example.backend.dto.response.GetRecipientsResponse;
+import com.example.backend.exception.NotFoundException;
+import com.example.backend.model.Account;
 import com.example.backend.model.Customer;
 import com.example.backend.model.Recipient;
+import com.example.backend.repository.AccountRepository;
 import com.example.backend.repository.CustomerRepository;
 import com.example.backend.repository.RecipientRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,10 +24,15 @@ public class RecipientService {
     @Autowired
     private CustomerRepository customerRepository;
 
+    @Autowired
+    private AccountRepository accountRepository;
+
     public List<Recipient> findByCustomer(Integer customerId) {
         return recipientRepository.findByCustomerId(customerId);
     }
-
+    public List<GetRecipientsResponse> getRecipientsByCustomerId(Integer customerId) {
+        return recipientRepository.getRecipientsByCustomerId(customerId);
+    }
     public Recipient saveRecipient(RecipientCreateRequest createRequest) {
 
         Customer customer = customerRepository.findById(createRequest.getCustomerId()).get();

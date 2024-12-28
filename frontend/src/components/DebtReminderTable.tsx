@@ -323,23 +323,7 @@ const DebtReminderTable: React.FC<DataTableProps> = ({ status = 'PENDING', type 
 			const response = await initiateTransfer(internalTransferRequest);
 			if (response.success) {
 				otpString = response.data.otp;
-				setOpenOtpDialog(true); // Mở dialog nhập OTP
-		
-				// const handleOtpSubmit = async (otpString: string) => {
-				//   try {
-				// 	const response = await payDebtReminder(debtReminderId, otpString);
-				// 	if (response.success) {
-				// 	  enqueueSnackbar('Payment successful!', { variant: 'success', autoHideDuration: 1500 });
-				// 	  fetchRows(type, id, status, page, pageSize);
-				// 	  setOpenOtpDialog(false); // Đóng dialog khi thanh toán thành công
-				// 	} else {
-				// 	  setOtpError(response.message); // Hiển thị lỗi OTP
-				// 	}
-				//   } catch (error) {
-				// 	setOtpError('Failed to process OTP. Please try again.');
-				// 	console.error('Error paying debt reminder:', error);
-				//   }
-				// };
+				setOpenOtpDialog(true); 
 			  }
 			} catch (error) {
 			  console.error('Error generate otp:', error);
@@ -361,33 +345,6 @@ const DebtReminderTable: React.FC<DataTableProps> = ({ status = 'PENDING', type 
 		  console.error('Error processing OTP:', error);
 		}
 	};
-
-	  
-	// const handleOtpConfirm = async (otp: string) => {
-	// 	if (selectedOtpData && otp) {
-	// 	  const { otpString, debtReminderId } = selectedOtpData;
-	// 	  if (otp === otpString) {
-	// 		setLoading(true);
-	// 		try {
-	// 		  const response = await payDebtReminder(debtReminderId, otpString);
-	// 		  if (response.success) {
-	// 			enqueueSnackbar('Payment successful!', { variant: 'success', autoHideDuration: 1500 });
-	// 			fetchRows(type, id, status, page, pageSize);
-	// 		  } else {
-	// 			enqueueSnackbar(response.message, { variant: 'error', autoHideDuration: 1500 });
-	// 		  }
-	// 		} catch (error) {
-	// 		  console.error('Error paying debt reminder:', error);
-	// 		  enqueueSnackbar('Failed to pay debt reminder!', { variant: 'error', autoHideDuration: 1500 });
-	// 		} finally {
-	// 		  setLoading(false);
-	// 		}
-	// 	  } else {
-	// 		enqueueSnackbar('OTP is incorrect!', { variant: 'error', autoHideDuration: 1500 });
-	// 	  }
-	// 	  setOtpDialogOpen(false); // Close the dialog
-	// 	}
-	//   };
 
 	const fetchRows = async (type: string, id: number, status: string, page: number, pageSize: number) => {
 		setLoading(true);

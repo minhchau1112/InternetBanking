@@ -46,7 +46,7 @@ const OtpDialog: React.FC<OtpDialogProps> = ({ open, onClose, onConfirm, errorMe
         <Button onClick={onClose} color="secondary">
           Cancel
         </Button>
-        <Button onClick={handleConfirm} color="primary">
+        <Button onClick={handleConfirm} color="primary" variant='contained'>
           Confirm
         </Button>
       </DialogActions>

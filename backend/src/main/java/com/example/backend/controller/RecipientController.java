@@ -2,6 +2,8 @@ package com.example.backend.controller;
 
 import com.example.backend.dto.RecipientCreateRequest;
 import com.example.backend.dto.RecipientUpdateRequest;
+import com.example.backend.dto.response.GetRecipientsResponse;
+import com.example.backend.enums.StatusCode;
 import com.example.backend.model.ApiResponse;
 import com.example.backend.model.Recipient;
 import com.example.backend.service.RecipientService;
@@ -10,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -33,7 +36,20 @@ public class RecipientController {
 
         return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
     }
+    @GetMapping("/v2/recipients/{customerId}")
+    public ResponseEntity<com.example.backend.dto.response.ApiResponse<List<GetRecipientsResponse>>> getRecipientsByCustomerId(@PathVariable int customerId) {
+        if(!recipientService.customerExistsById(customerId)) {
+            com.example.backend.dto.response.ApiResponse<List<GetRecipientsResponse>> apiResponse =
+                    new com.example.backend.dto.response.ApiResponse<>(false, StatusCode.NOT_FOUND.getCode(), null, "Customer does not exist", LocalDateTime.now());
+            return ResponseEntity.ok(apiResponse);
+        }
 
+        List<GetRecipientsResponse> recipients = recipientService.getRecipientsByCustomerId(customerId);
+        com.example.backend.dto.response.ApiResponse<List<GetRecipientsResponse>> apiResponse =
+                new com.example.backend.dto.response.ApiResponse<>(true, StatusCode.SUCCESS.getCode(), recipients, "Recipient fetched successfully.", LocalDateTime.now());
+
+        return ResponseEntity.ok(apiResponse);
+    }
     @PostMapping("/recipients")
     public ResponseEntity<ApiResponse<Recipient>> createRecipient(@RequestBody RecipientCreateRequest createRequest) {
 

@@ -44,6 +44,16 @@ public class GlobalException {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(res);
     }
     @ExceptionHandler(value = {
+            OTPNotFoundException.class,
+    })
+    public ResponseEntity<RestResponse<Object>> handleOTPNotFound(Exception ex) {
+        RestResponse<Object> res = new RestResponse<Object>();
+        res.setStatus(HttpStatus.NOT_FOUND.value());
+        res.setError(ex.getMessage());
+        res.setMessage("The OTP was not found");
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(res);
+    }
+    @ExceptionHandler(value = {
             NoResourceFoundException.class,
     })
     public ResponseEntity<RestResponse<Object>> handleNotFoundException(Exception ex) {

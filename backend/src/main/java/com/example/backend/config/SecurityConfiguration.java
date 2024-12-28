@@ -25,7 +25,8 @@ public class SecurityConfiguration {
             "/api/auth/refresh",
             "/api/auth/verify-email",
             "api/email/**",
-            "/api/auth/forgot-password"
+            "/api/auth/forgot-password",
+            "/api/auth/verify-reset-otp"
     };
 
     @Bean

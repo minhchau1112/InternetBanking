@@ -4,8 +4,10 @@ import com.example.backend.dto.request.LoginRequest;
 import com.example.backend.dto.response.EmailVerifyResponse;
 import com.example.backend.dto.response.LoginResponse;
 import com.example.backend.dto.response.RestResponse;
+import com.example.backend.dto.response.VerifyOTPResponse;
 import com.example.backend.exception.EmailNotFoundException;
 import com.example.backend.exception.InvalidException;
+import com.example.backend.exception.OTPNotFoundException;
 import com.example.backend.model.*;
 import com.example.backend.service.*;
 import com.example.backend.utils.annotation.APIMessage;
@@ -240,6 +242,36 @@ public class AuthenticationController {
         return ResponseEntity.ok().body(res);
     }
 
+    @PostMapping("/verify-reset-otp")
+    @APIMessage("Verify reset OTP")
+    public ResponseEntity<?> verifyResetOtp(@RequestBody Map<String, String> request) throws EmailNotFoundException, OTPNotFoundException {
+        RestResponse<?> res = new RestResponse<>();
+
+        String email = request.get("email");
+        String otp = request.get("otp");
+
+        if (email == null || email.isBlank()) {
+            throw new EmailNotFoundException("Email can not be blank");
+        }
+
+        if (otp == null || otp.isBlank()) {
+            throw new OTPNotFoundException("OTP can not be blank");
+        }
+
+        String storedOtp = otpService.getOtp(email);
+        if (storedOtp == null) {
+            throw new OTPNotFoundException("OTP is not valid");
+        }
+
+        if (!storedOtp.equals(otp)) {
+            throw new OTPNotFoundException("OTP is not valid");
+        }
+
+        otpService.deleteOtp(email);
+
+
+        return ResponseEntity.ok().body(new VerifyOTPResponse(storedOtp));
+    }
 
 
     public String getRole(User user) {

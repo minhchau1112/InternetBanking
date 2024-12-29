@@ -5,7 +5,11 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { FiEdit, FiArrowLeft } from "react-icons/fi";
 import { toast, ToastContainer } from "react-toastify";
-import { sendForgotPasswordEmail, verifyOTP } from "@/api/emailAPI.ts";
+import {sendForgotPasswordEmail, verifyEmail, verifyOTP} from "@/api/emailAPI.ts";
+import {useNavigate} from "react-router-dom";
+import { setEmail as setEmailRedux } from "@/redux/slices/otpSlice";
+import {useDispatch} from "react-redux";
+import { verifyOTP as verifyOTPAction } from "@/redux/slices/otpSlice";
 
 const ForgotPassword: React.FC = () => {
     const [email, setEmail] = useState("");
@@ -15,6 +19,8 @@ const ForgotPassword: React.FC = () => {
     const [timer, setTimer] = useState(60);
     const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
+    const navigate = useNavigate();
+    const dispatch = useDispatch();
 
     useEffect(() => {
         if (isEmailSubmitted) {
@@ -36,8 +42,19 @@ const ForgotPassword: React.FC = () => {
     }, [isEmailSubmitted]);
 
     const handleEmailSubmit = async () => {
+        const verifyResult = await verifyEmail(email);
+        if (verifyResult.data == null) {
+            return;
+        }
+
         const result = await sendForgotPasswordEmail(email);
+
         if (result.success) {
+            if (email.trim() === "") {
+                toast.error("Email không được để trống.");
+                return;
+            }
+            dispatch(setEmailRedux(email));
             setIsEmailSubmitted(true);
             setTimer(60);
             if (intervalRef.current) {
@@ -57,6 +74,7 @@ const ForgotPassword: React.FC = () => {
         }
     };
 
+
     const handleEditEmail = () => {
         setIsEmailSubmitted(false);
         setOTP(Array(6).fill(""));
@@ -71,11 +89,13 @@ const ForgotPassword: React.FC = () => {
             const response = await verifyOTP(email, enteredOtp);
             if (response.status === 200) {
                 setIsValidOTP(true);
+                dispatch(verifyOTPAction());
                 if (intervalRef.current) {
                     clearInterval(intervalRef.current);
                     intervalRef.current = null;
                 }
                 toast.success("OTP xác nhận thành công!");
+                setTimeout(() => navigate("/reset-password"), 2000);
             } else {
                 setIsValidOTP(false);
                 toast.error("OTP không hợp lệ.");

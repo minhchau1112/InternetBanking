@@ -1,10 +1,8 @@
 package com.example.backend.controller;
 
 import com.example.backend.dto.request.LoginRequest;
-import com.example.backend.dto.response.EmailVerifyResponse;
-import com.example.backend.dto.response.LoginResponse;
-import com.example.backend.dto.response.RestResponse;
-import com.example.backend.dto.response.VerifyOTPResponse;
+import com.example.backend.dto.request.ResetPasswordRequest;
+import com.example.backend.dto.response.*;
 import com.example.backend.exception.EmailNotFoundException;
 import com.example.backend.exception.InvalidException;
 import com.example.backend.exception.OTPNotFoundException;
@@ -273,6 +271,12 @@ public class AuthenticationController {
         return ResponseEntity.ok().body(new VerifyOTPResponse(storedOtp));
     }
 
+    @PostMapping("/reset-password")
+    @APIMessage("Reset password success.")
+    public ResponseEntity<ResetPasswordResponse> resetPassword(@RequestBody ResetPasswordRequest request) throws EmailNotFoundException {
+        customerService.resetPassword(request.getEmail(), request.getPassword());
+        return ResponseEntity.ok(new ResetPasswordResponse());
+    }
 
     public String getRole(User user) {
         if (user instanceof Admin) {

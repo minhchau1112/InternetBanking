@@ -10,6 +10,7 @@ import Recipient from "./pages/customer/Recipient.tsx";
 import ForgotPassword from "@/pages/login/ForgotPassword.tsx";
 import AccountCreation from "./pages/employee/AccountCreation.tsx";
 import TransactionHistory from "./pages/employee/TransactionHistory.tsx";
+import ResetPassword from "@/pages/login/ResetPassword.tsx";
 
 
 function App() {
@@ -17,7 +18,7 @@ function App() {
     const token = localStorage.getItem("access_token");
     const location = useLocation();
     useEffect(() => {
-        if (!token && location.pathname !== "/login" && location.pathname !== "/forgot-password") {
+        if (!token && location.pathname !== "/login" && location.pathname !== "/forgot-password" && location.pathname !== "/reset-password") {
             navigate("/login");
         }
     }, [navigate, token, location.pathname]);
@@ -29,7 +30,7 @@ function App() {
             ? user?.role
             : null;
 
-    const noSidebarPages = ["/login", "/forgot-password"];
+    const noSidebarPages = ["/login", "/forgot-password","/reset-password"];
 
     return (
         <div className="flex w-screen">
@@ -44,6 +45,7 @@ function App() {
                     <Route path="/customers" element={< AccountCreation/>}/>
                     <Route path="/history" element={< TransactionHistory/>}/>
                     <Route path="/forgot-password" element={<ForgotPassword/>}/>
+                    <Route path="/reset-password" element={<ResetPassword/>}/>
                 </Routes>
             </div>
         </div>

@@ -1,16 +1,17 @@
 package com.example.backend.controller;
 
 import com.example.backend.dto.request.LoginRequest;
-import com.example.backend.dto.response.LoginResponse;
+import com.example.backend.dto.request.ResetPasswordRequest;
+import com.example.backend.dto.response.*;
+import com.example.backend.exception.EmailNotFoundException;
 import com.example.backend.exception.InvalidException;
+import com.example.backend.exception.OTPNotFoundException;
 import com.example.backend.model.*;
-import com.example.backend.service.AccountService;
-import com.example.backend.service.LoginService;
-import com.example.backend.service.RefreshTokenService;
-import com.example.backend.service.UserService;
+import com.example.backend.service.*;
 import com.example.backend.utils.annotation.APIMessage;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Email;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
@@ -22,6 +23,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
 
 @Slf4j
 @RestController
@@ -38,12 +43,23 @@ public class AuthenticationController {
 
     private final LoginService loginService;
 
-    public AuthenticationController(RefreshTokenService refreshTokenService, AuthenticationManagerBuilder authenticationManagerBuilder, LoginService securityService, AccountService accountService, UserService userService, LoginService loginService) {
+    private final CustomerService customerService;
+
+    private final EmailService emailService;
+
+    private final Random random = new Random();
+
+    private final OTPService otpService;
+
+    public AuthenticationController(RefreshTokenService refreshTokenService, AuthenticationManagerBuilder authenticationManagerBuilder, LoginService securityService, AccountService accountService, UserService userService, LoginService loginService, CustomerService customerService, EmailService emailService, OTPService otpService) {
         this.authenticationManagerBuilder = authenticationManagerBuilder;
         this.loginService = securityService;
         this.accountService = accountService;
         this.userService = userService;
         this.refreshTokenService = refreshTokenService;
+        this.customerService = customerService;
+        this.emailService = emailService;
+        this.otpService = otpService;
     }
 
     @GetMapping("/refresh")
@@ -174,6 +190,92 @@ public class AuthenticationController {
                 .header(HttpHeaders.SET_COOKIE, deleteCookie.toString())
                 .body(null);
 
+    }
+
+    @PostMapping("/verify-email")
+    @APIMessage("Customer is found")
+    public ResponseEntity<EmailVerifyResponse> findCustomerByEmail(@RequestBody Map<String, String> requestBody) throws EmailNotFoundException {
+        String email = requestBody.get("email");
+        return customerService.findByEmail(email)
+                .map(customer -> {
+                    EmailVerifyResponse emailVerifyResponse = new EmailVerifyResponse(
+                            customer.getId(),
+                            customer.getUsername(),
+                            customer.getName(),
+                            customer.getEmail(),
+                            customer.getPhone()
+                    );
+                    return ResponseEntity.ok(emailVerifyResponse);
+                })
+                .orElseThrow(() -> new EmailNotFoundException("NOT_FOUND_EMAIL"));
+    }
+
+    @PostMapping("/forgot-password")
+    @APIMessage("Handle forgot password")
+    public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> request) {
+        RestResponse<?> res = new RestResponse<>();
+
+        String email = request.get("email");
+        if (email == null || email.isBlank()) {
+            res.setStatus(400);
+            res.setMessage("Invalid email");
+            res.setError("INVALID_EMAIL");
+            res.setData(null);
+            return ResponseEntity.badRequest().body(res);
+        }
+
+        String otp = String.format("%06d", new Random().nextInt(999999));
+
+        otpService.saveOtp(email, otp, 1);
+
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("OTP_CODE", otp);
+        emailService.sendEmailFromTemplateSync(email, "Reset Your Password", "verify-email", variables);
+
+        res.setStatus(200);
+        res.setMessage("Sent OTP code successfully");
+        res.setError(null);
+        res.setData(null);
+
+        return ResponseEntity.ok().body(res);
+    }
+
+    @PostMapping("/verify-reset-otp")
+    @APIMessage("Verify reset OTP")
+    public ResponseEntity<?> verifyResetOtp(@RequestBody Map<String, String> request) throws EmailNotFoundException, OTPNotFoundException {
+        RestResponse<?> res = new RestResponse<>();
+
+        String email = request.get("email");
+        String otp = request.get("otp");
+
+        if (email == null || email.isBlank()) {
+            throw new EmailNotFoundException("Email can not be blank");
+        }
+
+        if (otp == null || otp.isBlank()) {
+            throw new OTPNotFoundException("OTP can not be blank");
+        }
+
+        String storedOtp = otpService.getOtp(email);
+        if (storedOtp == null) {
+            throw new OTPNotFoundException("OTP is not valid");
+        }
+
+        if (!storedOtp.equals(otp)) {
+            throw new OTPNotFoundException("OTP is not valid");
+        }
+
+        otpService.deleteOtp(email);
+
+
+        return ResponseEntity.ok().body(new VerifyOTPResponse(storedOtp));
+    }
+
+    @PostMapping("/reset-password")
+    @APIMessage("Reset password success.")
+    public ResponseEntity<ResetPasswordResponse> resetPassword(@RequestBody ResetPasswordRequest request) throws EmailNotFoundException {
+        customerService.resetPassword(request.getEmail(), request.getPassword());
+        return ResponseEntity.ok(new ResetPasswordResponse());
     }
 
     public String getRole(User user) {

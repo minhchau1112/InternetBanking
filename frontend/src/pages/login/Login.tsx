@@ -37,6 +37,14 @@ export function LoginForm() {
             password: "",
         },
     })
+    const onForgotPassword = async () => {
+        try {
+            navigate("/forgot-password");
+        } catch (error) {
+            console.log(error);
+            toast.error("Có lỗi xảy ra khi gửi OTP. Vui lòng thử lại.");
+        }
+    };
 
     const onSubmit = async (values: z.infer<typeof formSchema>) => {
         try {
@@ -64,10 +72,10 @@ export function LoginForm() {
     };
     return (
         <Form {...form}>
-            <div className="flex items-center justify-center w-screen bg-white h-screen">
+            <div className="flex items-center justify-center w-screen bg-gray-100 h-screen">
                 <form onSubmit={form.handleSubmit(onSubmit)}
-                      className="space-y-8 w-[480px] bg-white p-8 rounded-lg shadow-lg">
-                    <div className="text-center space-y-2">
+                      className="space-y-6 w-[480px] bg-white p-8 rounded-lg shadow-lg">
+                    <div className="text-center space-y-1">
                         <h1 className="text-2xl font-bold text-gray-800">
                             Internet Banking
                         </h1>
@@ -104,12 +112,13 @@ export function LoginForm() {
                     />
                     <Button className="w-full hover:border-none" type="submit">Đăng nhập</Button>
                     <div className="text-left">
-                        <a
-                            href="/forgot-password"
-                            className="text-sm"
+                        <button
+                            type="button"
+                            onClick={onForgotPassword}
+                            className="text-sm text-blue-600 bg-transparent border-none p-0 m-0 focus:outline-none"
                         >
                             Quên mật khẩu?
-                        </a>
+                        </button>
                     </div>
                 </form>
             </div>

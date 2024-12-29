@@ -1,4 +1,4 @@
-package com.example.backend.dto.request;
+package com.example.backend.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,9 +9,9 @@ import lombok.Setter;
 @Setter
 @Builder
 @AllArgsConstructor
-public class RecipientUpdateRequest {
+public class RecipientCreateRequest {
 
-    private Integer recipientId;
+    private Integer customerId;
     private String accountNumber;
     private String aliasName;
     private String bankCode;

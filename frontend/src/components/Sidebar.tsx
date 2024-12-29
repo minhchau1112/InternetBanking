@@ -12,7 +12,7 @@ import {
 import logo from "../logoBank.png";
 
 interface SidebarProps {
-  userType: "ROLE_CUSTOMER" | "ROLE_EMPLOYEE" | "ROLE_ADMIN" | null  | undefined;
+  userType: "customer" | "employee" | "admin";
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ userType }) => {
@@ -41,7 +41,7 @@ const Sidebar: React.FC<SidebarProps> = ({ userType }) => {
             <DashboardOutlined /> Dashboard
           </NavLink>
 
-          {userType === "ROLE_CUSTOMER" && (
+          {userType === "customer" && (
             <>
               <NavLink to="/customer/payments" className={getNavLinkClass}>
                 <PaymentOutlined /> Payments
@@ -61,13 +61,13 @@ const Sidebar: React.FC<SidebarProps> = ({ userType }) => {
             </>
           )}
 
-          {userType === "ROLE_EMPLOYEE" && (
+          {userType === "employee" && (
             <>
               <NavLink to="/employee/customers" className={getNavLinkClass}>
                 <PaymentOutlined /> Accounts
               </NavLink>
-              <NavLink to="/deposit" className={getNavLinkClass}>
-                <AccountBalanceOutlined /> Deposit
+              <NavLink to="/employee/transactions" className={getNavLinkClass}>
+                <AccountBalanceOutlined /> Transaction
               </NavLink>
               <NavLink to="/employee/history" className={getNavLinkClass}>
                 <EqualizerOutlined /> History
@@ -75,7 +75,7 @@ const Sidebar: React.FC<SidebarProps> = ({ userType }) => {
             </>
           )}
 
-          {userType === "ROLE_ADMIN" && (
+          {userType === "admin" && (
             <>
               <NavLink to="/admin/employees" className={getNavLinkClass}>
                 <PaymentOutlined /> Employees

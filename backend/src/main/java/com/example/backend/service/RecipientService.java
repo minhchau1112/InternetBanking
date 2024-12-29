@@ -1,7 +1,7 @@
 package com.example.backend.service;
 
-import com.example.backend.dto.request.RecipientCreateRequest;
-import com.example.backend.dto.request.RecipientUpdateRequest;
+import com.example.backend.dto.RecipientCreateRequest;
+import com.example.backend.dto.RecipientUpdateRequest;
 import com.example.backend.model.Customer;
 import com.example.backend.model.Recipient;
 import com.example.backend.repository.CustomerRepository;
@@ -9,9 +9,7 @@ import com.example.backend.repository.RecipientRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Objects;
 
 @Service
 public class RecipientService {
@@ -30,28 +28,19 @@ public class RecipientService {
 
         Customer customer = customerRepository.findById(createRequest.getCustomerId()).get();
 
-        String aliasName = (!Objects.equals(createRequest.getAliasName(), null)) ? createRequest.getAliasName() : customer.getName();
-
         Recipient recipient = Recipient.builder()
-                .customer(customer)
                 .accountNumber(createRequest.getAccountNumber())
-                .aliasName(aliasName)
+                .aliasName(createRequest.getAliasName())
                 .bankCode(createRequest.getBankCode())
-                .createdAt(LocalDateTime.now())
                 .build();
 
-        System.out.println(recipient.getAccountNumber());
         return recipientRepository.save(recipient);
     }
 
     public Recipient updateRecipient(RecipientUpdateRequest updateRequest) {
 
         Recipient existingRecipient = recipientRepository.findById(updateRequest.getRecipientId()).get();
-
-        String aliasName = (!Objects.equals(updateRequest.getAliasName(), null)) ?
-                updateRequest.getAliasName() : existingRecipient.getCustomer().getName();
-
-        existingRecipient.setAliasName(aliasName);
+        existingRecipient.setAliasName(updateRequest.getAliasName());
         existingRecipient.setBankCode(updateRequest.getBankCode());
         existingRecipient.setAccountNumber(updateRequest.getAccountNumber());
 

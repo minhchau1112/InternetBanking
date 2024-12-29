@@ -16,12 +16,12 @@ const ResetPassword: React.FC = () => {
     const email = useSelector((state: RootState) => state.otp.email);
     const navigate = useNavigate();
 
-    // useEffect(() => {
-    //     if (!isOTPVerified) {
-    //         toast.error("Bạn cần xác nhận OTP trước khi đặt lại mật khẩu.");
-    //         navigate("/forgot-password");
-    //     }
-    // }, [isOTPVerified, navigate]);
+    useEffect(() => {
+        if (!isOTPVerified) {
+            toast.error("Bạn cần xác nhận OTP trước khi đặt lại mật khẩu.");
+            navigate("/forgot-password");
+        }
+    }, [isOTPVerified, navigate]);
 
     const handleResetPassword = async () => {
         if (!password || !confirmPassword) {

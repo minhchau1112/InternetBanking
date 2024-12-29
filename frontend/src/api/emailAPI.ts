@@ -47,3 +47,15 @@ export const verifyOTP = async (email: string, otp: string) => {
         throw new Error("Lỗi kết nối với server");
     }
 };
+export const resetPasswordAPI = async (email: string | null, password: string) => {
+    if (!email) {
+        throw new Error("Email không tồn tại.");
+    }
+    try {
+        const response = await axios.post(`${API_BASE_URL}/reset-password`, { email, password });
+        return response.data;
+    } catch (error) {
+        console.error("API Error:", error);
+        throw new Error("Lỗi kết nối với server.");
+    }
+};

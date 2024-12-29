@@ -16,12 +16,12 @@ const ResetPassword: React.FC = () => {
     const email = useSelector((state: RootState) => state.otp.email);
     const navigate = useNavigate();
 
-    useEffect(() => {
-        if (!isOTPVerified) {
-            toast.error("Bạn cần xác nhận OTP trước khi đặt lại mật khẩu.");
-            navigate("/forgot-password");
-        }
-    }, [isOTPVerified, navigate]);
+    // useEffect(() => {
+    //     if (!isOTPVerified) {
+    //         toast.error("Bạn cần xác nhận OTP trước khi đặt lại mật khẩu.");
+    //         navigate("/forgot-password");
+    //     }
+    // }, [isOTPVerified, navigate]);
 
     const handleResetPassword = async () => {
         if (!password || !confirmPassword) {
@@ -60,8 +60,9 @@ const ResetPassword: React.FC = () => {
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <div>
-                        <Label htmlFor="password">Mật khẩu mới</Label>
+                        <Label htmlFor="password" className="mb-2">Mật khẩu mới</Label>
                         <Input
+                            className="mt-2"
                             id="password"
                             type="password"
                             placeholder="Nhập mật khẩu mới"
@@ -71,9 +72,10 @@ const ResetPassword: React.FC = () => {
                         />
                     </div>
                     <div>
-                        <Label htmlFor="confirmPassword">Xác nhận mật khẩu</Label>
+                        <Label htmlFor="confirmPassword" className="mb-2">Xác nhận mật khẩu</Label>
                         <Input
                             id="confirmPassword"
+                            className="mt-2"
                             type="password"
                             placeholder="Nhập lại mật khẩu mới"
                             value={confirmPassword}

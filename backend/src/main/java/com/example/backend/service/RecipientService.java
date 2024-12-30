@@ -40,7 +40,6 @@ public class RecipientService {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        System.out.println(recipient.getAccountNumber());
         return recipientRepository.save(recipient);
     }
 

@@ -23,9 +23,6 @@ public class RecipientController {
     @GetMapping("/{customer_id}")
     @APIMessage("Recipient fetched successfully.")
     public ResponseEntity<RecipientListResponse> getRecipient(@PathVariable("customer_id") int customer_id) throws CustomerNotFoundException {
-        if (!recipientService.customerExistsById(customer_id)) {
-            throw new CustomerNotFoundException("CUSTOMER_NOT_FOUND");
-        }
 
         List<Recipient> recipients = recipientService.findByCustomer(customer_id);
         RecipientListResponse recipientListResponse = new RecipientListResponse(recipients);
@@ -33,12 +30,12 @@ public class RecipientController {
         return ResponseEntity.ok(recipientListResponse);
     }
 
-    @PostMapping("")
+    @PostMapping
     @APIMessage("Recipient created successfully.")
     public ResponseEntity<Void> createRecipient(@RequestBody RecipientCreateRequest createRequest) throws CustomerNotFoundException {
 
         if(!recipientService.customerExistsById(createRequest.getCustomerId())) {
-            throw new CustomerNotFoundException("CUSTOMER_NOT_FOUND");
+            throw new CustomerNotFoundException("Không tìm thấy khách hàng này");
         }
 
         try {

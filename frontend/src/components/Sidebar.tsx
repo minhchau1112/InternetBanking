@@ -8,6 +8,7 @@ import {
   AccountBalanceOutlined,
   LogoutOutlined,
   NotificationsActiveOutlined,
+  People
 } from "@mui/icons-material";
 import logo from "../logoBank.png";
 
@@ -48,6 +49,9 @@ const Sidebar: React.FC<SidebarProps> = ({ userType }) => {
               </NavLink>
               <NavLink to="/transactions" className={getNavLinkClass}>
                 <AccountBalanceOutlined /> Transaction
+              </NavLink>
+              <NavLink to="/recipient" className={getNavLinkClass}>
+                <People /> Recipient
               </NavLink>
               <NavLink to="/debt-reminder" className={getNavLinkClass}>
                 <NotificationsActiveOutlined /> Debt Reminder

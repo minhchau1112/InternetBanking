@@ -88,4 +88,14 @@ public class GlobalException {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(res);
     }
 
+    @ExceptionHandler(value = {
+            CustomerNotFoundException.class,
+    })
+    public ResponseEntity<RestResponse<Object>> handleCustomerNotFound(Exception ex) {
+        RestResponse<Object> res = new RestResponse<Object>();
+        res.setStatus(HttpStatus.NOT_FOUND.value());
+        res.setError(ex.getMessage());
+        res.setMessage("The customer was not found");
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(res);
+    }
 }

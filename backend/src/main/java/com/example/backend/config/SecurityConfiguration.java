@@ -42,15 +42,17 @@ public class SecurityConfiguration {
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(
                         authz -> authz
-                                .requestMatchers(PUBLIC_URLS).permitAll()
-                                .requestMatchers("/admin/**").hasRole("ADMIN")
-                                .requestMatchers("/customer/**").hasRole("CUSTOMER")
-                                .requestMatchers("/employee/**").hasRole("EMPLOYEE")
-                                .anyRequest().authenticated()
+//                                .requestMatchers(PUBLIC_URLS).permitAll()
+//                                .requestMatchers("/admin/**").hasRole("ADMIN")
+//                                .requestMatchers("/customer/**").hasRole("CUSTOMER")
+//                                .requestMatchers("/employee/**").hasRole("EMPLOYEE")
+//                                .anyRequest().authenticated()
+                                .anyRequest().permitAll()
                 )
-                .oauth2ResourceServer((oauth2)->oauth2.jwt(Customizer.withDefaults())
-                        .authenticationEntryPoint(authenticationEntryPointConfiguration)
-                )
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
+//                .oauth2ResourceServer((oauth2)->oauth2.jwt(Customizer.withDefaults())
+//                        .authenticationEntryPoint(authenticationEntryPointConfiguration)
+//                )
                 .formLogin(form -> form.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
         return http.build();

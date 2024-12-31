@@ -24,7 +24,7 @@ const formSchema = z.object({
     username: z.string().min(1, "Tên đăng nhập là bắt buộc"),
     password: z
         .string()
-        .min(5, "Mật khẩu phải có ít nhất 6 ký tự")
+        .min(5, "Mật khẩu phải có ít nhất 5 ký tự")
         .min(1, "Mật khẩu là bắt buộc"),
 })
 const RECAPTCHA_SITE_KEY = "6LeOfqoqAAAAABX7HwReZGjialYSZF-RQ6MjvwTn";

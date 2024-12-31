@@ -1,6 +1,5 @@
 package com.example.backend.controller;
 
-import com.example.backend.model.Transaction;
 import com.example.backend.service.TransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -22,15 +21,15 @@ public class TransactionController {
     }
 
     @GetMapping
-    public List<Transaction> getTransactions(
+    public List<?> getTransactions(
             @RequestParam(value = "accountId") String accountId,
-            @RequestParam(value = "destinationAccountId", required = false) String destinationAccountId,
+            @RequestParam(value = "destinationAccountNumber", required = false) String destinationAccountNumber,
+            @RequestParam(value = "type", required = false) String type,
             @RequestParam(value = "startDate", required = false) String startDate,
             @RequestParam(value = "endDate", required = false) String endDate
     ) {
         Integer srcAccountId = Integer.parseInt(accountId);
-        Integer destAccountId = (destinationAccountId != null && !destinationAccountId.isEmpty())
-                ? Integer.parseInt(destinationAccountId) : null;
+        String desAccountNum = (destinationAccountNumber != null && !destinationAccountNumber.isEmpty()) ? destinationAccountNumber : null;
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         LocalDateTime start = (startDate != null && !startDate.isEmpty())
@@ -38,8 +37,12 @@ public class TransactionController {
         LocalDateTime end = (endDate != null && !endDate.isEmpty())
                 ? LocalDateTime.parse(endDate + "T23:59:59", formatter) : null;
 
-        System.out.println("accountId: " + srcAccountId + ", destinationAccountId: " + destAccountId + ", startDate: " + start + ", endDate: " + end);
+        System.out.println("accountId: " + srcAccountId + ", destinationAccountNumber: " + desAccountNum + ", startDate: " + start + ", endDate: " + end);
 
-        return transactionService.getTransactions(srcAccountId, destAccountId, start, end);
+        if ("interbank".equals(type)) {
+            return transactionService.getInterbankTransactionsWithBankName(srcAccountId, desAccountNum, start, end);
+        } else {
+            return transactionService.getTransactions(srcAccountId, desAccountNum, start, end);
+        }
     }
 }

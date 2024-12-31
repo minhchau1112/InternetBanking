@@ -12,12 +12,12 @@ import java.util.List;
 public interface TransactionRepository extends JpaRepository<Transaction, Integer> {
     // Truy vấn theo source account id và destination account id (nếu có)
     @Query("SELECT t FROM Transaction t WHERE t.sourceAccount.id = :sourceAccountId" +
-            " AND (:destinationAccountId IS NULL OR t.destinationAccount.id = :destinationAccountId)" +
+            " AND (:destinationAccountNum IS NULL OR t.destinationAccount.accountNumber = :destinationAccountNum)" +
             " AND (:startDate IS NULL OR t.createdAt >= :startDate)" +
             " AND (:endDate IS NULL OR t.createdAt <= :endDate)")
     List<Transaction> findTransactions(
             Integer sourceAccountId,
-            Integer destinationAccountId,
+            String destinationAccountNum,
             LocalDateTime startDate,
             LocalDateTime endDate
     );

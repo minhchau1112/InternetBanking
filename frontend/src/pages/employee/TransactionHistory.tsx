@@ -2,22 +2,34 @@ import { useState } from 'react';
 import NoDataImage from '@/assets/image/nodata.png';
 import axios from "axios";
 
-type Transaction = {
+type BaseTransaction = {
     id: number;
-    type: 'received' | 'transfer' | 'debt_payment';
     amount: number;
     date: string;
     description: string;
 };
 
+type InternalTransaction = BaseTransaction & {
+    type: 'received' | 'transfer' | 'debt_payment';
+};
+
+type InterbankTransaction = BaseTransaction & {
+    bankName: string;
+    type: 'interbank_received' | 'interbank_transfer';
+};
+
+type CombinedTransaction = InternalTransaction | InterbankTransaction;
+
+
 const TransactionHistory = () => {
     const [activeTab, setActiveTab] = useState<'all' | 'in' | 'out'>('all');
     const [sourceAccountId] = useState<string>(localStorage.getItem('accountId') || '');
-    const [destinationAccountId, setDestinationAccountId] = useState<string>('');
+    const [destinationAccountNumber, setDestinationAccountNumber] = useState<string>('');
+    const [transactionType, setTransactionType] = useState<'internal' | 'interbank'>('internal');
     const [startDate, setStartDate] = useState<string>('');
     const [endDate, setEndDate] = useState<string>('');
-    const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
-    const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
+    const [allTransactions, setAllTransactions] = useState<CombinedTransaction[]>([]);
+    const [filteredTransactions, setFilteredTransactions] = useState<CombinedTransaction[]>([]);
     const [error, setError] = useState<string | null>(null);
 
     // Hàm fetch dữ liệu giao dịch từ API
@@ -33,9 +45,10 @@ const TransactionHistory = () => {
                 // Tạo chuỗi query parameters cho các tham số tìm kiếm
                 params: new URLSearchParams({
                     accountId: sourceAccountId || '',
-                    destinationAccountId: destinationAccountId || '',
+                    destinationAccountNumber: destinationAccountNumber || '',
                     startDate: startDate || '',
                     endDate: endDate || '',
+                    type: transactionType || 'internal',
                 }),
             });
 
@@ -47,13 +60,27 @@ const TransactionHistory = () => {
             }
 
             // Sử dụng map để chuyển đổi dữ liệu thành đối tượng Transaction
-            const transactions = data.map((transaction: any) => ({
-                id: transaction.id,
-                type: transaction.type,
-                amount: transaction.amount,
-                date: transaction.createdAt,
-                description: transaction.message,
-            }));
+            const transactions: CombinedTransaction[] = data.map((item: any) => {
+                const transaction = item.transaction;
+                if (item.bankName) {
+                    return {
+                        id: transaction.id,
+                        type: transaction.type === 'received' ? 'interbank_received' : 'interbank_transfer',
+                        amount: transaction.amount,
+                        date: transaction.createdAt,
+                        description: transaction.message,
+                        bankName: item.bankName,
+                    } as InterbankTransaction;
+                } else {
+                    return {
+                        id: item.id,
+                        type: item.type,
+                        amount: item.amount,
+                        date: item.createdAt,
+                        description: item.message,
+                    } as InternalTransaction;
+                }
+            });
 
             setAllTransactions(transactions); // Lưu tất cả giao dịch
             filterByTab(transactions, activeTab); // Lọc giao dịch theo tab đã chọn
@@ -64,12 +91,16 @@ const TransactionHistory = () => {
     };
 
     // Hàm lọc giao dịch theo loại tab (all, in, out)
-    const filterByTab = (list: Transaction[], tab: 'all' | 'in' | 'out') => {
+    const filterByTab = (list: CombinedTransaction[], tab: 'all' | 'in' | 'out') => {
         let filtered = list;
         if (tab === 'in') {
-            filtered = list.filter((transaction) => transaction.type === 'received'); // Lọc giao dịch nhận
+            filtered = list.filter(
+                (transaction) =>
+                    transaction.type === 'received' || transaction.type === 'interbank_received'); // Lọc giao dịch nhận
         } else if (tab === 'out') {
-            filtered = list.filter((transaction) => transaction.type !== 'received'); // Lọc giao dịch chuyển
+            filtered = list.filter(
+                (transaction) =>
+                    transaction.type === 'transfer' || transaction.type === 'interbank_transfer'); // Lọc giao dịch chuyển
         }
         setFilteredTransactions(filtered); // Cập nhật danh sách giao dịch đã lọc
     };
@@ -93,8 +124,8 @@ const TransactionHistory = () => {
                         type="text"
                         placeholder="Số tài khoản"
                         className="border border-gray-300 rounded-lg p-2 flex-1"
-                        value={destinationAccountId}
-                        onChange={(e) => setDestinationAccountId(e.target.value)}
+                        value={destinationAccountNumber}
+                        onChange={(e) => setDestinationAccountNumber(e.target.value)}
                     />
                     <input
                         type="date"
@@ -108,6 +139,14 @@ const TransactionHistory = () => {
                         value={endDate}
                         onChange={(e) => setEndDate(e.target.value)}
                     />
+                    <select
+                        className="border border-gray-300 rounded-lg p-2"
+                        value={transactionType}
+                        onChange={(e) => setTransactionType(e.target.value as 'internal' | 'interbank')}
+                    >
+                        <option value="internal">Nội bộ</option>
+                        <option value="interbank">Liên ngân hàng</option>
+                    </select>
                     <button
                         onClick={handleSearch}
                         className="bg-blue-500 text-white font-semibold py-2 px-6 rounded-lg hover:bg-blue-600"
@@ -145,10 +184,19 @@ const TransactionHistory = () => {
                             >
                                 <div>
                                     <p className="font-semibold">{transaction.description}</p>
+                                    {transaction.type.startsWith('interbank') && (
+                                        <p className="text-sm text-gray-600">Ngân hàng: {transaction.bankName}</p>
+                                    )}
                                     <p className="text-sm text-gray-600">{new Date(transaction.date).toLocaleDateString()}</p>
                                 </div>
-                                <div className={`font-bold text-lg ${transaction.type === 'received' ? 'text-green-500' : 'text-red-500'}`}>
-                                    {transaction.type === 'received' ? '+' : '-'}
+                                <div
+                                    className={`font-bold text-lg ${
+                                        transaction.type === 'received' || transaction.type === 'interbank_received'
+                                            ? 'text-green-500'
+                                            : 'text-red-500'
+                                    }`}
+                                >
+                                    {transaction.type === 'received' || transaction.type === 'interbank_received' ? '+' : '-'}
                                     {transaction.amount.toLocaleString()}₫
                                 </div>
                             </div>

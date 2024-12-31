@@ -8,11 +8,11 @@ import com.example.backend.enums.TransactionType;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+@Setter
+@Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Getter
-@Setter
 @Data
 @Entity
 @Table(name = "transactions")
@@ -60,4 +60,5 @@ public class Transaction {
 
     @Column
     private LocalDateTime completedAt;
+
 }

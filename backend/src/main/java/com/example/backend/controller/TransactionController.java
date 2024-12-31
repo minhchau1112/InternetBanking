@@ -62,8 +62,6 @@ public class TransactionController {
 
     @PostMapping("/create")
     public ResponseEntity<?> createTransaction(@RequestBody TransactionRequest transactionRequest) {
-        System.out.println(transactionRequest);
-
         // Tính toán phí giao dịch và số tiền
         BigDecimal fee = transactionRequest.getFee();
         BigDecimal amount = transactionRequest.getAmount();
@@ -92,7 +90,6 @@ public class TransactionController {
 
     @PostMapping("/verify-otp")
     public ResponseEntity<?> verifyOtp(@RequestBody OtpVerificationRequest otpRequest) {
-        System.out.println(otpRequest);
         boolean isVerified = transactionService.verifyOtpAndCompleteTransaction(otpRequest);
 
         if (isVerified) {

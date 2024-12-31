@@ -66,7 +66,6 @@ public class TransactionService {
     }
 
     public String generateAndSendOTP(Transaction request) {
-        System.out.println("generateAndSendOTP"+request);
         String otp = String.valueOf((int) ((Math.random() * 9000) + 1000)); // Generate 4-digit OTP
 
         // Gửi OTP qua email
@@ -86,7 +85,6 @@ public class TransactionService {
         Account destinationAccount = accountRepository.findByAccountNumber(request.getDestinationAccountNumber())
                 .orElseThrow(() -> new IllegalArgumentException("Destination account not found"));
 
-
         Transaction transaction = Transaction.builder()
                 .sourceAccount(sourceAccount)
                 .destinationAccount(destinationAccount)
@@ -102,8 +100,6 @@ public class TransactionService {
 
 
         transaction = transactionRepository.save(transaction);
-
-        System.out.println(transaction);
         return transaction;
     }
 

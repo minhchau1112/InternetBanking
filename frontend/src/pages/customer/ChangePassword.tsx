@@ -1,14 +1,17 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useFormik } from 'formik';
 import { z } from 'zod';
 import { Input } from '@/components/ui/input.tsx';
 import { Button } from '@/components/ui/button.tsx';
+import { updatePassword } from '@/api/authAPI.ts';
+import {toast} from "react-toastify";
 
-const ChangePassword: React.FC = () => {
-    const [successMessage, setSuccessMessage] = useState('');
+interface ChangePasswordProps {
+    onSuccess: () => void;
+}
 
+const ChangePassword: React.FC<ChangePasswordProps> = ({ onSuccess }) => {
     const passwordSchema = z.object({
-        currentPassword: z.string().nonempty('Mật khẩu hiện tại là bắt buộc'),
         newPassword: z.string().min(5, 'Mật khẩu mới phải có ít nhất 5 ký tự'),
         confirmPassword: z.string().nonempty('Xác nhận mật khẩu là bắt buộc'),
     }).refine((data) => data.newPassword === data.confirmPassword, {
@@ -16,7 +19,7 @@ const ChangePassword: React.FC = () => {
         path: ['confirmPassword'],
     });
 
-    const validate = (values: { currentPassword: string; newPassword: string; confirmPassword: string }) => {
+    const validate = (values: { newPassword: string; confirmPassword: string }) => {
         const result = passwordSchema.safeParse(values);
         if (!result.success) {
             return result.error.formErrors.fieldErrors;
@@ -26,46 +29,33 @@ const ChangePassword: React.FC = () => {
 
     const formik = useFormik({
         initialValues: {
-            currentPassword: '',
             newPassword: '',
             confirmPassword: '',
         },
         validate,
-        onSubmit: (values) => {
-            setTimeout(() => {
-                console.log('Đổi mật khẩu thành công:', values);
-                setSuccessMessage('Mật khẩu của bạn đã được cập nhật thành công.');
+        onSubmit: async (values) => {
+            try {
+                const username = localStorage.getItem('username') || 'customer';
+                const passwordData = {
+                    username,
+                    password: values.newPassword,
+                };
+
+                await updatePassword(passwordData);
+
+                toast.success('Mật khẩu của bạn đã được cập nhật thành công.');
                 formik.resetForm();
-            }, 1000);
+                onSuccess();
+            } catch (error) {
+                console.error(error);
+                toast.error('Có lỗi xảy ra khi thay đổi mật khẩu.');
+            }
         },
     });
 
     return (
         <div className="grid gap-4 py-4">
-            {successMessage && (
-                <div className="mb-4 p-2 text-green-700 bg-green-100 rounded">
-                    {successMessage}
-                </div>
-            )}
             <form onSubmit={formik.handleSubmit}>
-                <div className="mb-4">
-                    <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700">
-                        Mật khẩu hiện tại
-                    </label>
-                    <Input
-                        id="currentPassword"
-                        name="currentPassword"
-                        type="password"
-                        value={formik.values.currentPassword}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        className="mt-1 block w-full mb-2"
-                    />
-                    {formik.touched.currentPassword && formik.errors.currentPassword && (
-                        <p className="text-sm text-red-600">{formik.errors.currentPassword}</p>
-                    )}
-                </div>
-
                 <div className="mb-4">
                     <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700">
                         Mật khẩu mới
@@ -76,7 +66,6 @@ const ChangePassword: React.FC = () => {
                         type="password"
                         value={formik.values.newPassword}
                         onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
                         className="mt-1 block w-full"
                     />
                     {formik.touched.newPassword && formik.errors.newPassword && (
@@ -94,7 +83,6 @@ const ChangePassword: React.FC = () => {
                         type="password"
                         value={formik.values.confirmPassword}
                         onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
                         className="mt-1 block w-full"
                     />
                     {formik.touched.confirmPassword && formik.errors.confirmPassword && (

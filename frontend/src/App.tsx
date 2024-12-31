@@ -11,7 +11,7 @@ import ForgotPassword from "@/pages/login/ForgotPassword.tsx";
 import AccountCreation from "./pages/employee/AccountCreation.tsx";
 import TransactionHistory from "./pages/employee/TransactionHistory.tsx";
 import ResetPassword from "@/pages/login/ResetPassword.tsx";
-
+import TransactionForm from "@/pages/employee/TransactionForm.tsx";
 
 function App() {
     const navigate = useNavigate();
@@ -46,6 +46,7 @@ function App() {
                     <Route path="/history" element={< TransactionHistory/>}/>
                     <Route path="/forgot-password" element={<ForgotPassword/>}/>
                     <Route path="/reset-password" element={<ResetPassword/>}/>
+                    <Route path="/transactions/createTransaction" element={<TransactionForm/>}/>
                 </Routes>
             </div>
         </div>

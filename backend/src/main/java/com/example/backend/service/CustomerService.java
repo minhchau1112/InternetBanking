@@ -37,5 +37,16 @@ public class CustomerService {
     public Customer getCustomerByUsername(String username) {
         return customerRepository.findByUsername(username);
     }
+    public boolean updatePassword(String username, String newPassword) {
+        Customer customer = customerRepository.findByUsername(username);
+
+        if (customer != null) {
+            customer.setPassword(passwordEncoder.encode(newPassword));
+            customerRepository.save(customer);
+            return true;
+        }
+
+        return false;
+    }
 
 }

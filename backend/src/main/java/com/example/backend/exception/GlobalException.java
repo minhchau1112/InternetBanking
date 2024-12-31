@@ -46,4 +46,24 @@ public class GlobalException {
         );
         return ResponseEntity.ok(response);
     }
+
+    @ExceptionHandler(value = {
+            CustomerNotFoundException.class,
+    })
+    public ResponseEntity<RestResponse<Object>> handleCustomerNotFound(Exception ex) {
+        RestResponse<Object> res = new RestResponse<Object>();
+        res.setStatus(HttpStatus.NOT_FOUND.value());
+        res.setError(ex.getMessage());
+        res.setMessage("The customer was not found");
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(res);
+    }
+
+    @ExceptionHandler(RecaptchaException.class)
+    public ResponseEntity<RestResponse<Object>> handleRecaptchaException(RecaptchaException ex) {
+        RestResponse<Object> res = new RestResponse<>();
+        res.setStatus(HttpStatus.BAD_REQUEST.value());
+        res.setError(ex.getMessage());
+        res.setMessage("reCAPTCHA validation failed");
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(res);
+    }
 }

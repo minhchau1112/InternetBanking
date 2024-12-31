@@ -8,11 +8,12 @@ import {
   AccountBalanceOutlined,
   LogoutOutlined,
   NotificationsActiveOutlined,
+  People
 } from "@mui/icons-material";
 import logo from "../logoBank.png";
 
 interface SidebarProps {
-  userType: "customer" | "employee" | "admin";
+  userType: "ROLE_CUSTOMER" | "ROLE_EMPLOYEE" | "ROLE_ADMIN" | null  | undefined;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ userType }) => {
@@ -41,46 +42,49 @@ const Sidebar: React.FC<SidebarProps> = ({ userType }) => {
             <DashboardOutlined /> Dashboard
           </NavLink>
 
-          {userType === "customer" && (
+          {userType === "ROLE_CUSTOMER" && (
             <>
-              <NavLink to="/customer/payments" className={getNavLinkClass}>
+              <NavLink to="/payments" className={getNavLinkClass}>
                 <PaymentOutlined /> Payments
               </NavLink>
-              <NavLink to="/customer/transactions" className={getNavLinkClass}>
+              <NavLink to="/transactions" className={getNavLinkClass}>
                 <AccountBalanceOutlined /> Transaction
               </NavLink>
-              <NavLink to="/customer/debt-reminder" className={getNavLinkClass}>
+              <NavLink to="/recipient" className={getNavLinkClass}>
+                <People /> Recipient
+              </NavLink>
+              <NavLink to="/debt-reminder" className={getNavLinkClass}>
                 <NotificationsActiveOutlined /> Debt Reminder
               </NavLink>
-              <NavLink to="/customer/history" className={getNavLinkClass}>
+              <NavLink to="/history" className={getNavLinkClass}>
                 <EqualizerOutlined /> History
               </NavLink>
-              <NavLink to="/customer/profile" className={getNavLinkClass}>
+              <NavLink to="/profile" className={getNavLinkClass}>
                 <PersonOutlineOutlined /> Profile
               </NavLink>
             </>
           )}
 
-          {userType === "employee" && (
+          {userType === "ROLE_EMPLOYEE" && (
             <>
-              <NavLink to="/employee/customers" className={getNavLinkClass}>
+              <NavLink to="/customers" className={getNavLinkClass}>
                 <PaymentOutlined /> Accounts
               </NavLink>
-              <NavLink to="/employee/transactions" className={getNavLinkClass}>
-                <AccountBalanceOutlined /> Transaction
+              <NavLink to="/deposit" className={getNavLinkClass}>
+                <AccountBalanceOutlined /> Deposit
               </NavLink>
-              <NavLink to="/employee/history" className={getNavLinkClass}>
+              <NavLink to="/history" className={getNavLinkClass}>
                 <EqualizerOutlined /> History
               </NavLink>
             </>
           )}
 
-          {userType === "admin" && (
+          {userType === "ROLE_ADMIN" && (
             <>
-              <NavLink to="/admin/employees" className={getNavLinkClass}>
+              <NavLink to="/employees" className={getNavLinkClass}>
                 <PaymentOutlined /> Employees
               </NavLink>
-              <NavLink to="/admin/transactions" className={getNavLinkClass}>
+              <NavLink to="/transactions" className={getNavLinkClass}>
                 <AccountBalanceOutlined /> Transaction
               </NavLink>
             </>

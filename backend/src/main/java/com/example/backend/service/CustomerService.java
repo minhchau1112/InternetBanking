@@ -34,4 +34,8 @@ public class CustomerService {
         customer.setPassword(passwordEncoder.encode(newPassword));
         customerRepository.save(customer);
     }
+    public Customer getCustomerByUsername(String username) {
+        return customerRepository.findByUsername(username);
+    }
+
 }

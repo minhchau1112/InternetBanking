@@ -98,4 +98,13 @@ public class GlobalException {
         res.setMessage("The customer was not found");
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(res);
     }
+
+    @ExceptionHandler(RecaptchaException.class)
+    public ResponseEntity<RestResponse<Object>> handleRecaptchaException(RecaptchaException ex) {
+        RestResponse<Object> res = new RestResponse<>();
+        res.setStatus(HttpStatus.BAD_REQUEST.value());
+        res.setError(ex.getMessage());
+        res.setMessage("reCAPTCHA validation failed");
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(res);
+    }
 }

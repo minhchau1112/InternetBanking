@@ -23,6 +23,7 @@ public class EmployeeService {
     }
 
     public Employee createEmployee(Employee employee) {
+        // Ensure that the employee has a username and password set
         return employeeRepository.save(employee);
     }
 

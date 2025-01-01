@@ -19,4 +19,3 @@ public class Employee extends User {
     @Column(nullable = false)
     private EmployeeStatus status;
 }
-

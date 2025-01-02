@@ -14,6 +14,7 @@ import ResetPassword from "@/pages/login/ResetPassword.tsx";
 import ChangePassword from "@/pages/customer/ChangePassword.tsx";
 import Profile from "@/pages/customer/Profile.tsx";
 
+import TransactionForm from "@/pages/employee/TransactionForm.tsx";
 
 function App() {
     const navigate = useNavigate();
@@ -50,6 +51,7 @@ function App() {
                     <Route path="/reset-password" element={<ResetPassword/>}/>
                     <Route path="/change-password" element={<ChangePassword/>}/>
                     <Route path="/profile" element={<Profile/>}/>
+                    <Route path="/transactions/createTransaction" element={<TransactionForm/>}/>
                 </Routes>
             </div>
         </div>

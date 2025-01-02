@@ -12,7 +12,6 @@ import com.example.backend.service.*;
 import com.example.backend.utils.annotation.APIMessage;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Email;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;

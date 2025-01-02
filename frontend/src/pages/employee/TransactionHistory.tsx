@@ -123,24 +123,24 @@ const TransactionHistory = () => {
                     <input
                         type="text"
                         placeholder="Số tài khoản"
-                        className="border border-gray-300 rounded-lg p-2 flex-1"
+                        className="border border-gray-300 rounded-lg p-2 flex-1 text-white"
                         value={destinationAccountNumber}
                         onChange={(e) => setDestinationAccountNumber(e.target.value)}
                     />
                     <input
                         type="date"
-                        className="border border-gray-300 rounded-lg p-2"
+                        className="border border-gray-300 rounded-lg p-2 text-white"
                         value={startDate}
                         onChange={(e) => setStartDate(e.target.value)}
                     />
                     <input
                         type="date"
-                        className="border border-gray-300 rounded-lg p-2"
+                        className="border border-gray-300 rounded-lg p-2 text-white"
                         value={endDate}
                         onChange={(e) => setEndDate(e.target.value)}
                     />
                     <select
-                        className="border border-gray-300 rounded-lg p-2"
+                        className="border border-gray-300 rounded-lg p-2 text-white"
                         value={transactionType}
                         onChange={(e) => setTransactionType(e.target.value as 'internal' | 'interbank')}
                     >
@@ -156,12 +156,12 @@ const TransactionHistory = () => {
                 </div>
 
                 {/* Tabs */}
-                <div className="flex border-b">
+                <div className="flex border-b p-6 flex flex-col sm:flex-row items-center gap-4">
                     {['all', 'in', 'out'].map((tab) => (
                         <button
                             key={tab}
                             onClick={() => handleTabChange(tab as 'all' | 'in' | 'out')}
-                            className={`w-1/3 p-4 text-center font-semibold ${
+                            className={`w-1/3 p-4 text-center font-semibold text-white ${
                                 activeTab === tab ? 'border-b-4 border-blue-500 text-blue-600' : 'text-gray-500'
                             }`}
                         >

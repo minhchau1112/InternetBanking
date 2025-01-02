@@ -52,6 +52,7 @@ public class LoginService {
                 .expiresAt(validity)
                 .subject(username)
                 .claim("user", loginResponse.getUser())
+                .claim("role", loginResponse.getUser().getRole())
                 .build();
 
         JwsHeader jwsHeader = JwsHeader.with(JWT_ALGORITHM).build();

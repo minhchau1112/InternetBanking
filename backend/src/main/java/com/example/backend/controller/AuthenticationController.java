@@ -126,10 +126,10 @@ public class AuthenticationController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request,@RequestParam String recaptchaResponse)  {
 
-        boolean isRecaptchaValid = verifyRecaptcha(recaptchaResponse);
-        if (!isRecaptchaValid) {
-            throw new RecaptchaException("Invalid reCAPTCHA response");
-        }
+        //boolean isRecaptchaValid = verifyRecaptcha(recaptchaResponse);
+        //if (!isRecaptchaValid) {
+        //    throw new RecaptchaException("Invalid reCAPTCHA response");
+        //}
 
         UsernamePasswordAuthenticationToken authenticationToken
                 = new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword());

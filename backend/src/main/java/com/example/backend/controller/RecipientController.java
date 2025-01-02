@@ -10,6 +10,7 @@ import com.example.backend.repository.AccountRepository;
 import com.example.backend.repository.LinkedBankRepository;
 import com.example.backend.service.RecipientService;
 import com.example.backend.utils.annotation.APIMessage;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -31,7 +32,8 @@ public class RecipientController {
 
     @GetMapping("/{customer_id}")
     @APIMessage("Recipient fetched successfully.")
-    public ResponseEntity<List<Recipient>> getRecipient(@PathVariable("customer_id") int customer_id) throws CustomerNotFoundException {
+    public ResponseEntity<List<Recipient>> getRecipient
+            (@PathVariable("customer_id") int customer_id) throws CustomerNotFoundException {
 
         List<Recipient> recipients = recipientService.findByCustomer(customer_id);
         RecipientListResponse recipientListResponse = new RecipientListResponse(recipients);
@@ -41,7 +43,8 @@ public class RecipientController {
 
     @PostMapping
     @APIMessage("Recipient created successfully.")
-    public ResponseEntity<Void> createRecipient(@RequestBody RecipientCreateRequest createRequest) throws CustomerNotFoundException {
+    public ResponseEntity<Void> createRecipient
+            (@RequestBody @Valid RecipientCreateRequest createRequest) throws CustomerNotFoundException {
 
         if(!accountRepository.existsByAccountNumber(createRequest.getAccountNumber())) {
             throw new CustomerNotFoundException("Không tìm thấy khách hàng này");
@@ -58,7 +61,8 @@ public class RecipientController {
 
     @PutMapping("/{recipient_id}")
     @APIMessage("Recipient updated successfully.")
-    public ResponseEntity<Void> updateRecipient(@PathVariable("recipient_id") Integer recipient_id, @RequestBody RecipientUpdateRequest updateRequest) {
+    public ResponseEntity<Void> updateRecipient(@PathVariable("recipient_id") Integer recipient_id,
+                                                @RequestBody @Valid  RecipientUpdateRequest updateRequest) {
 
         try{
             Recipient recipient = recipientService.updateRecipient(updateRequest);

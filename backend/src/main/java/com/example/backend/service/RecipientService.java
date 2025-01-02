@@ -2,9 +2,13 @@ package com.example.backend.service;
 
 import com.example.backend.dto.request.RecipientCreateRequest;
 import com.example.backend.dto.request.RecipientUpdateRequest;
+import com.example.backend.model.Account;
 import com.example.backend.model.Customer;
+import com.example.backend.model.LinkedBank;
 import com.example.backend.model.Recipient;
+import com.example.backend.repository.AccountRepository;
 import com.example.backend.repository.CustomerRepository;
+import com.example.backend.repository.LinkedBankRepository;
 import com.example.backend.repository.RecipientRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -22,15 +26,24 @@ public class RecipientService {
     @Autowired
     private CustomerRepository customerRepository;
 
+    @Autowired
+    private AccountRepository accountRepository;
+
+    @Autowired
+    private LinkedBankRepository linkedBankRepository;
+
     public List<Recipient> findByCustomer(Integer customerId) {
         return recipientRepository.findByCustomerId(customerId);
     }
 
     public Recipient saveRecipient(RecipientCreateRequest createRequest) {
 
-        Customer customer = customerRepository.findById(createRequest.getCustomerId()).get();
+        Customer customer = customerRepository.findById(createRequest.getCustomerId()).orElse(null);
 
-        String aliasName = (!Objects.equals(createRequest.getAliasName(), null)) ? createRequest.getAliasName() : customer.getName();
+        Account account = accountRepository.findByAccountNumber(createRequest.getAccountNumber()).get();
+
+        String aliasName = (!Objects.equals(createRequest.getAliasName(), null)) ?
+                createRequest.getAliasName() : account.getCustomer().getName();
 
         Recipient recipient = Recipient.builder()
                 .customer(customer)
@@ -57,17 +70,8 @@ public class RecipientService {
         return recipientRepository.save(existingRecipient);
     }
 
-    public void delete(Integer id) {
+    public void deleteRecipient(Integer id) {
         Recipient recipient = recipientRepository.findById(id).get();
         recipientRepository.delete(recipient);
     }
-
-    public boolean customerExistsById(Integer id) {
-        return customerRepository.existsById(id);
-    }
-
-    public boolean recipientExistsById(Integer id) {
-        return recipientRepository.existsById(id);
-    }
-
 }

@@ -4,7 +4,10 @@ import com.example.backend.dto.request.RecipientCreateRequest;
 import com.example.backend.dto.request.RecipientUpdateRequest;
 import com.example.backend.dto.response.RecipientListResponse;
 import com.example.backend.exception.CustomerNotFoundException;
+import com.example.backend.model.LinkedBank;
 import com.example.backend.model.Recipient;
+import com.example.backend.repository.AccountRepository;
+import com.example.backend.repository.LinkedBankRepository;
 import com.example.backend.service.RecipientService;
 import com.example.backend.utils.annotation.APIMessage;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,21 +23,27 @@ public class RecipientController {
     @Autowired
     private RecipientService recipientService;
 
+    @Autowired
+    private LinkedBankRepository linkedBankRepository;
+
+    @Autowired
+    private AccountRepository accountRepository;
+
     @GetMapping("/{customer_id}")
     @APIMessage("Recipient fetched successfully.")
-    public ResponseEntity<RecipientListResponse> getRecipient(@PathVariable("customer_id") int customer_id) throws CustomerNotFoundException {
+    public ResponseEntity<List<Recipient>> getRecipient(@PathVariable("customer_id") int customer_id) throws CustomerNotFoundException {
 
         List<Recipient> recipients = recipientService.findByCustomer(customer_id);
         RecipientListResponse recipientListResponse = new RecipientListResponse(recipients);
 
-        return ResponseEntity.ok(recipientListResponse);
+        return ResponseEntity.ok(recipients);
     }
 
     @PostMapping
     @APIMessage("Recipient created successfully.")
     public ResponseEntity<Void> createRecipient(@RequestBody RecipientCreateRequest createRequest) throws CustomerNotFoundException {
 
-        if(!recipientService.customerExistsById(createRequest.getCustomerId())) {
+        if(!accountRepository.existsByAccountNumber(createRequest.getAccountNumber())) {
             throw new CustomerNotFoundException("Không tìm thấy khách hàng này");
         }
 
@@ -65,10 +74,17 @@ public class RecipientController {
     public ResponseEntity<Void> deleteRecipient(@PathVariable("recipient_id") int recipient_id) {
 
         try {
-            recipientService.delete(recipient_id);
+            recipientService.deleteRecipient(recipient_id);
             return ResponseEntity.ok().body(null);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body(null);
         }
+    }
+
+    @GetMapping("/banks")
+    @APIMessage("Getted")
+    public ResponseEntity<List<LinkedBank>> getBanks() {
+        List<LinkedBank> banks = linkedBankRepository.findAll();
+        return ResponseEntity.ok(banks);
     }
 }

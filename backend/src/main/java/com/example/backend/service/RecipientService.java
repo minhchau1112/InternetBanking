@@ -60,7 +60,7 @@ public class RecipientService {
 
         Recipient existingRecipient = recipientRepository.findById(updateRequest.getRecipientId()).get();
 
-        if(updateRequest.getAliasName().isEmpty()){
+        if(!updateRequest.getAliasName().isEmpty()){
             existingRecipient.setAliasName(updateRequest.getAliasName());
         } else {
             String aliasName = accountRepository.findByAccountNumber(updateRequest.getAccountNumber()).get()

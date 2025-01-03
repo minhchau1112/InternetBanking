@@ -6,7 +6,7 @@ import { useEffect } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "./redux/store/index.ts";
 import DepositPage from "./pages/employee/Deposit";
-import Recipient from "./pages/customer/Recipient.tsx";
+import Recipient from "./pages/customer/Contact.tsx";
 import ForgotPassword from "@/pages/login/ForgotPassword.tsx";
 import AccountCreation from "./pages/employee/AccountCreation.tsx";
 import TransactionHistory from "./pages/employee/TransactionHistory.tsx";
@@ -14,6 +14,7 @@ import ResetPassword from "@/pages/login/ResetPassword.tsx";
 import ChangePassword from "@/pages/customer/ChangePassword.tsx";
 import Profile from "@/pages/customer/Profile.tsx";
 
+import TransactionForm from "@/pages/employee/TransactionForm.tsx";
 
 function App() {
     const navigate = useNavigate();
@@ -43,13 +44,14 @@ function App() {
                     <Route path="/customer" element={<CustomerDashboard/>}/>
                     <Route path="/login" element={<LoginForm/>}/>
                     <Route path="/deposit" element={<DepositPage/>}/>
-                    <Route path="/recipient" element={<Recipient/>}/>
+                    <Route path="/contact" element={<Recipient/>}/>
                     <Route path="/customers" element={< AccountCreation/>}/>
                     <Route path="/history" element={< TransactionHistory/>}/>
                     <Route path="/forgot-password" element={<ForgotPassword/>}/>
                     <Route path="/reset-password" element={<ResetPassword/>}/>
                     <Route path="/change-password" element={<ChangePassword/>}/>
                     <Route path="/profile" element={<Profile/>}/>
+                    <Route path="/transactions/createTransaction" element={<TransactionForm/>}/>
                 </Routes>
             </div>
         </div>

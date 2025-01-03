@@ -16,7 +16,7 @@ public class RecipientCreateRequest {
     @NotNull(message = "Customer ID is required")
     private Integer customerId;
 
-    @NotBlank(message = "Account number is required")
+    @NotNull(message = "Account number is required")
     private String accountNumber;
 
     private String aliasName;

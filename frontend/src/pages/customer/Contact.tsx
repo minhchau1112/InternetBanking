@@ -2,6 +2,7 @@ import { Edit, Delete, NavigateBefore, NavigateNext } from '@mui/icons-material'
 import {useEffect, useState} from 'react';
 import axios from "axios";
 import {useForm, SubmitHandler} from "react-hook-form";
+import {toast, ToastContainer} from "react-toastify";
 
 type Customer = {
     createdAt: string,
@@ -52,12 +53,11 @@ const Recipient = () => {
                     Authorization: `Bearer ${localStorage.getItem('access_token')}`,
                 },
             });
-
             const { data } = response.data;
             setRecipients(data);
             handleSearch('', data);
         } catch (error) {
-            console.error("Error fetching recipients:", error);
+            toast.error("Error fetching recipients.");
         }
     };
 
@@ -100,25 +100,26 @@ const Recipient = () => {
         setCurrentPage(prevPage);
     };
 
-    const handleDelete = (customerId: number) => {
+    const handleDelete = async (customerId: number) => {
         try {
-            const response = axios.delete(`http://localhost:8888/api/recipients/${customerId}`,
+            const response = await axios.delete(`http://localhost:8888/api/recipients/${customerId}`,
                 {
                     headers: {
                         Authorization: `Bearer ${localStorage.getItem('access_token')}`,
                     },
                 }
             );
-            console.log(response);
+            toast.success(response.data.message);
             fetchRecipients();
         } catch (err) {
-            console.log("failed");
+            const errorMessage = err.response?.data?.message || "An unexpected error occurred.";
+            toast.error(errorMessage);
         }
     }
 
-    const onSubmitCreate: SubmitHandler<FormData> = (data) => {
+    const onSubmitCreate: SubmitHandler<FormData> = async (data) => {
         try {
-            const response = axios.post(`http://localhost:8888/api/recipients`,
+            const response = await axios.post(`http://localhost:8888/api/recipients`,
                 {
                     customerId: userAccountId,
                     accountNumber: data.accountNumber,
@@ -131,10 +132,11 @@ const Recipient = () => {
                     },
                 }
                 );
-            console.log(response);
+            toast.success(response.data.message);
             fetchRecipients();
         } catch (err) {
-            console.log("failed");
+            const errorMessage = err.response?.data?.message || "An unexpected error occurred.";
+            toast.error(errorMessage);
         }
     };
 
@@ -145,9 +147,9 @@ const Recipient = () => {
         setUpdatingRecipientId(data.id);
         setIsOpenUForm(true);
     }
-    const onSubmitUpdate: SubmitHandler<FormData> = (data) => {
+    const onSubmitUpdate: SubmitHandler<FormData> = async (data) => {
         try {
-            const response = axios.put(`http://localhost:8888/api/recipients/${updatingRecipientId}`,
+            const response = await axios.put(`http://localhost:8888/api/recipients/${updatingRecipientId}`,
                 {
                     recipientId: updatingRecipientId,
                     accountNumber: data.accountNumber,
@@ -160,10 +162,11 @@ const Recipient = () => {
                     },
                 }
             );
-            console.log(response);
+            toast.success(response.data.message);
             fetchRecipients();
         } catch (err) {
-            console.log("failed");
+            const errorMessage = err.response?.data?.message || "An unexpected error occurred.";
+            toast.error(errorMessage);
         }
     };
     return (
@@ -179,23 +182,23 @@ const Recipient = () => {
                 />
                 <div className="w-full grid grid-cols-5">
                     <div className="w-full h-full flex flex-col justify-center items-start col-span-3">
-                        <div className="w-full px-[2%] pb-[2%] pt-[0.5%] border border-gray-300 rounded-3xl">
+                        <div className="w-full h-full flex flex-col justify-between px-[2%] pb-[2%] pt-[0.5%] border border-gray-300 rounded-3xl">
                             <table className="w-full text-lg text-left pb-[1%] border-collapse">
                                 <thead>
                                 <tr className="border-b border-gray-300">
-                                    <th className="py-[2%] w-[40%] font-bold">Alias Name</th>
-                                    <th className="py-[2%] w-[30%] font-bold">Account Number</th>
-                                    <th className="py-[2%] w-[20%] font-bold">Bank Code</th>
-                                    <th className="py-[2%] w-[10%]"></th>
+                                    <th className="py-[1.9%] w-[40%] font-bold">Alias Name</th>
+                                    <th className="py-[1.9%] w-[30%] font-bold">Account Number</th>
+                                    <th className="py-[1.9%] w-[20%] font-bold">Bank Code</th>
+                                    <th className="py-[1.9%] w-[10%]"></th>
                                 </tr>
                                 </thead>
                                 <tbody>
                                 {pageRecipients.map((recipient) => (
                                     <tr key={recipient.id}>
-                                        <td className="py-[2%]">{recipient.aliasName}</td>
-                                        <td className="py-[2%] text-gray-400">{recipient.accountNumber}</td>
-                                        <td className="py-[2%]">{recipient.bankCode}</td>
-                                        <td className="py-[2%] flex">
+                                        <td className="py-[1.9%]">{recipient.aliasName}</td>
+                                        <td className="py-[1.9%] text-gray-400">{recipient.accountNumber}</td>
+                                        <td className="py-[1.9%]">{recipient.bankCode}</td>
+                                        <td className="py-[1.9%] flex">
                                             <button className="bg-transparent p-2"
                                                     onClick={() => openUpdateForm(recipient)}>
                                                 <Edit style={{color: "green"}}/>
@@ -221,7 +224,7 @@ const Recipient = () => {
                         </div>
                     </div>
 
-                    <div className="w-full h-full flex flex-col justify-between items-start col-span-2">
+                    <div className="w-full h-full flex flex-col justify-between items-start col-span-2 space-y-1">
                         <div className="w-full px-[2%] pb-[2%] pt-[2%] ml-[1%] border border-gray-300 rounded-3xl">
                             <h1 className="w-full text-2xl font-bold text-gray-800  mb-4 text-center">
                                 Add New Contact</h1>
@@ -340,6 +343,7 @@ const Recipient = () => {
                     </div>
                 </div>
             </div>
+            <ToastContainer/>
         </div>
     )
 }

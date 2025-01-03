@@ -38,11 +38,11 @@ public class RecipientService {
 
     public Recipient saveRecipient(RecipientCreateRequest createRequest) {
 
-        Customer customer = customerRepository.findById(createRequest.getCustomerId()).orElse(null);
+        Customer customer = accountRepository.findById(createRequest.getCustomerId()).get().getCustomer();
 
         Account account = accountRepository.findByAccountNumber(createRequest.getAccountNumber()).get();
 
-        String aliasName = (!Objects.equals(createRequest.getAliasName(), null)) ?
+        String aliasName = (!createRequest.getAliasName().isEmpty()) ?
                 createRequest.getAliasName() : account.getCustomer().getName();
 
         Recipient recipient = Recipient.builder()
@@ -60,10 +60,14 @@ public class RecipientService {
 
         Recipient existingRecipient = recipientRepository.findById(updateRequest.getRecipientId()).get();
 
-        String aliasName = (!Objects.equals(updateRequest.getAliasName(), null)) ?
-                updateRequest.getAliasName() : existingRecipient.getCustomer().getName();
+        if(updateRequest.getAliasName().isEmpty()){
+            existingRecipient.setAliasName(updateRequest.getAliasName());
+        } else {
+            String aliasName = accountRepository.findByAccountNumber(updateRequest.getAccountNumber()).get()
+                    .getCustomer().getName();
+            existingRecipient.setAliasName(aliasName);
+        }
 
-        existingRecipient.setAliasName(aliasName);
         existingRecipient.setBankCode(updateRequest.getBankCode());
         existingRecipient.setAccountNumber(updateRequest.getAccountNumber());
 

@@ -1,40 +1,31 @@
 package com.example.backend.service;
 
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
-import java.security.SecureRandom;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class OTPService {
 
-    private Map<String, String> otpStorage = new ConcurrentHashMap<>();
+    private final RedisTemplate<String, String> redisTemplate;
 
-    private final EmailService emailService;
-
-    public OTPService(EmailService emailService) {
-        this.emailService = emailService;
+    public OTPService(RedisTemplate<String, String> redisTemplate) {
+        this.redisTemplate = redisTemplate;
     }
 
-    public String generateAndSendOTP(String email) {
-        System.out.println("generateAndSendOTP");
-
-        SecureRandom secureRandom = new SecureRandom();
-        int otp = secureRandom.nextInt(900000) + 100000;
-        String otpString = String.valueOf(otp);
-
-        otpStorage.put(email, otpString);
-
-        System.out.println("start send email");
-
-        emailService.sendEmail(email, "Your OTP Code", "Your OTP code is: " + otp);
-
-        return otpString;
+    public void saveOtp(String email, String otp, long ttl) {
+        String key = "OTP:" + email;
+        redisTemplate.opsForValue().set(key, otp, ttl, TimeUnit.MINUTES);
     }
 
-    public boolean verifyOTP(String otp) {
-        return otpStorage.containsValue(otp);
+    public String getOtp(String email) {
+        String key = "OTP:" + email;
+        return redisTemplate.opsForValue().get(key);
+    }
+
+    public void deleteOtp(String email) {
+        String key = "OTP:" + email;
+        redisTemplate.delete(key);
     }
 }
-

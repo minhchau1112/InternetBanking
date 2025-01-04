@@ -323,7 +323,9 @@ const DebtReminderTable: React.FC<DataTableProps> = ({ status = 'PENDING', type 
 
 		try {
 			const response = await initiateTransfer(internalTransferRequest, accessToken);
-			if (response.success) {
+			console.log("handlePayClick", response);
+
+			if (response.status == 200) {
 				otpString = response.data.otp;
 				setOpenOtpDialog(true); 
 			  }

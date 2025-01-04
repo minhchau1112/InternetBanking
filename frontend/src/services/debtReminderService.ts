@@ -86,12 +86,14 @@ export const cancelDebtReminder = async (
 export const payDebtReminder = async (
 	debtReminderId: number,
 	otp: string,
+	email: string,
 	accessToken: string
 ) => {
 	try {
 		const response = await axios.post(
 			`${API_URL}/${debtReminderId}/pay`,
 			{
+				email: email,
 				otp: otp,
 			},
 			{

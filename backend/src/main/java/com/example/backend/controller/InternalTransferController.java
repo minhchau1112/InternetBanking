@@ -5,6 +5,8 @@ import com.example.backend.dto.request.InternalTransferRequest;
 import com.example.backend.dto.response.ApiResponse;
 import com.example.backend.dto.response.InitiateInternalTransferResponse;
 import com.example.backend.enums.StatusCode;
+import com.example.backend.exception.EmailNotFoundException;
+import com.example.backend.exception.OTPNotFoundException;
 import com.example.backend.service.InternalTransferService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -35,7 +37,7 @@ public class InternalTransferController {
     }
 
     @PostMapping("/confirm")
-    public ResponseEntity<ApiResponse<Void>> confirmInternalTransfer(@RequestBody ConfirmTransferRequest request) {
+    public ResponseEntity<ApiResponse<Void>> confirmInternalTransfer(@RequestBody ConfirmTransferRequest request) throws EmailNotFoundException, OTPNotFoundException {
         internalTransferService.confirmTransfer(request);
 
         ApiResponse<Void> apiResponse = new ApiResponse<>(true, StatusCode.SUCCESS.getCode(), null, "Transfer completed successfully!", LocalDateTime.now());

@@ -19,6 +19,17 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity
 public class SecurityConfiguration {
 
+    private static final String[] PUBLIC_URLS = {
+            "/",
+            "/api/auth/login",
+            "/api/auth/refresh",
+            "/api/auth/verify-email",
+            "/api/email/**",
+            "/api/auth/forgot-password",
+            "/api/auth/verify-reset-otp",
+            "/api/auth/reset-password"
+    };
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -31,7 +42,7 @@ public class SecurityConfiguration {
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(
                         authz -> authz
-                                .requestMatchers("/","/api/auth/login","/api/auth/refresh", "/api/accounts").permitAll()
+                                .requestMatchers(PUBLIC_URLS).permitAll()
                                 .requestMatchers("/admin/**").hasRole("ADMIN")
                                 .requestMatchers("/customer/**").hasRole("CUSTOMER")
                                 .requestMatchers("/employee/**").hasRole("EMPLOYEE")

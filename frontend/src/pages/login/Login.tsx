@@ -17,19 +17,22 @@ import {toast, ToastContainer} from "react-toastify";
 import {login} from "@/api/authAPI.ts";
 import {useDispatch} from "react-redux";
 import {setUser} from "@/redux/slices/authSlice.ts";
+import ReCAPTCHA from "react-google-recaptcha";
+import {useState} from "react";
 
 const formSchema = z.object({
     username: z.string().min(1, "Tên đăng nhập là bắt buộc"),
     password: z
         .string()
-        .min(5, "Mật khẩu phải có ít nhất 6 ký tự")
+        .min(5, "Mật khẩu phải có ít nhất 5 ký tự")
         .min(1, "Mật khẩu là bắt buộc"),
 })
+const RECAPTCHA_SITE_KEY = "6LeOfqoqAAAAABX7HwReZGjialYSZF-RQ6MjvwTn";
 
 export function LoginForm() {
     const navigate = useNavigate();
     const dispatch = useDispatch();
-
+    const [recaptchaValue, setRecaptchaValue] = useState<string | null>(null);
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -37,10 +40,25 @@ export function LoginForm() {
             password: "",
         },
     })
+    const onRecaptchaChange = (value: string | null) => {
+        setRecaptchaValue(value);
+    };
+    const onForgotPassword = async () => {
+        try {
+            navigate("/forgot-password");
+        } catch (error) {
+            console.log(error);
+            toast.error("Có lỗi xảy ra khi gửi OTP. Vui lòng thử lại.");
+        }
+    };
 
     const onSubmit = async (values: z.infer<typeof formSchema>) => {
+        if (!recaptchaValue) {
+            toast.error("Vui lòng xác minh reCAPTCHA");
+            return;
+        }
         try {
-            const data = await login(values.username, values.password);
+            const data = await login(values.username, values.password, recaptchaValue);
 
             console.log(data);
 
@@ -64,10 +82,10 @@ export function LoginForm() {
     };
     return (
         <Form {...form}>
-            <div className="flex items-center justify-center w-screen bg-white h-screen">
+            <div className="flex items-center justify-center w-screen bg-gray-100 h-screen">
                 <form onSubmit={form.handleSubmit(onSubmit)}
-                      className="space-y-8 w-[480px] bg-white p-8 rounded-lg shadow-lg">
-                    <div className="text-center space-y-2">
+                      className="space-y-6 w-[480px] bg-white p-8 rounded-lg shadow-lg">
+                    <div className="text-center space-y-1">
                         <h1 className="text-2xl font-bold text-gray-800">
                             Internet Banking
                         </h1>
@@ -102,14 +120,19 @@ export function LoginForm() {
                             </FormItem>
                         )}
                     />
+                    <ReCAPTCHA
+                        sitekey={RECAPTCHA_SITE_KEY}
+                        onChange={onRecaptchaChange}
+                    />
                     <Button className="w-full hover:border-none" type="submit">Đăng nhập</Button>
                     <div className="text-left">
-                        <a
-                            href="/forgot-password"
-                            className="text-sm"
+                        <button
+                            type="button"
+                            onClick={onForgotPassword}
+                            className="text-sm text-blue-600 bg-transparent border-none p-0 m-0 focus:outline-none"
                         >
                             Quên mật khẩu?
-                        </a>
+                        </button>
                     </div>
                 </form>
             </div>

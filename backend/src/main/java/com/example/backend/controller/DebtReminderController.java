@@ -7,6 +7,8 @@ import com.example.backend.dto.request.DebtReminderRequest;
 import com.example.backend.dto.response.GetDebtReminderForCreatorResponse;
 import com.example.backend.enums.DebtReminderStatus;
 import com.example.backend.enums.StatusCode;
+import com.example.backend.exception.EmailNotFoundException;
+import com.example.backend.exception.OTPNotFoundException;
 import com.example.backend.model.ApiResponse;
 import com.example.backend.model.DebtReminder;
 import com.example.backend.service.DebtReminderService;
@@ -111,7 +113,7 @@ public class DebtReminderController {
     }
 
     @PostMapping("/{debtReminderId}/pay")
-    public ResponseEntity<ApiResponse<Void>> payDebtReminder(@PathVariable Integer debtReminderId, @RequestBody ConfirmTransferRequest request) {
+    public ResponseEntity<ApiResponse<Void>> payDebtReminder(@PathVariable Integer debtReminderId, @RequestBody ConfirmTransferRequest request) throws EmailNotFoundException, OTPNotFoundException {
         internalTransferService.confirmTransfer(request);
         debtReminderService.payDebtReminder(debtReminderId);
 

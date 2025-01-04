@@ -1,20 +1,21 @@
 package com.example.backend.controller;
 
 import com.example.backend.dto.request.LoginRequest;
-import com.example.backend.dto.response.LoginResponse;
+import com.example.backend.dto.request.ResetPasswordRequest;
+import com.example.backend.dto.response.*;
+import com.example.backend.exception.EmailNotFoundException;
 import com.example.backend.exception.InvalidException;
+import com.example.backend.exception.OTPNotFoundException;
+import com.example.backend.exception.RecaptchaException;
 import com.example.backend.model.*;
-import com.example.backend.service.AccountService;
-import com.example.backend.service.LoginService;
-import com.example.backend.service.RefreshTokenService;
-import com.example.backend.service.UserService;
+import com.example.backend.service.*;
 import com.example.backend.utils.annotation.APIMessage;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Email;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseCookie;
-import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
@@ -22,11 +23,19 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
 
 @Slf4j
 @RestController
 @RequestMapping("/api/auth")
 public class AuthenticationController {
+
+    @Value("${recaptcha.secretKey}")
+    private String secretKey;
 
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
 
@@ -38,12 +47,23 @@ public class AuthenticationController {
 
     private final LoginService loginService;
 
-    public AuthenticationController(RefreshTokenService refreshTokenService, AuthenticationManagerBuilder authenticationManagerBuilder, LoginService securityService, AccountService accountService, UserService userService, LoginService loginService) {
+    private final CustomerService customerService;
+
+    private final EmailService emailService;
+
+    private final Random random = new Random();
+
+    private final OTPService otpService;
+
+    public AuthenticationController(RefreshTokenService refreshTokenService, AuthenticationManagerBuilder authenticationManagerBuilder, LoginService securityService, AccountService accountService, UserService userService, LoginService loginService, CustomerService customerService, EmailService emailService, OTPService otpService) {
         this.authenticationManagerBuilder = authenticationManagerBuilder;
         this.loginService = securityService;
         this.accountService = accountService;
         this.userService = userService;
         this.refreshTokenService = refreshTokenService;
+        this.customerService = customerService;
+        this.emailService = emailService;
+        this.otpService = otpService;
     }
 
     @GetMapping("/refresh")
@@ -104,7 +124,13 @@ public class AuthenticationController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request,@RequestParam String recaptchaResponse)  {
+
+        boolean isRecaptchaValid = verifyRecaptcha(recaptchaResponse);
+        if (!isRecaptchaValid) {
+            throw new RecaptchaException("Invalid reCAPTCHA response");
+        }
+
         UsernamePasswordAuthenticationToken authenticationToken
                 = new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword());
         Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
@@ -176,6 +202,92 @@ public class AuthenticationController {
 
     }
 
+    @PostMapping("/verify-email")
+    @APIMessage("Customer is found")
+    public ResponseEntity<EmailVerifyResponse> findCustomerByEmail(@RequestBody Map<String, String> requestBody) throws EmailNotFoundException {
+        String email = requestBody.get("email");
+        return customerService.findByEmail(email)
+                .map(customer -> {
+                    EmailVerifyResponse emailVerifyResponse = new EmailVerifyResponse(
+                            customer.getId(),
+                            customer.getUsername(),
+                            customer.getName(),
+                            customer.getEmail(),
+                            customer.getPhone()
+                    );
+                    return ResponseEntity.ok(emailVerifyResponse);
+                })
+                .orElseThrow(() -> new EmailNotFoundException("NOT_FOUND_EMAIL"));
+    }
+
+    @PostMapping("/forgot-password")
+    @APIMessage("Handle forgot password")
+    public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> request) {
+        RestResponse<?> res = new RestResponse<>();
+
+        String email = request.get("email");
+        if (email == null || email.isBlank()) {
+            res.setStatus(400);
+            res.setMessage("Invalid email");
+            res.setError("INVALID_EMAIL");
+            res.setData(null);
+            return ResponseEntity.badRequest().body(res);
+        }
+
+        String otp = String.format("%06d", new Random().nextInt(999999));
+
+        otpService.saveOtp(email, otp, 1);
+
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("OTP_CODE", otp);
+        emailService.sendEmailFromTemplateSync(email, "Reset Your Password", "verify-email", variables);
+
+        res.setStatus(200);
+        res.setMessage("Sent OTP code successfully");
+        res.setError(null);
+        res.setData(null);
+
+        return ResponseEntity.ok().body(res);
+    }
+
+    @PostMapping("/verify-reset-otp")
+    @APIMessage("Verify reset OTP")
+    public ResponseEntity<?> verifyResetOtp(@RequestBody Map<String, String> request) throws EmailNotFoundException, OTPNotFoundException {
+        RestResponse<?> res = new RestResponse<>();
+
+        String email = request.get("email");
+        String otp = request.get("otp");
+
+        if (email == null || email.isBlank()) {
+            throw new EmailNotFoundException("Email can not be blank");
+        }
+
+        if (otp == null || otp.isBlank()) {
+            throw new OTPNotFoundException("OTP can not be blank");
+        }
+
+        String storedOtp = otpService.getOtp(email);
+        if (storedOtp == null) {
+            throw new OTPNotFoundException("OTP is not valid");
+        }
+
+        if (!storedOtp.equals(otp)) {
+            throw new OTPNotFoundException("OTP is not valid");
+        }
+
+        otpService.deleteOtp(email);
+
+
+        return ResponseEntity.ok().body(new VerifyOTPResponse(storedOtp));
+    }
+
+    @PostMapping("/reset-password")
+    @APIMessage("Reset password success.")
+    public ResponseEntity<ResetPasswordResponse> resetPassword(@RequestBody ResetPasswordRequest request) throws EmailNotFoundException {
+        customerService.resetPassword(request.getEmail(), request.getPassword());
+        return ResponseEntity.ok(new ResetPasswordResponse());
+    }
+
     public String getRole(User user) {
         if (user instanceof Admin) {
             return "ROLE_ADMIN";
@@ -187,6 +299,26 @@ public class AuthenticationController {
             return "ROLE_EMPLOYEE";
         }
         throw new IllegalStateException("Unknown user type: " + user.getClass().getName());
+    }
+
+    private boolean verifyRecaptcha(String recaptchaResponse) {
+        String url = "https://www.google.com/recaptcha/api/siteverify";
+        RestTemplate restTemplate = new RestTemplate();
+
+        String params = "secret=" + secretKey + "&response=" + recaptchaResponse;
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        HttpEntity<String> entity = new HttpEntity<>(params, headers);
+        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
+
+        if (response.getStatusCode() == HttpStatus.OK) {
+            String body = response.getBody();
+            return body.contains("\"success\": true");
+        }
+
+        return false;
     }
 
 }

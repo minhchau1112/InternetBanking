@@ -144,6 +144,7 @@ public class AuthenticationController {
         LoginResponse.UserInformation userInformation = new LoginResponse.UserInformation();
 
         userInformation.setRole(authentication.getAuthorities().iterator().next().getAuthority());
+        userInformation.setUserID(user.getId());
         userInformation.setUsername(user.getUsername());
         if ("ROLE_CUSTOMER".equals(userInformation.getRole())) {
             Account account = accountService.findByCustomerId(user.getId())

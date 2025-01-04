@@ -21,6 +21,7 @@ public class LoginResponse {
     @NoArgsConstructor
     @Builder
     public static class UserInformation{
+        private Integer userID;
         private String username;
         private Integer accountID;
         private String role;

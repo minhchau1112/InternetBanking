@@ -164,7 +164,7 @@ public class AuthenticationController {
         refreshTokenService.storeRefreshToken(request.getUsername(), refresh_token, loginService.getRefreshExpiresIn());
         ResponseCookie responseCookie = ResponseCookie
                 .from("refresh_token",refresh_token)
-                .httpOnly(true)
+                .httpOnly(false)
                 .path("/")
                 .secure(false)
                 .sameSite("None")
@@ -185,11 +185,13 @@ public class AuthenticationController {
             throw new InvalidException("Access Token is not valid");
         }
 
-        refreshTokenService.deleteRefreshToken("refresh_token:" + username);
+        System.out.println(username);
+
+        refreshTokenService.deleteRefreshToken(username);
 
         ResponseCookie deleteCookie = ResponseCookie
                 .from("refresh_token", null)
-                .httpOnly(true)
+                .httpOnly(false)
                 .secure(false)
                 .path("/")
                 .maxAge(0)

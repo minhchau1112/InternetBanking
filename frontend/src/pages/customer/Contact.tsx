@@ -40,7 +40,6 @@ const Recipient = () => {
     const [pageLimit] = useState<number>(10);
     const { register: resC, handleSubmit: subC, formState: { errors: errC } } = useForm<FormData>();
     const { register: resU, handleSubmit: subU, formState: { errors: errU }, setValue: setU } = useForm<FormData>();
-    const [isOpenUForm, setIsOpenUForm] = useState<boolean>(false);
     const [updatingRecipientId, setUpdatingRecipientId] = useState<number>(-1);
     useEffect(() => {
         fetchRecipients();
@@ -140,12 +139,11 @@ const Recipient = () => {
         }
     };
 
-    const openUpdateForm = (data: Recipient) => {
+    const parseUpdateForm = (data: Recipient) => {
         setU("bankCode", data.bankCode);
         setU("accountNumber", data.accountNumber);
         setU("aliasName", data.aliasName);
         setUpdatingRecipientId(data.id);
-        setIsOpenUForm(true);
     }
     const onSubmitUpdate: SubmitHandler<FormData> = async (data) => {
         try {
@@ -200,7 +198,7 @@ const Recipient = () => {
                                         <td className="py-[1.9%]">{recipient.bankCode}</td>
                                         <td className="py-[1.9%] flex">
                                             <button className="bg-transparent p-2"
-                                                    onClick={() => openUpdateForm(recipient)}>
+                                                    onClick={() => parseUpdateForm(recipient)}>
                                                 <Edit style={{color: "green"}}/>
                                             </button>
                                             <button className="bg-transparent p-2"

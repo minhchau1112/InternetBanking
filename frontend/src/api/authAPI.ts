@@ -59,8 +59,31 @@ export const fetchCustomerDetails = async () => {
         console.error(error);
     }
 };
+export const logoutUser = async (): Promise<void> => {
+    try {
+        const accessToken = localStorage.getItem("access_token");
 
+        if (!accessToken) {
+            throw new Error("No access token found.");
+        }
 
+        await axios.post(
+            `${API_BASE_URL}/logout`,
+            {},
+            {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                },
+                withCredentials: true,
+            }
+        );
+
+        console.log("User logged out successfully.");
+    } catch (error) {
+        console.error("Error logging out:", error);
+        throw error instanceof Error ? error : new Error("An unknown error occurred.");
+    }
+};
 
 
 

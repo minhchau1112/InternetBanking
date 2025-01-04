@@ -6,12 +6,11 @@ import { useEffect } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "./redux/store/index.ts";
 import DepositPage from "./pages/employee/Deposit";
-import Recipient from "./pages/customer/Contact.tsx";
+import Recipient from "./pages/customer/Recipient.tsx";
 import ForgotPassword from "@/pages/login/ForgotPassword.tsx";
 import AccountCreation from "./pages/employee/AccountCreation.tsx";
 import TransactionHistory from "./pages/employee/TransactionHistory.tsx";
 import ResetPassword from "@/pages/login/ResetPassword.tsx";
-import ChangePassword from "@/pages/customer/ChangePassword.tsx";
 import Profile from "@/pages/customer/Profile.tsx";
 
 import TransactionForm from "@/pages/employee/TransactionForm.tsx";
@@ -20,6 +19,8 @@ function App() {
     const navigate = useNavigate();
     const token = localStorage.getItem("access_token");
     const location = useLocation();
+
+
     useEffect(() => {
         if (!token && location.pathname !== "/login" && location.pathname !== "/forgot-password" && location.pathname !== "/reset-password") {
             navigate("/login");
@@ -49,7 +50,6 @@ function App() {
                     <Route path="/history" element={< TransactionHistory/>}/>
                     <Route path="/forgot-password" element={<ForgotPassword/>}/>
                     <Route path="/reset-password" element={<ResetPassword/>}/>
-                    <Route path="/change-password" element={<ChangePassword/>}/>
                     <Route path="/profile" element={<Profile/>}/>
                     <Route path="/transactions/createTransaction" element={<TransactionForm/>}/>
                 </Routes>

@@ -12,7 +12,6 @@ import com.example.backend.service.*;
 import com.example.backend.utils.annotation.APIMessage;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Email;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -165,7 +164,7 @@ public class AuthenticationController {
         refreshTokenService.storeRefreshToken(request.getUsername(), refresh_token, loginService.getRefreshExpiresIn());
         ResponseCookie responseCookie = ResponseCookie
                 .from("refresh_token",refresh_token)
-                .httpOnly(true)
+                .httpOnly(false)
                 .path("/")
                 .secure(false)
                 .sameSite("None")
@@ -186,11 +185,13 @@ public class AuthenticationController {
             throw new InvalidException("Access Token is not valid");
         }
 
-        refreshTokenService.deleteRefreshToken("refresh_token:" + username);
+        System.out.println(username);
+
+        refreshTokenService.deleteRefreshToken(username);
 
         ResponseCookie deleteCookie = ResponseCookie
                 .from("refresh_token", null)
-                .httpOnly(true)
+                .httpOnly(false)
                 .secure(false)
                 .path("/")
                 .maxAge(0)

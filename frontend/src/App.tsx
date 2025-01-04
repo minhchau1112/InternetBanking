@@ -6,7 +6,7 @@ import { useEffect } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "./redux/store/index.ts";
 import DepositPage from "./pages/employee/Deposit";
-import Recipient from "./pages/customer/Recipient.tsx";
+import Recipient from "./pages/customer/Contact.tsx";
 import ForgotPassword from "@/pages/login/ForgotPassword.tsx";
 import AccountCreation from "./pages/employee/AccountCreation.tsx";
 import TransactionHistory from "./pages/employee/TransactionHistory.tsx";

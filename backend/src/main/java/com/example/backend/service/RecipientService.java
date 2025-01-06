@@ -38,7 +38,7 @@ public class RecipientService {
 
     public Recipient saveRecipient(RecipientCreateRequest createRequest) {
 
-        Customer customer = accountRepository.findById(createRequest.getCustomerId()).get().getCustomer();
+        Customer customer = customerRepository.findById(createRequest.getCustomerId()).get();
 
         Account account = accountRepository.findByAccountNumber(createRequest.getAccountNumber()).get();
 

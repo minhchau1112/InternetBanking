@@ -34,9 +34,9 @@ public class RecipientController {
     @APIMessage("Recipient fetched successfully.")
     public ResponseEntity<List<Recipient>> getRecipient
             (@PathVariable("customer_id") int customer_id) throws CustomerNotFoundException {
-        Integer customerId = accountRepository.findById(customer_id).get().getCustomer().getId();
-        List<Recipient> recipients = recipientService.findByCustomer(customerId);
-        RecipientListResponse recipientListResponse = new RecipientListResponse(recipients);
+
+        List<Recipient> recipients = recipientService.findByCustomer(customer_id);
+//        RecipientListResponse recipientListResponse = new RecipientListResponse(recipients);
 
         return ResponseEntity.ok(recipients);
     }

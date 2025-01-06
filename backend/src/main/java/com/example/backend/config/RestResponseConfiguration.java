@@ -29,6 +29,11 @@ public class RestResponseConfiguration implements ResponseBodyAdvice<Object> {
             Class selectedConverterType,
             ServerHttpRequest request,
             ServerHttpResponse response) {
+
+        if (body instanceof byte[]) {
+            return body;
+        }
+
         HttpServletResponse servletResponse = ((ServletServerHttpResponse) response).getServletResponse();
         int status = servletResponse.getStatus();
 

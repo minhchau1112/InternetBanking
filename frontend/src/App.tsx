@@ -14,7 +14,6 @@ import ForgotPassword from "@/pages/login/ForgotPassword.tsx";
 import AccountCreation from "./pages/employee/AccountCreation.tsx";
 import TransactionHistory from "./pages/employee/TransactionHistory.tsx";
 import ResetPassword from "@/pages/login/ResetPassword.tsx";
-import ChangePassword from "@/pages/customer/ChangePassword.tsx";
 import Profile from "@/pages/customer/Profile.tsx";
 
 import TransactionForm from "@/pages/employee/TransactionForm.tsx";
@@ -24,6 +23,8 @@ function App() {
     const navigate = useNavigate();
     const token = localStorage.getItem("access_token");
     const location = useLocation();
+
+
     useEffect(() => {
         if (!token && location.pathname !== "/login" && location.pathname !== "/forgot-password" && location.pathname !== "/reset-password") {
             navigate("/login");

@@ -39,14 +39,14 @@ public class TransactionController {
     @GetMapping
     public List<?> getTransactions(
             @RequestParam(value = "accountId") String accountId,
-            @RequestParam(value = "destinationAccountNumber", required = false) String destinationAccountNumber,
+            @RequestParam(value = "partnerAccountNumber", required = false) String partnerAccountNumber,
             @RequestParam(value = "type", required = false) String type,
             @RequestParam(value = "startDate", required = false) String startDate,
             @RequestParam(value = "endDate", required = false) String endDate
     ) {
         try {
             Integer srcAccountId = Integer.parseInt(accountId);
-            String desAccountNum = (destinationAccountNumber != null && !destinationAccountNumber.isEmpty()) ? destinationAccountNumber : null;
+            String partnerAccountNum = (partnerAccountNumber != null && !partnerAccountNumber.isEmpty()) ? partnerAccountNumber : null;
 
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
             LocalDateTime start = (startDate != null && !startDate.isEmpty())
@@ -54,12 +54,10 @@ public class TransactionController {
             LocalDateTime end = (endDate != null && !endDate.isEmpty())
                     ? LocalDateTime.parse(endDate + "T23:59:59", formatter) : null;
 
-            System.out.println("accountId: " + srcAccountId + ", destinationAccountNumber: " + desAccountNum + ", startDate: " + start + ", endDate: " + end);
-
             if ("interbank".equals(type)) {
-                return transactionService.getInterbankTransactionsWithBankName(srcAccountId, desAccountNum, start, end);
+                return transactionService.getUserInterbankTransactions(srcAccountId, partnerAccountNum, start, end);
             } else {
-                return transactionService.getTransactions(srcAccountId, desAccountNum, start, end);
+                return transactionService.getUserTransactions(srcAccountId, partnerAccountNum, start, end);
             }
         } catch (Exception e) {
             e.printStackTrace();

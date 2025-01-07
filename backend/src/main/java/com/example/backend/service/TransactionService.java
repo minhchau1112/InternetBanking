@@ -3,6 +3,7 @@ package com.example.backend.service;
 import com.example.backend.dto.request.OtpVerificationRequest;
 import com.example.backend.dto.request.TransactionRequest;
 import com.example.backend.dto.response.InterbankTransactionResponse;
+import com.example.backend.dto.response.TransactionResponse;
 import com.example.backend.model.Account;
 import com.example.backend.model.InterbankTransaction;
 import com.example.backend.model.LinkedBank;
@@ -15,10 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -41,27 +39,37 @@ public class TransactionService {
 
     private final Map<Integer, String> otpCache = new HashMap<>();
 
-    public List<Transaction> getTransactions(
-            Integer sourceAccountId,
-            String destinationAccountNum,
+    // Lấy danh sách giao dịch nội bộ của tài khoản
+    public List<TransactionResponse> getUserTransactions(
+            Integer accountId,
+            String partnerAccountNumber,
             LocalDateTime startDate,
             LocalDateTime endDate
     ) {
-            return transactionRepository.findTransactions(sourceAccountId, destinationAccountNum, startDate, endDate);
+        List<Transaction> transactions = transactionRepository.findAllTransactionsByAccount(accountId, partnerAccountNumber, startDate, endDate);
+
+        return transactions.stream().map(transaction -> {
+            String tab = transaction.getSourceAccount().getId().equals(accountId) ? "out" : "in";
+            return new TransactionResponse(transaction, tab);
+        }).collect(Collectors.toList());
     }
 
-    public List<InterbankTransactionResponse> getInterbankTransactionsWithBankName(
-            Integer sourceAccountId,
-            String destinationAccountNum,
+    // Lấy danh sách giao dịch liên ngân hàng của tài khoản
+    public List<InterbankTransactionResponse> getUserInterbankTransactions(
+            Integer accountId,
+            String partnerAccountNumber,
             LocalDateTime startDate,
             LocalDateTime endDate
     ) {
-        List<InterbankTransaction> transactions = interbankTransactionRepository.findInterbankTransactionsWithBankName(sourceAccountId, destinationAccountNum, startDate, endDate);
-        return transactions.stream().map(transaction ->{
-           String bankName = linkedBankRepository.findByBankCode(transaction.getExternalBankCode())
-                   .map(LinkedBank::getName)
-                   .orElse("Unknown Bank");
-           return new InterbankTransactionResponse(transaction, bankName);
+        List<InterbankTransaction> transactions = interbankTransactionRepository.findInterbankTransactionsByAccount(accountId, partnerAccountNumber, startDate, endDate);
+
+        return transactions.stream().map(transaction -> {
+            String tab = transaction.isIncoming() ? "in" : "out";
+            String externalAccount = transaction.isIncoming() ? transaction.getExternalAccountNumber() : transaction.getSourceAccount().getAccountNumber();
+            String bankName = linkedBankRepository.findByBankCode(transaction.getExternalBankCode())
+                    .map(LinkedBank::getName)
+                    .orElse("Unknown Bank");
+            return new InterbankTransactionResponse(transaction, externalAccount, bankName, tab);
         }).collect(Collectors.toList());
     }
 

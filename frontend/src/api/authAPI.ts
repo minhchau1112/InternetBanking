@@ -59,8 +59,55 @@ export const fetchCustomerDetails = async () => {
         console.error(error);
     }
 };
+export const logoutUser = async (): Promise<void> => {
+    try {
+        const accessToken = localStorage.getItem("access_token");
 
+        if (!accessToken) {
+            throw new Error("No access token found.");
+        }
 
+        await axios.post(
+            `${API_BASE_URL}/logout`,
+            {},
+            {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                },
+                withCredentials: true,
+            }
+        );
+
+        console.log("User logged out successfully.");
+    } catch (error) {
+        console.error("Error logging out:", error);
+        throw error instanceof Error ? error : new Error("An unknown error occurred.");
+    }
+};
+export const fetchCustomerAccounts = async () => {
+    try {
+        const user = localStorage.getItem('user');
+        const accessToken = localStorage.getItem('access_token');
+        if (!user) {
+            throw new Error('User information not found in localStorage');
+        }
+
+        const { userID } = JSON.parse(user);
+        if (!userID) {
+            throw new Error('userID is missing in localStorage');
+        }
+
+        const response = await axios.get(`${API_CUSTOMER_URL}/api/accounts/list/${userID}`, {
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+            },
+        });
+        console.log(response.data.data);
+        return response.data.data;
+    } catch (error) {
+        console.error(error);
+    }
+};
 
 
 

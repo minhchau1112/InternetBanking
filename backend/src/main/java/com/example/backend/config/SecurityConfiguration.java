@@ -27,7 +27,9 @@ public class SecurityConfiguration {
             "/api/email/**",
             "/api/auth/forgot-password",
             "/api/auth/verify-reset-otp",
-            "/api/auth/reset-password"
+            "/api/auth/reset-password",
+            "/v3/api-docs",
+            "/swagger-ui/**",
     };
 
     @Bean
@@ -46,6 +48,7 @@ public class SecurityConfiguration {
                                 .requestMatchers("/admin/**").hasRole("ADMIN")
                                 .requestMatchers("/customer/**").hasRole("CUSTOMER")
                                 .requestMatchers("/employee/**").hasRole("EMPLOYEE")
+                                .requestMatchers("/api/interbank/**").permitAll()
                                 .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer((oauth2)->oauth2.jwt(Customizer.withDefaults())

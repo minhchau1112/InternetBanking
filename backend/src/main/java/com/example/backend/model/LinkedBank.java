@@ -24,8 +24,17 @@ public class LinkedBank {
     @Column(nullable = false)
     private String name;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "LONGTEXT")
+    private String theirPublicKey;
+
+    @Column(nullable = false, columnDefinition = "LONGTEXT")
     private String publicKey;
+
+    @Column(nullable = false)
+    private String type;
+
+    @Column(nullable = false, columnDefinition = "LONGTEXT")
+    private String privateKey;
 
     @Column(nullable = false)
     private LocalDateTime createdAt;

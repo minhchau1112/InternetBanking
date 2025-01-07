@@ -42,6 +42,7 @@ public class PGPUtil {
 
     // Decrypt the data using PGP Private Key Decryption
     public static String decrypt(String encryptedData, PGPPrivateKey privateKey) throws Exception {
+        encryptedData = encryptedData.replaceAll("\\\\r\\\\n", "\n");
         InputStream in = new ByteArrayInputStream(encryptedData.getBytes());
         InputStream decoderStream = PGPUtil.getDecoderStream(in);
         PGPObjectFactory pgpObjectFactory = new PGPObjectFactory(decoderStream, new JcaKeyFingerprintCalculator());
@@ -80,14 +81,23 @@ public class PGPUtil {
 
     // Verify the signature of the data using PGP Public Key
     public static boolean verifySignature(String data, String signatureStr, PGPPublicKey publicKey) throws Exception {
-        InputStream sigIn = new ByteArrayInputStream(signatureStr.getBytes());
-        InputStream decoderStream = PGPUtil.getDecoderStream(sigIn);
-        PGPObjectFactory pgpObjectFactory = new PGPObjectFactory(decoderStream, new JcaKeyFingerprintCalculator());
-        PGPSignatureList signatureList = (PGPSignatureList) pgpObjectFactory.nextObject();
-        PGPSignature signature = signatureList.get(0);
-        signature.init(new JcaPGPContentVerifierBuilderProvider().setProvider("BC"), publicKey);
-        signature.update(data.getBytes());
-        return signature.verify();
+        // replace all occurrences of \r\n with \n
+        signatureStr = signatureStr.replaceAll("\\\\r\\\\n", "\n");
+        InputStream in = new ByteArrayInputStream(signatureStr.getBytes());
+        InputStream decoderStream = org.bouncycastle.openpgp.PGPUtil.getDecoderStream(in);
+        PGPObjectFactory pgpFactory = new PGPObjectFactory(decoderStream, new JcaKeyFingerprintCalculator());
+        Object object = pgpFactory.nextObject();
+
+        if (object instanceof PGPSignatureList) {
+            PGPSignatureList signatureList = (PGPSignatureList) object;
+            PGPSignature signature = signatureList.get(0);
+
+            signature.init(new JcaPGPContentVerifierBuilderProvider().setProvider("BC"), publicKey);
+            signature.update(data.getBytes());
+
+            return signature.verify();
+        }
+        return false;
     }
 
     // Helper method to decode armored data

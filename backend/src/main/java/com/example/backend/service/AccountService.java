@@ -1,6 +1,7 @@
 package com.example.backend.service;
 
 import com.example.backend.dto.request.DepositRequest;
+import com.example.backend.dto.response.interbank.UserDetailResponse;
 import com.example.backend.enums.AccountType;
 import com.example.backend.enums.FeePayer;
 import com.example.backend.enums.TransactionType;
@@ -95,7 +96,18 @@ public class AccountService {
             accountNumber.append(random.nextInt(10)); // Appends a digit (0-9)
         }
         return accountNumber.toString();
+    }
 
+    public UserDetailResponse getUserDetailByAccountNumber(String accountNumber) {
+        Account account = accountRepository.findByAccountNumber(accountNumber).orElseThrow(() -> new IllegalArgumentException("Account does not exist"));
+        Customer customer = account.getCustomer();
+
+        UserDetailResponse response = new UserDetailResponse();
+        response.setName(customer.getName());
+        response.setBankCode("GROUP2");
+        response.setAccountNumber(account.getAccountNumber());
+
+        return response;
     }
 
     public Account getAccountDetails(String accountNumber) {
@@ -171,4 +183,11 @@ public class AccountService {
         return accountRepository.findByCustomerId(customerId);
     }
 
+    public boolean checkIfAccountExistedByAccountNumber(String recipientAccountNumber) {
+        return accountRepository.existsByAccountNumber(recipientAccountNumber);
+    }
+
+    public Account findAccountByAccountNumber(String accountNumber) {
+        return accountRepository.findByAccountNumber(accountNumber).orElse(null);
+    }
 }

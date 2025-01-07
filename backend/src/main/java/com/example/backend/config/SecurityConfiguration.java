@@ -27,7 +27,9 @@ public class SecurityConfiguration {
             "/api/email/**",
             "/api/auth/forgot-password",
             "/api/auth/verify-reset-otp",
-            "/api/auth/reset-password"
+            "/api/auth/reset-password",
+            "/v3/api-docs",
+            "/swagger-ui/**",
     };
 
     @Bean

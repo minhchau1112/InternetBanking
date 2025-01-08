@@ -1,7 +1,10 @@
 import React, { useState, useCallback } from 'react';
-import { useForm, SubmitHandler} from 'react-hook-form';
-import {toast, ToastContainer} from "react-toastify";
+import { useDispatch, useSelector } from 'react-redux';
+import { useForm, SubmitHandler } from 'react-hook-form';
+import { toast, ToastContainer } from "react-toastify";
 import debounce from 'lodash.debounce';
+import { setUsernameSearchResult, setAccountSearchResult, setRawAccountNumber } from '../../redux/slices/searchDepositSlice';
+import { setLoading, setSuccessMessage, setErrorMessage } from '../../redux/slices/depositSlice';
 
 function formatAccountNumber(accountNumber: string): string {
     const formattedAccountNumber = accountNumber.replace(/\d{3}(?=\d)/g, '$& ');
@@ -9,14 +12,15 @@ function formatAccountNumber(accountNumber: string): string {
 }
 
 const DepositPage = () => {
+    const dispatch = useDispatch();
+    const { usernameSearchResult, accountSearchResult, rawAccountNumber } = useSelector((state: any) => state.search);
+    const { isLoading, successMessage, errorMessage } = useSelector((state: any) => state.deposit);
+
     type FormData = {
         identifier: string;
         depositAmount: number;
     };
 
-    const [usernameSearchResult, setUsernameSearchResult] = useState<string | null>(null);
-    const [accountSearchResult, setAccountSearchResult] = useState<string | null>(null);
-    const [rawAccountNumber, setRawAccountNumber] = useState<string>('');
     const searchByUsername = async (username: string) => {
         console.log('Searching username:', username);
         try {
@@ -28,18 +32,15 @@ const DepositPage = () => {
             });
             if (response.ok) {
                 const data = await response.json();
-                // Process the response data
                 console.log('Data:', data);
-                // capital ownerName 
-                setUsernameSearchResult(`${data.data.accountNumber}`);
+                dispatch(setUsernameSearchResult(`${data.data.accountNumber}`));
             } else {
-                // Handle error response
                 console.error('Error:', response.status);
-                setUsernameSearchResult(null);
+                dispatch(setUsernameSearchResult(null));
             }
         } catch (error) {
-            // Handle network or other errors
             console.error('Error:', error);
+            dispatch(setUsernameSearchResult(null));
         }
     };
 
@@ -54,18 +55,15 @@ const DepositPage = () => {
             });
             if (response.ok) {
                 const data = await response.json();
-                // Process the response data
                 console.log('Data:', data);
-                // capital ownerName 
-                setAccountSearchResult(`${data.data.ownerName}`.toUpperCase());
+                dispatch(setAccountSearchResult(`${data.data.ownerName}`.toUpperCase()));
             } else {
-                // Handle error response
                 console.error('Error:', response.status);
-                setAccountSearchResult(null);
+                dispatch(setAccountSearchResult(null));
             }
         } catch (error) {
-            // Handle network or other errors
             console.error('Error:', error);
+            dispatch(setAccountSearchResult(null));
         }
     };
 
@@ -86,17 +84,15 @@ const DepositPage = () => {
 
     const onSubmitUsername: SubmitHandler<FormData> = async (data) => {
         console.log('Deposit by Username:', data);
-    
-        // Perform deposit logic for username
+        dispatch(setLoading(true));
+
         try {
             const response = await fetch(`http://localhost:8888/api/accounts/deposit`, {
                 method: 'POST',
-                // Add any headers or body data if required
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${localStorage.getItem('access_token')}`
                 },
-                // manually add the username and deposit amount to the body
                 body: JSON.stringify({
                     username: data.identifier,
                     deposit_amount: data.depositAmount,
@@ -104,59 +100,63 @@ const DepositPage = () => {
             });
             if (response.ok) {
                 const data = await response.json();
-                // Process the response data
                 console.log('Data:', data);
+                dispatch(setSuccessMessage('Deposit successful.'));
                 toast.success("Deposit successful.");
             } else {
-                // Handle error response
                 console.error('Error:', response);
+                dispatch(setErrorMessage('Deposit failed.'));
                 toast.error("Deposit failed.");
             }
         } catch (error) {
-            // Handle network or other errors
             console.error('Error:', error);
+            dispatch(setErrorMessage('Deposit failed.'));
+        } finally {
+            dispatch(setLoading(false));
         }
     };
 
     const onSubmitAccount: SubmitHandler<FormData> = async (data) => {
         console.log('Deposit by Account Number:', data);
-    
-        // Perform deposit logic for username
+        dispatch(setLoading(true));
+
         try {
+            const accountNumber = data.identifier.replace(/\s+/g, '');
+            
             const response = await fetch(`http://localhost:8888/api/accounts/deposit`, {
                 method: 'POST',
-                // Add any headers or body data if required
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${localStorage.getItem('access_token')}`
                 },
-                // manually add the username and deposit amount to the body
                 body: JSON.stringify({
-                    account_number: data.identifier,
+                    account_number: accountNumber,
                     deposit_amount: data.depositAmount,
                 }),
             });
             if (response.ok) {
                 const data = await response.json();
-                // Process the response data
                 console.log('Data:', data);
+                dispatch(setSuccessMessage('Deposit successful.'));
+                toast.success("Deposit successful.");
             } else {
-                // Handle error response
                 console.error('Error:', response);
-
+                dispatch(setErrorMessage('Deposit failed.'));
+                toast.error("Deposit failed.");
             }
         } catch (error) {
-            // Handle network or other errors
             console.error('Error:', error);
+            dispatch(setErrorMessage('Deposit failed.'));
+        } finally {
+            dispatch(setLoading(false));
         }
-
     };
 
     const handleAccountNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const rawValue = e.target.value.replace(/\s/g, ''); // Remove spaces for raw value
-        if (/^\d*$/.test(rawValue)) { // Allow only numeric input
-            setRawAccountNumber(rawValue);
-            debouncedSearchByAccountNumber(rawValue); // Trigger search with raw value
+        const rawValue = e.target.value.replace(/\s/g, '');
+        if (/^\d*$/.test(rawValue)) {
+            dispatch(setRawAccountNumber(rawValue));
+            debouncedSearchByAccountNumber(rawValue);
         }
     };
 

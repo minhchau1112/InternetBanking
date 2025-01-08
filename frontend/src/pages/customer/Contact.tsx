@@ -106,6 +106,11 @@ const Recipient = () => {
     }
 
     const onSubmitCreate: SubmitHandler<FormData> = async (data) => {
+        if(recipients.some(recipient => recipient.accountNumber === data.accountNumber)){
+            toast.error("Recipient available.");
+            return;
+        }
+
         try {
             const response = await createRecipient(data.accountNumber, data.aliasName, data.bankCode);
             toast.success(response);

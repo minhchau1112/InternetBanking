@@ -72,11 +72,14 @@ const TransactionForm = () => {
             toast.success('Transaction completed successfully!');
 
             //Lưu người nhận mới
-            const reicipientResponse = await createRecipient(destinationAccount, "", "GROUP2");
-            toast.success(reicipientResponse);
+            if(!recipients.some(recipient => recipient.accountNumber === destinationAccount)){
+                const reicipientResponse = await createRecipient(destinationAccount, "", "GROUP2");
+                toast.success(reicipientResponse);
+            }
+
             // Trì hoãn reload để người dùng kịp thấy thông báo
             setTimeout(() => {
-                // window.location.reload(); // Reload lại trang sau 2 giây
+                // Reload lại trang sau 2 giây
                 setAmount('');
                 setFee('');
                 setFeePayer('SENDER');
@@ -85,6 +88,7 @@ const TransactionForm = () => {
                 setOtp('');
                 setTransactionId(null);
                 setOtpSent(false);
+                fetchRecipients();
             }, 3000);
         } catch (error) {
             console.error('Error verifying OTP:', error);

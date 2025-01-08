@@ -94,13 +94,13 @@ const ViewListDebtReminder = () => {
   const currentType = tab === 0 ? "Creator" : "Debtor";
 
   return (
-    <Box sx={{ paddingLeft: 4, paddingTop: 4 }}>
+    <Box sx={{ paddingLeft: 10, paddingRight: 10, paddingTop: 4 }}>
       <Tabs value={tab} onChange={handleTabChange}>
         <Tab label="Created by You" />
         <Tab label="Received from Others" />
       </Tabs>
 
-      <Box className="flex justify-end" sx={{ paddingBottom: 4, gap: 1 }}>
+      <Box className="flex justify-end" sx={{ paddingBottom: 4, gap: 1}}>
         <FormControl size="small">
           <InputLabel>Status</InputLabel>
           <Select value={filter} label="Status" onChange={handleStatusChange}>

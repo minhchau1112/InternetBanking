@@ -18,6 +18,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import io.swagger.v3.oas.annotations.Operation;
 
 @RestController
 @RequestMapping("/api/debt-reminders")
@@ -64,6 +65,7 @@ public class DebtReminderController {
 
     @GetMapping("/debtor/{debtorAccountId}")
     @APIMessage("Get debt reminders for debtor success")
+    @Operation(summary = "Get debt reminders", description = "Retrieve debt reminders for debtor")
     public ResponseEntity<Page<DebtReminder>> getDebtRemindersForDebtor(@PathVariable Integer debtorAccountId,
                                                                                      @RequestParam(required = false) DebtReminderStatus status,
                                                                                      @RequestParam(defaultValue = "0") int page,
@@ -80,6 +82,8 @@ public class DebtReminderController {
                                                    @RequestParam Integer requesterAccountId,
                                                    @RequestBody CancelDebtReminderRequest request) throws DebtReminderNotFoundException {
         debtReminderService.cancelDebtReminder(debtReminderId, request, requesterAccountId);
+
+//        notificationHandler.sendNotification("This debt reminder cancelled!", requesterAccountId);
 
         return ResponseEntity.ok(null);
     }

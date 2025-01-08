@@ -30,7 +30,6 @@ public class SecurityConfiguration {
             "/api/auth/reset-password",
             "/v3/api-docs",
             "/swagger-ui/**",
-            "/api/debt-reminders/**",
     };
 
     @Bean
@@ -50,6 +49,7 @@ public class SecurityConfiguration {
                                 .requestMatchers("/customer/**").hasRole("CUSTOMER")
                                 .requestMatchers("/employee/**").hasRole("EMPLOYEE")
                                 .requestMatchers("/api/interbank/**").permitAll()
+                                .requestMatchers("/ws/**").permitAll()
                                 .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer((oauth2)->oauth2.jwt(Customizer.withDefaults())

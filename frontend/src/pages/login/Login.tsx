@@ -65,6 +65,7 @@ export function LoginForm() {
             localStorage.setItem("access_token", data.accessToken);
             localStorage.setItem("accountId", data.user.accountID);
 
+            console.log("access_token: ", data.accessToken);
             dispatch(setUser(data.user));
 
             toast.success("Đăng nhập thành công.");

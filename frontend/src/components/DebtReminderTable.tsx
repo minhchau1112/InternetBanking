@@ -67,7 +67,7 @@ const DebtReminderTable: React.FC<DataTableProps> = ({ status = 'PENDING', type 
 				</Box>
 			),
 		},
-			{ 
+		{ 
 			field: 'accountNumber', 
 			width: 150 ,
 			headerAlign: 'right',
@@ -91,7 +91,7 @@ const DebtReminderTable: React.FC<DataTableProps> = ({ status = 'PENDING', type 
 				</Box>
 			),
 		},
-			{
+		{
 			field: 'accountName',
 			width: 220,
 			headerAlign: 'right',
@@ -142,7 +142,7 @@ const DebtReminderTable: React.FC<DataTableProps> = ({ status = 'PENDING', type 
 		},
 		{ 
 			field: 'message', 
-			width: 300,
+			width: 320,
 			headerAlign: 'center',
 			headerClassName: 'theme--header',
 			renderHeader: () => (
@@ -292,8 +292,7 @@ const DebtReminderTable: React.FC<DataTableProps> = ({ status = 'PENDING', type 
 			setLoading(true);
 			try {
 				const response = await cancelDebtReminder(selectedDebtId, id, reason.trim(), accessToken);
-				console.log("success");
-				if (response.success) {
+				if (response.status == 200) {
 					enqueueSnackbar(response.message, { variant: 'success', autoHideDuration: 1500 });
 					console.log("fetch");
 					fetchRows(type, id, status, page, pageSize);
@@ -357,7 +356,7 @@ const DebtReminderTable: React.FC<DataTableProps> = ({ status = 'PENDING', type 
 	
 			if (type === 'Creator') {
 				let response = await fetchDebtRemindersForCreator(id, status, page, pageSize, accessToken);
-				let data = response.data;
+				data = response;
 
 				console.log('data: ', data);
 
@@ -378,7 +377,7 @@ const DebtReminderTable: React.FC<DataTableProps> = ({ status = 'PENDING', type 
 				}
 			} else {
 				let response = await fetchDebtRemindersForDebtor(id, status, page, pageSize, accessToken);
-				let data = response.data;
+				data = response;
 
 				console.log('data: ', data);
 				

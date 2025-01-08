@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { toast, ToastContainer } from "react-toastify";
@@ -14,7 +14,7 @@ function formatAccountNumber(accountNumber: string): string {
 const DepositPage = () => {
     const dispatch = useDispatch();
     const { usernameSearchResult, accountSearchResult, rawAccountNumber } = useSelector((state: any) => state.search);
-    const { isLoading, successMessage, errorMessage } = useSelector((state: any) => state.deposit);
+    // const { isLoading, successMessage, errorMessage } = useSelector((state: any) => state.deposit);
 
     type FormData = {
         identifier: string;

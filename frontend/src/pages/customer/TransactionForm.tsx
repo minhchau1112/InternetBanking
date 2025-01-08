@@ -91,7 +91,7 @@ const TransactionForm = () => {
                                 placeholder="Enter destination account"
                                 value={destinationAccount}
                                 onChange={(e) => setDestinationAccount(e.target.value)}
-                                className="w-full p-3 border border-gray-300 rounded-lg bg-gray-800 text-white placeholder-gray-400"
+                                className="w-full p-3 border border-gray-300 rounded-lg bg-gray-200 text-white placeholder-gray-400"
                             />
                         </div>
                         <div>
@@ -101,7 +101,7 @@ const TransactionForm = () => {
                                 placeholder="Enter amount"
                                 value={amount}
                                 onChange={(e) => setAmount(e.target.value)}
-                                className="w-full p-3 border border-gray-300 rounded-lg bg-gray-800 text-white placeholder-gray-400"
+                                className="w-full p-3 border border-gray-300 rounded-lg bg-gray-200 text-white placeholder-gray-400"
                             />
                         </div>
                         <div>
@@ -111,7 +111,7 @@ const TransactionForm = () => {
                                 placeholder="Enter fee"
                                 value={fee}
                                 onChange={(e) => setFee(e.target.value)}
-                                className="w-full p-3 border border-gray-300 rounded-lg bg-gray-800 text-white placeholder-gray-400"
+                                className="w-full p-3 border border-gray-300 rounded-lg bg-gray-200 text-white placeholder-gray-400"
                             />
                         </div>
                         <div>
@@ -119,7 +119,7 @@ const TransactionForm = () => {
                             <select
                                 value={feePayer}
                                 onChange={(e) => setFeePayer(e.target.value)}
-                                className="w-full p-3 border border-gray-300 rounded-lg bg-gray-800 text-white"
+                                className="w-full p-3 border border-gray-300 rounded-lg bg-gray-200 text-white"
                             >
                                 <option value="SENDER">Sender</option>
                                 <option value="RECEIVER">Receiver</option>
@@ -130,7 +130,7 @@ const TransactionForm = () => {
                             <select
                                 value={type}
                                 onChange={(e) => setType(e.target.value)}
-                                className="w-full p-3 border border-gray-300 rounded-lg bg-gray-800 text-white"
+                                className="w-full p-3 border border-gray-300 rounded-lg bg-gray-200 text-white"
                             >
                                 <option value="TRANSFER">Transfer</option>
                                 <option value="DEPOSIT">Deposit</option>
@@ -143,7 +143,7 @@ const TransactionForm = () => {
                                 placeholder="Enter message"
                                 value={message}
                                 onChange={(e) => setMessage(e.target.value)}
-                                className="w-full p-3 border border-gray-300 rounded-lg bg-gray-800 text-white placeholder-gray-400"
+                                className="w-full p-3 border border-gray-300 rounded-lg bg-gray-200 text-white placeholder-gray-400"
                             />
                         </div>
                     </div>

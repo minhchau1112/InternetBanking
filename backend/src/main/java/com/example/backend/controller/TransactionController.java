@@ -2,6 +2,8 @@ package com.example.backend.controller;
 
 import com.example.backend.dto.request.OtpVerificationRequest;
 import com.example.backend.dto.request.TransactionRequest;
+import com.example.backend.dto.response.InterbankTransactionResponse;
+import com.example.backend.dto.response.TransactionResponse;
 import com.example.backend.model.Account;
 import com.example.backend.model.Transaction;
 import com.example.backend.repository.AccountRepository;
@@ -15,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -40,7 +43,6 @@ public class TransactionController {
     public List<?> getTransactions(
             @RequestParam(value = "accountId") String accountId,
             @RequestParam(value = "partnerAccountNumber", required = false) String partnerAccountNumber,
-            @RequestParam(value = "type", required = false) String type,
             @RequestParam(value = "startDate", required = false) String startDate,
             @RequestParam(value = "endDate", required = false) String endDate
     ) {
@@ -54,26 +56,29 @@ public class TransactionController {
             LocalDateTime end = (endDate != null && !endDate.isEmpty())
                     ? LocalDateTime.parse(endDate + "T23:59:59", formatter) : null;
 
-            if ("interbank".equals(type)) {
-                return transactionService.getUserInterbankTransactions(srcAccountId, partnerAccountNum, start, end);
-            } else {
-                return transactionService.getUserTransactions(srcAccountId, partnerAccountNum, start, end);
-            }
+            List<?> internalTransactions = transactionService.getUserTransactions(srcAccountId, partnerAccountNum, start, end);
+            List<?> interbankTransactions = transactionService.getUserInterbankTransactions(srcAccountId, partnerAccountNum, start, end);
+
+            // Combine both lists
+            List<Object> allTransactions = new ArrayList<>();
+            allTransactions.addAll(internalTransactions);
+            allTransactions.addAll(interbankTransactions);
+
+            return allTransactions;
         } catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException("Error processing request: " + e.getMessage());
         }
     }
 
-    @GetMapping("/customer")
+    @GetMapping("/employee")
     public List<?> getCustomerTransactions(
-            @RequestParam(value = "accountId") String accountId,
-            @RequestParam(value = "type", required = false) String type,
+            @RequestParam(value = "partnerAccountNumber", required = false) String partnerAccountNumber,
             @RequestParam(value = "startDate", required = false) String startDate,
             @RequestParam(value = "endDate", required = false) String endDate
     ) {
         try {
-            Integer srcAccountId = Integer.parseInt(accountId);
+            String partnerAccountNum = (partnerAccountNumber != null && !partnerAccountNumber.isEmpty()) ? partnerAccountNumber : null;
 
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
             LocalDateTime start = (startDate != null && !startDate.isEmpty())
@@ -81,13 +86,15 @@ public class TransactionController {
             LocalDateTime end = (endDate != null && !endDate.isEmpty())
                     ? LocalDateTime.parse(endDate + "T23:59:59", formatter) : null;
 
-//            System.out.println("accountId: " + srcAccountId + ", destinationAccountNumber: " + desAccountNum + ", startDate: " + start + ", endDate: " + end);
+            List<?> internalTransactions = transactionService.getUserTransactionsByAccountNumber(partnerAccountNum, start, end);
+            List<?> interbankTransactions = transactionService.getUserInterbankTransactionsByAccountNumber(partnerAccountNum, start, end);
 
-            if ("interbank".equals(type)) {
-                return transactionService.getInterbankTransactionsWithAccountId(srcAccountId, start, end);
-            } else {
-                return transactionService.getInterbankTransactionsWithAccountId(srcAccountId, start, end);
-            }
+            // Combine both lists
+            List<Object> allTransactions = new ArrayList<>();
+            allTransactions.addAll(internalTransactions);
+            allTransactions.addAll(interbankTransactions);
+
+            return allTransactions;
         } catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException("Error processing request: " + e.getMessage());

@@ -51,6 +51,10 @@ public class TransactionService {
 
         return transactions.stream().map(transaction -> {
             String tab = transaction.getSourceAccount().getId().equals(accountId) ? "out" : "in";
+            System.out.println(transaction.getType());
+            if(transaction.getType().toString().equals("DEPOSIT")) {
+                tab = "in";
+            }
             return new TransactionResponse(transaction, tab);
         }).collect(Collectors.toList());
     }
@@ -66,7 +70,7 @@ public class TransactionService {
 
         return transactions.stream().map(transaction -> {
             String tab = transaction.isIncoming() ? "in" : "out";
-            String externalAccount = transaction.isIncoming() ? transaction.getExternalAccountNumber() : transaction.getSourceAccount().getAccountNumber();
+            String externalAccount = transaction.getExternalAccountNumber();
             String bankName = linkedBankRepository.findByBankCode(transaction.getExternalBankCode())
                     .map(LinkedBank::getName)
                     .orElse("Unknown Bank");
@@ -80,11 +84,13 @@ public class TransactionService {
             LocalDateTime endDate
     ) {
         List<InterbankTransaction> transactions = interbankTransactionRepository.findInterbankTransactionsWithAccountId(accountId, startDate, endDate);
-        return transactions.stream().map(transaction ->{
+        return transactions.stream().map(transaction -> {
+            String tab = transaction.isIncoming() ? "in" : "out";
+            String externalAccount = transaction.isIncoming() ? transaction.getExternalAccountNumber() : transaction.getSourceAccount().getAccountNumber();
             String bankName = linkedBankRepository.findByBankCode(transaction.getExternalBankCode())
                     .map(LinkedBank::getName)
                     .orElse("Unknown Bank");
-            return new InterbankTransactionResponse(transaction, bankName);
+            return new InterbankTransactionResponse(transaction, externalAccount, bankName, tab);
         }).collect(Collectors.toList());
     }
 
@@ -177,5 +183,46 @@ public class TransactionService {
         BigDecimal totalDeduction = feePayer.equals("SENDER") ? amount.add(fee) : amount;
         return account.getBalance().compareTo(totalDeduction) >= 0;
     }
+
+
+    // Lấy danh sách giao dịch nội bộ của tài khoản dua vao account number cho employee
+    public List<TransactionResponse> getUserTransactionsByAccountNumber(
+            String partnerAccountNumber,
+            LocalDateTime startDate,
+            LocalDateTime endDate
+    ) {
+        List<Transaction> transactions = transactionRepository.findAllTransactionsByAccountNumber(partnerAccountNumber, startDate, endDate);
+
+        return transactions.stream().map(transaction -> {
+            String tab = transaction.getSourceAccount().getAccountNumber().equals(partnerAccountNumber) ? "out" : "in";
+            System.out.println(transaction.getType());
+            if(transaction.getType().toString().equals("DEPOSIT")) {
+                tab = "in";
+            }
+            return new TransactionResponse(transaction, tab);
+        }).collect(Collectors.toList());
+    }
+
+    // Lấy danh sách giao dịch liên ngân hàng của tài khoản
+    public List<InterbankTransactionResponse> getUserInterbankTransactionsByAccountNumber(
+            String partnerAccountNumber,
+            LocalDateTime startDate,
+            LocalDateTime endDate
+    ) {
+        Account account = accountRepository.findByAccountNumber(partnerAccountNumber)
+                .orElseThrow(() -> new IllegalArgumentException("Account not found"));
+        List<InterbankTransaction> transactions = interbankTransactionRepository.findInterbankTransactionsByAccountNumber(account.getId(), startDate, endDate);
+
+        return transactions.stream().map(transaction -> {
+            String tab = transaction.isIncoming() ? "in" : "out";
+            String externalAccount = transaction.getExternalAccountNumber();
+            String bankName = linkedBankRepository.findByBankCode(transaction.getExternalBankCode())
+                    .map(LinkedBank::getName)
+                    .orElse("Unknown Bank");
+            return new InterbankTransactionResponse(transaction, externalAccount, bankName, tab);
+        }).collect(Collectors.toList());
+    }
+
+
 
 }

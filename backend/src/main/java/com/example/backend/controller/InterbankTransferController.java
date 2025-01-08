@@ -79,6 +79,9 @@ public class InterbankTransferController {
                 entity,
                 Object.class);
 
+        request.setSenderBankCode("WNC");
+        interbankService.createTransaction(request);
+
         return new ResponseEntity<Object>(response, headers, 200);
     }
 

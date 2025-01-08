@@ -7,6 +7,7 @@ type BaseTransaction = {
     amount: number;
     date: string;
     description: string;
+    accountNumber: string;
     tab: 'in' | 'out';
 };
 
@@ -30,6 +31,7 @@ const TransactionHistory = () => {
     const [allTransactions, setAllTransactions] = useState<CombinedTransaction[]>([]);
     const [filteredTransactions, setFilteredTransactions] = useState<CombinedTransaction[]>([]);
     const [error, setError] = useState<string | null>(null);
+    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
     // Hàm fetch dữ liệu giao dịch từ API
     const fetchTransactions = async () => {
@@ -41,30 +43,28 @@ const TransactionHistory = () => {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                 },
-                // Tạo chuỗi query parameters cho các tham số tìm kiếm
                 params: new URLSearchParams({
                     accountId: sourceAccountId || '',
                     partnerAccountNumber: partnerAccountNumber || '',
                     startDate: startDate || '',
                     endDate: endDate || '',
-                    type: transactionType || 'internal',
+                    type: transactionType || 'internal', // This will fetch both if not filtered
                     tab: activeTab,
                 }),
             });
-
+    
             const data = await response.data.data;
-
-            console.log('Data:', data);
-
+    
             if (data.length === 0) {
                 setError('Không có dữ liệu giao dịch.');
                 return;
             }
-
-            // Sử dụng map để chuyển đổi dữ liệu thành đối tượng Transaction
+    
+            console.log(data);
+            // Map response data into transactions array
             const transactions: CombinedTransaction[] = data.map((item: any) => {
                 const transaction = item.transaction;
-                if (item.bankName) {
+                if (item.bankName) { // Interbank transaction
                     return {
                         id: transaction.id,
                         amount: transaction.amount,
@@ -72,30 +72,44 @@ const TransactionHistory = () => {
                         description: transaction.message,
                         bankName: item.bankName,
                         tab: item.tab,
+                        accountNumber: item.externalAccount
                     } as InterbankTransaction;
-                } else {
+                } else { // Internal transaction
                     return {
                         id: transaction.id,
                         type: transaction.type,
                         amount: transaction.amount,
                         date: transaction.createdAt,
                         description: transaction.message,
+                        accountNumber: transaction.sourceAccount.id === parseInt(sourceAccountId) ? transaction.destinationAccount.accountNumber : transaction.sourceAccount.accountNumber,
                         tab: item.tab,
                     } as InternalTransaction;
                 }
             });
 
-            setAllTransactions(transactions); // Lưu tất cả giao dịch
-            filterByTab(transactions, activeTab); // Lọc giao dịch theo tab
+            // print out the transactions through mapping
+            // transactions.forEach(transaction => console.log(transaction));
+    
+            setAllTransactions(transactions); // Store all transactions
+            filterByTab(transactions, activeTab); // Filter by tab (all, in, out)
         } catch (err) {
             setError('Không thể tải dữ liệu. Vui lòng thử lại sau.');
             console.error('Failed to fetch transactions:', err);
         }
-    };
+    };    
 
     // Hàm tìm kiếm
     const handleSearch = () => {
         fetchTransactions();
+    };
+
+    // Sort transactions
+    const sortTransactions = (list: CombinedTransaction[]) => {
+        return [...list].sort((a, b) =>
+            sortOrder === 'asc'
+                ? new Date(a.date).getTime() - new Date(b.date).getTime()
+                : new Date(b.date).getTime() - new Date(a.date).getTime()
+        );
     };
 
     const filterByTab = (list: CombinedTransaction[], tab: 'all' | 'in' | 'out') => {
@@ -117,24 +131,26 @@ const TransactionHistory = () => {
     // Hàm thay đổi tab
     const handleTabChange = (tab: 'all' | 'in' | 'out') => {
         setActiveTab(tab);
+        filterByTab(allTransactions, tab);
+    };
+
+    // Toggle sort order
+    const toggleSortOrder = () => {
+        const newOrder = sortOrder === 'asc' ? 'desc' : 'asc';
+        setSortOrder(newOrder);
+        setFilteredTransactions(sortTransactions(filteredTransactions));
     };
 
     return (
-        <div className="min-h-screen w-[calc(100vw-300px)] max-w-full bg-gray-50 p-6">
+        <div className="min-h-screen w-[calc(100vw-300px)] max-w-full bg-gray-50 pt-7">
             <div className="w-full mx-auto bg-white shadow-lg rounded-lg">
                 <div className="p-6 flex flex-col sm:flex-row items-center gap-4">
                     <input
                         type="text"
-                        placeholder="Số tài khoản"
-<<<<<<<< HEAD:frontend/src/pages/employee/TransactionHistory.tsx
+                        placeholder="Số tài khoản để lọc"
                         className="border border-gray-300 rounded-lg p-2 flex-1 text-black"
-                        value={destinationAccountNumber}
-                        onChange={(e) => setDestinationAccountNumber(e.target.value)}
-========
-                        className="border border-gray-300 rounded-lg p-2 flex-1 text-white"
                         value={partnerAccountNumber}
                         onChange={(e) => setPartnerAccountNumber(e.target.value)}
->>>>>>>> origin/main:frontend/src/pages/customer/TransactionHistory.tsx
                     />
                     <input
                         type="date"
@@ -148,14 +164,13 @@ const TransactionHistory = () => {
                         value={endDate}
                         onChange={(e) => setEndDate(e.target.value)}
                     />
-                    <select
-                        className="border border-gray-300 rounded-lg p-2 text-black"
-                        value={transactionType}
-                        onChange={(e) => setTransactionType(e.target.value as 'internal' | 'interbank')}
+                    {/* Sort button */}
+                    <button
+                        onClick={toggleSortOrder}
+                        className="bg-gray-100 text-black px-4 py-2 rounded-lg hover:bg-gray-200"
                     >
-                        <option value="internal">Nội bộ</option>
-                        <option value="interbank">Liên ngân hàng</option>
-                    </select>
+                        Sort time: {sortOrder === 'asc' ? 'Newest' : 'Oldest'}
+                    </button>
                     <button
                         onClick={handleSearch}
                         className="bg-blue-500 text-white font-semibold py-2 px-6 rounded-lg hover:bg-blue-600"
@@ -165,7 +180,7 @@ const TransactionHistory = () => {
                 </div>
 
                 {/* Tabs */}
-                <div className="flex border-b p-6 flex-col sm:flex-row items-center gap-4">
+                <div className="flex border-b p-6 flex flex-col sm:flex-row items-center gap-4">
                     {['all', 'in', 'out'].map((tab) => (
                         <button
                             key={tab}
@@ -185,49 +200,72 @@ const TransactionHistory = () => {
                 {/* Transaction List */}
                 <div className="flex flex-col h-[calc(100vh-300px)] overflow-y-auto p-6">
                     {filteredTransactions.length > 0 ? (
-                        // Dùng map để render danh sách giao dịch
                         filteredTransactions.map((transaction) => (
                             <div
-                                key={transaction.id}
-                                className="flex justify-between items-center p-4 mb-4 rounded-lg shadow-sm bg-gray-100"
+                                key={`${transaction.id}-${transaction.date}`}
+                                className={`flex justify-between items-center p-4 mb-4 rounded-lg shadow-sm ${
+                                    transaction.bankName 
+                                        ? transaction.tab === 'in' 
+                                            ? 'bg-green-100 border-green-500' 
+                                            : 'bg-orange-100 border-orange-500' 
+                                        : transaction.tab === 'in' 
+                                            ? 'bg-blue-100 border-blue-500' 
+                                            : 'bg-red-100 border-red-500'
+                                } border-l-4`}
                             >
                                 <div>
-                                    <p className="font-semibold">{transaction.description}</p>
-<<<<<<<< HEAD:frontend/src/pages/employee/TransactionHistory.tsx
-                                    {transaction.type.startsWith('interbank') && 'bankName' in transaction && (
-                                        <p className="text-sm text-gray-600">Ngân hàng: {transaction.bankName}</p>
-========
-                                    {transactionType === 'interbank' && (
-                                        <p className="text-sm text-gray-600">
-                                            Ngân hàng: {transaction.bankName || 'Không xác định'}
-                                        </p>
->>>>>>>> origin/main:frontend/src/pages/customer/TransactionHistory.tsx
+                                    {/* <p className="font-semibold">{transaction.description}</p> */}
+                                    
+                                    {/* Add badge and extra details based on bankName */}
+                                    {transaction.bankName ? (
+                                        <>
+                                            <p className="text-sm text-gray-600">
+                                                <span className="inline-block bg-blue-500 text-white px-2 py-1 rounded text-xs mb-2">
+                                                    Liên ngân hàng
+                                                </span>
+                                                <span className="mx-2 py-1 rounded mb-2">
+                                                    Ngân hàng: {transaction.bankName}
+                                                </span>
+                                            </p>
+                                            <p className="text-sm text-gray-600 my-2">
+                                                Số tài khoản nhận: {transaction.accountNumber}
+                                            </p>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <p className="text-sm text-gray-600 my-2">
+                                                <span className="inline-block bg-green-500 text-white px-2 py-1 rounded text-xs mr-2">
+                                                    Nội bộ
+                                                </span>
+                                                <span className="text-gray px-2 py-1 rounded mr-2">
+                                                    Loại giao dịch: {transaction.type}
+                                                </span>
+                                            </p>
+                                            <p className="text-sm text-gray-600">
+                                                Số tài khoản nhận: {transaction.accountNumber}
+                                            </p>
+                                        </>
                                     )}
-                                    {transactionType === 'internal' && (
-                                        <p className="text-sm text-gray-600">
-                                            Loại giao dịch: {transaction.type.toLowerCase() === 'transfer' ? 'Giao dịch' : 'Trả nợ'}
-                                        </p>
-                                    )}
+
                                     <p className="text-sm text-gray-600">
                                         {new Date(transaction.date).toLocaleDateString()}
                                     </p>
                                 </div>
                                 <div
                                     className={`font-bold text-lg ${
-                                        transaction.tab === 'in'
-                                            ? 'text-green-500'
+                                        transaction.bankName 
+                                        ? transaction.tab === 'in' 
+                                            ? 'text-green-500' 
+                                            : 'text-orange-500' 
+                                        : transaction.tab === 'in' 
+                                            ? 'text-blue-500' 
                                             : 'text-red-500'
                                     }`}
                                 >
-<<<<<<<< HEAD:frontend/src/pages/employee/TransactionHistory.tsx
-                                    {transaction.type === 'received' || transaction.type === 'interbank_received' ? '+' : '-'}                                    {transaction.amount.toLocaleString()}₫
-========
                                     {transaction.tab === 'in' ? '+' : '-'}
                                     {transaction.amount.toLocaleString()}₫
->>>>>>>> origin/main:frontend/src/pages/customer/TransactionHistory.tsx
                                 </div>
                             </div>
-
                         ))
                     ) : (
                         <div className="flex flex-col items-center mt-10">

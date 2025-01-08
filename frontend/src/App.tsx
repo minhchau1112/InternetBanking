@@ -9,7 +9,7 @@ import DepositPage from "./pages/employee/Deposit";
 import Recipient from "./pages/customer/Contact.tsx";
 import ForgotPassword from "@/pages/login/ForgotPassword.tsx";
 import AccountCreation from "./pages/employee/AccountCreation.tsx";
-import TransactionHistory from "./pages/customer/TransactionHistory.tsx";
+import TransactionHistory from "./pages/employee/Transaction.tsx";
 import TransactionForm from "@/pages/customer/TransactionForm.tsx";
 import TransactionHistoryCustomer from "./pages/customer/TransactionHistory.tsx";
 import ResetPassword from "@/pages/login/ResetPassword.tsx";
@@ -49,7 +49,7 @@ function App() {
                     <Route path="/contact" element={<Recipient/>}/>
                     <Route path="/customers" element={< AccountCreation/>}/>
                     <Route path="/history" element={< TransactionHistoryCustomer/>}/>
-                    <Route path="/employee-transaction" element={< TransactionHistory/>}/>
+                    <Route path="/employee-transaction" element={<TransactionHistory/>}/>
                     <Route path="/forgot-password" element={<ForgotPassword/>}/>
                     <Route path="/reset-password" element={<ResetPassword/>}/>
                     <Route path="/profile" element={<Profile/>}/>

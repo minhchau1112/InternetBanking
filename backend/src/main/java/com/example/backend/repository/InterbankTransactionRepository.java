@@ -14,10 +14,6 @@ public interface InterbankTransactionRepository extends JpaRepository<InterbankT
     @Query("SELECT t FROM InterbankTransaction t " +
             "WHERE (t.sourceAccount.id = :accountId OR t.destinationAccount.id = :accountId) " +
             "AND (:partnerAccountNumber IS NULL OR t.externalAccountNumber = :partnerAccountNumber) " +
-            "LEFT JOIN LinkedBank b ON t.externalBankCode = b.bankCode " +
-            "WHERE (:destinationAccountNum IS NULL OR" +
-            "(t.isIncoming = true AND t.destinationAccount.accountNumber = :destinationAccountNum) OR " +
-            "(t.isIncoming = false AND t.sourceAccount.accountNumber = :destinationAccountNum)) " +
             "AND (:startDate IS NULL OR t.createdAt >= :startDate) " +
             "AND (:endDate IS NULL OR t.createdAt <= :endDate)")
     List<InterbankTransaction> findInterbankTransactionsByAccount(
@@ -26,8 +22,6 @@ public interface InterbankTransactionRepository extends JpaRepository<InterbankT
             LocalDateTime startDate,
             LocalDateTime endDate
     );
-            LocalDateTime endDate);
-
 
     // truy vấn các interbank transaction co destination account id va source account id = accountId
     @Query("SELECT t FROM InterbankTransaction t " +
@@ -39,4 +33,14 @@ public interface InterbankTransactionRepository extends JpaRepository<InterbankT
             Integer accountId,
             LocalDateTime startDate,
             LocalDateTime endDate);
+
+    @Query("SELECT t FROM InterbankTransaction t " +
+            "WHERE (t.sourceAccount.id = :id OR t.destinationAccount.id = :id) " +
+            "AND (:startDate IS NULL OR t.createdAt >= :startDate) " +
+            "AND (:endDate IS NULL OR t.createdAt <= :endDate)")
+    List<InterbankTransaction> findInterbankTransactionsByAccountNumber(
+            Integer id,
+            LocalDateTime startDate,
+            LocalDateTime endDate
+    );
 }

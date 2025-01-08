@@ -9,10 +9,16 @@ import com.example.backend.model.Transaction;
 import com.example.backend.repository.AccountRepository;
 import com.example.backend.repository.CustomerRepository;
 import com.example.backend.service.TransactionService;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -39,6 +45,21 @@ public class TransactionController {
         this.transactionService = transactionService;
     }
 
+    /**
+     * Get the list of transactions for a user.
+     * @param accountId ID of the current logged account.
+     * @param partnerAccountNumber Account number of the partner.
+     * @param type Type of transaction.
+     * @param startDate Start date of the transaction.
+     * @param endDate End date of the transaction.
+     * @return List of transactions.
+     */
+    @Operation(summary = "Get transactions", description = "Retrieve transactions based on filters")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "List of transactions retrieved successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid input parameters", content = @Content),
+            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+    })
     @GetMapping
     public List<?> getTransactions(
             @RequestParam(value = "accountId") String accountId,
@@ -47,14 +68,14 @@ public class TransactionController {
             @RequestParam(value = "endDate", required = false) String endDate
     ) {
         try {
-            Integer srcAccountId = Integer.parseInt(accountId);
-            String partnerAccountNum = (partnerAccountNumber != null && !partnerAccountNumber.isEmpty()) ? partnerAccountNumber : null;
+            Integer srcAccountId = Integer.parseInt(accountId); // Parse accountId to Integer
+            String partnerAccountNum = (partnerAccountNumber != null && !partnerAccountNumber.isEmpty()) ? partnerAccountNumber : null; // Set partnerAccountNum to null if it's empty
 
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss"); // Define the date time format
             LocalDateTime start = (startDate != null && !startDate.isEmpty())
-                    ? LocalDateTime.parse(startDate + "T00:00:00", formatter) : null;
+                    ? LocalDateTime.parse(startDate + "T00:00:00", formatter) : null; // Parse startDate to LocalDateTime
             LocalDateTime end = (endDate != null && !endDate.isEmpty())
-                    ? LocalDateTime.parse(endDate + "T23:59:59", formatter) : null;
+                    ? LocalDateTime.parse(endDate + "T23:59:59", formatter) : null; // Parse endDate to LocalDateTime
 
             List<?> internalTransactions = transactionService.getUserTransactions(srcAccountId, partnerAccountNum, start, end);
             List<?> interbankTransactions = transactionService.getUserInterbankTransactions(srcAccountId, partnerAccountNum, start, end);
@@ -101,12 +122,26 @@ public class TransactionController {
         }
     }
 
+    /**
+     * Create a new transaction.
+     * @param transactionRequest Transaction request object.
+     * @return Transaction ID and message.
+     */
+    @Operation(summary = "Create a new transaction", description = "Initiate a new transaction and send OTP")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Transaction created and OTP sent",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = Transaction.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid transaction details", content = @Content),
+            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+    })
     @PostMapping("/create")
     public ResponseEntity<?> createTransaction(@RequestBody TransactionRequest transactionRequest) {
         try {
-            BigDecimal fee = transactionRequest.getFee();
-            BigDecimal amount = transactionRequest.getAmount();
+            BigDecimal fee = transactionRequest.getFee(); // Get fee from the request
+            BigDecimal amount = transactionRequest.getAmount(); // Get amount from the request
 
+            // Create a new transaction request object
             TransactionRequest newTransactionRequest = TransactionRequest.builder()
                     .sourceAccountId(transactionRequest.getSourceAccountId())
                     .destinationAccountNumber(transactionRequest.getDestinationAccountNumber())
@@ -117,10 +152,10 @@ public class TransactionController {
                     .type(transactionRequest.getType())
                     .build();
 
-            // Lưu giao dịch vào trạng thái chờ xác thực OTP
+            // Save the transaction
             Transaction transaction = transactionService.createPendingTransaction(newTransactionRequest);
 
-            // Tạo OTP và gửi qua email
+            // Generate and send OTP
             String otp = transactionService.generateAndSendOTP(transaction);
 
             return ResponseEntity.ok(new HashMap<String, Object>() {{
@@ -132,9 +167,20 @@ public class TransactionController {
         }
     }
 
+    /**
+     * Verify OTP and complete the transaction.
+     * @param otpRequest OTP verification request.
+     * @return Response message.
+     */
+    @Operation(summary = "Verify OTP", description = "Verify the OTP and complete the transaction")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Transaction completed successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid or expired OTP", content = @Content),
+            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+    })
     @PostMapping("/verify-otp")
     public ResponseEntity<?> verifyOtp(@RequestBody OtpVerificationRequest otpRequest) {
-        boolean isVerified = transactionService.verifyOtpAndCompleteTransaction(otpRequest);
+        boolean isVerified = transactionService.verifyOtpAndCompleteTransaction(otpRequest); // Verify OTP
 
         if (isVerified) {
             return ResponseEntity.ok("Transaction completed successfully.");

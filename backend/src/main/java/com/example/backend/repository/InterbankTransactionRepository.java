@@ -11,18 +11,21 @@ import java.util.List;
 
 @Repository
 public interface InterbankTransactionRepository extends JpaRepository<InterbankTransaction, Integer> {
-    // Truy vấn theo source account id và destination account id (nếu có)
     @Query("SELECT t FROM InterbankTransaction t " +
+            "WHERE (t.sourceAccount.id = :accountId OR t.destinationAccount.id = :accountId) " +
+            "AND (:partnerAccountNumber IS NULL OR t.externalAccountNumber = :partnerAccountNumber) " +
             "LEFT JOIN LinkedBank b ON t.externalBankCode = b.bankCode " +
             "WHERE (:destinationAccountNum IS NULL OR" +
             "(t.isIncoming = true AND t.destinationAccount.accountNumber = :destinationAccountNum) OR " +
             "(t.isIncoming = false AND t.sourceAccount.accountNumber = :destinationAccountNum)) " +
             "AND (:startDate IS NULL OR t.createdAt >= :startDate) " +
             "AND (:endDate IS NULL OR t.createdAt <= :endDate)")
-    List<InterbankTransaction> findInterbankTransactionsWithBankName(
-            Integer sourceAccountId,
-            String destinationAccountNum,
+    List<InterbankTransaction> findInterbankTransactionsByAccount(
+            Integer accountId,
+            String partnerAccountNumber,
             LocalDateTime startDate,
+            LocalDateTime endDate
+    );
             LocalDateTime endDate);
 
 

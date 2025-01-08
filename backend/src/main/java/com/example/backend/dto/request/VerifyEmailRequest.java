@@ -1,4 +1,4 @@
-package com.example.backend.dto.response;
+package com.example.backend.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
@@ -7,10 +7,10 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class VerifyOTPResponse {
-    @Schema(description = "The OTP code that was verified", example = "198910")
-    private String temporary_token;
+@Builder
+public class VerifyEmailRequest {
+    @Schema(description = "The email address of the customer", example = "john.doe@example.com")
+    private String email;
 }

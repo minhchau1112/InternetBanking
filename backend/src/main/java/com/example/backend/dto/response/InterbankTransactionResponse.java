@@ -10,5 +10,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class InterbankTransactionResponse {
     private InterbankTransaction transaction;
+    private String externalAccount;
     private String bankName;
+    private String tab;
 }

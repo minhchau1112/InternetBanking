@@ -7,24 +7,23 @@ type BaseTransaction = {
     amount: number;
     date: string;
     description: string;
+    tab: 'in' | 'out';
 };
 
 type InternalTransaction = BaseTransaction & {
-    type: 'received' | 'transfer' | 'debt_payment';
+    type: 'transfer' | 'debt_payment';
 };
 
 type InterbankTransaction = BaseTransaction & {
     bankName: string;
-    type: 'interbank_received' | 'interbank_transfer';
 };
 
 type CombinedTransaction = InternalTransaction | InterbankTransaction;
 
-
 const TransactionHistory = () => {
     const [activeTab, setActiveTab] = useState<'all' | 'in' | 'out'>('all');
     const [sourceAccountId] = useState<string>(localStorage.getItem('accountId') || '');
-    const [destinationAccountNumber, setDestinationAccountNumber] = useState<string>('');
+    const [partnerAccountNumber, setPartnerAccountNumber] = useState<string>('');
     const [transactionType, setTransactionType] = useState<'internal' | 'interbank'>('internal');
     const [startDate, setStartDate] = useState<string>('');
     const [endDate, setEndDate] = useState<string>('');
@@ -45,14 +44,17 @@ const TransactionHistory = () => {
                 // Tạo chuỗi query parameters cho các tham số tìm kiếm
                 params: new URLSearchParams({
                     accountId: sourceAccountId || '',
-                    destinationAccountNumber: destinationAccountNumber || '',
+                    partnerAccountNumber: partnerAccountNumber || '',
                     startDate: startDate || '',
                     endDate: endDate || '',
                     type: transactionType || 'internal',
+                    tab: activeTab,
                 }),
             });
 
             const data = await response.data.data;
+
+            console.log('Data:', data);
 
             if (data.length === 0) {
                 setError('Không có dữ liệu giao dịch.');
@@ -65,44 +67,30 @@ const TransactionHistory = () => {
                 if (item.bankName) {
                     return {
                         id: transaction.id,
-                        type: transaction.type === 'received' ? 'interbank_received' : 'interbank_transfer',
                         amount: transaction.amount,
                         date: transaction.createdAt,
                         description: transaction.message,
                         bankName: item.bankName,
+                        tab: item.tab,
                     } as InterbankTransaction;
                 } else {
                     return {
-                        id: item.id,
-                        type: item.type,
-                        amount: item.amount,
-                        date: item.createdAt,
-                        description: item.message,
+                        id: transaction.id,
+                        type: transaction.type,
+                        amount: transaction.amount,
+                        date: transaction.createdAt,
+                        description: transaction.message,
+                        tab: item.tab,
                     } as InternalTransaction;
                 }
             });
 
             setAllTransactions(transactions); // Lưu tất cả giao dịch
-            filterByTab(transactions, activeTab); // Lọc giao dịch theo tab đã chọn
+            filterByTab(transactions, activeTab); // Lọc giao dịch theo tab
         } catch (err) {
             setError('Không thể tải dữ liệu. Vui lòng thử lại sau.');
             console.error('Failed to fetch transactions:', err);
         }
-    };
-
-    // Hàm lọc giao dịch theo loại tab (all, in, out)
-    const filterByTab = (list: CombinedTransaction[], tab: 'all' | 'in' | 'out') => {
-        let filtered = list;
-        if (tab === 'in') {
-            filtered = list.filter(
-                (transaction) =>
-                    transaction.type === 'received' || transaction.type === 'interbank_received'); // Lọc giao dịch nhận
-        } else if (tab === 'out') {
-            filtered = list.filter(
-                (transaction) =>
-                    transaction.type === 'transfer' || transaction.type === 'interbank_transfer'); // Lọc giao dịch chuyển
-        }
-        setFilteredTransactions(filtered); // Cập nhật danh sách giao dịch đã lọc
     };
 
     // Hàm tìm kiếm
@@ -110,10 +98,25 @@ const TransactionHistory = () => {
         fetchTransactions();
     };
 
+    const filterByTab = (list: CombinedTransaction[], tab: 'all' | 'in' | 'out') => {
+        let filtered = list;
+        if (tab === 'in') {
+            filtered = list.filter(
+                (transaction) =>
+                    transaction.tab === 'in'
+            );
+        } else if (tab === 'out') {
+            filtered = list.filter(
+                (transaction) =>
+                    transaction.tab === 'out'
+            );
+        }
+        setFilteredTransactions(filtered);
+    };
+
     // Hàm thay đổi tab
     const handleTabChange = (tab: 'all' | 'in' | 'out') => {
         setActiveTab(tab);
-        filterByTab(allTransactions, tab);
     };
 
     return (
@@ -124,8 +127,8 @@ const TransactionHistory = () => {
                         type="text"
                         placeholder="Số tài khoản"
                         className="border border-gray-300 rounded-lg p-2 flex-1 text-white"
-                        value={destinationAccountNumber}
-                        onChange={(e) => setDestinationAccountNumber(e.target.value)}
+                        value={partnerAccountNumber}
+                        onChange={(e) => setPartnerAccountNumber(e.target.value)}
                     />
                     <input
                         type="date"
@@ -184,27 +187,39 @@ const TransactionHistory = () => {
                             >
                                 <div>
                                     <p className="font-semibold">{transaction.description}</p>
-                                    {transaction.type.startsWith('interbank') && (
-                                        <p className="text-sm text-gray-600">Ngân hàng: {transaction.bankName}</p>
+                                    {transactionType === 'interbank' && (
+                                        <p className="text-sm text-gray-600">
+                                            Ngân hàng: {transaction.bankName || 'Không xác định'}
+                                        </p>
                                     )}
-                                    <p className="text-sm text-gray-600">{new Date(transaction.date).toLocaleDateString()}</p>
+                                    {transactionType === 'internal' && (
+                                        <p className="text-sm text-gray-600">
+                                            Loại giao dịch: {transaction.type.toLowerCase() === 'transfer' ? 'Giao dịch' : 'Trả nợ'}
+                                        </p>
+                                    )}
+                                    <p className="text-sm text-gray-600">
+                                        {new Date(transaction.date).toLocaleDateString()}
+                                    </p>
                                 </div>
                                 <div
                                     className={`font-bold text-lg ${
-                                        transaction.type === 'received' || transaction.type === 'interbank_received'
+                                        transaction.tab === 'in'
                                             ? 'text-green-500'
                                             : 'text-red-500'
                                     }`}
                                 >
-                                    {transaction.type === 'received' || transaction.type === 'interbank_received' ? '+' : '-'}
+                                    {transaction.tab === 'in' ? '+' : '-'}
                                     {transaction.amount.toLocaleString()}₫
                                 </div>
                             </div>
+
                         ))
                     ) : (
                         <div className="flex flex-col items-center mt-10">
                             <img src={NoDataImage} alt="No data" className="w-1/3" />
-                            <p className="text-gray-500 mt-4">Không có giao dịch trong thời gian đã chọn.</p>
+                            <p className="text-gray-500 mt-4">
+                                Không có giao dịch {activeTab === 'in' ? 'nhận tiền' : activeTab === 'out' ? 'chuyển tiền' : 'trong thời gian đã chọn'}.
+                            </p>
                         </div>
                     )}
                 </div>

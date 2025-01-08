@@ -36,30 +36,38 @@ public class TransactionController {
         this.transactionService = transactionService;
     }
 
+    /**
+     * Get the list of transactions for a user.
+     * @param accountId ID of the current logged account.
+     * @param partnerAccountNumber Account number of the partner.
+     * @param type Type of transaction.
+     * @param startDate Start date of the transaction.
+     * @param endDate End date of the transaction.
+     * @return List of transactions.
+     */
     @GetMapping
     public List<?> getTransactions(
             @RequestParam(value = "accountId") String accountId,
-            @RequestParam(value = "destinationAccountNumber", required = false) String destinationAccountNumber,
+            @RequestParam(value = "partnerAccountNumber", required = false) String partnerAccountNumber,
             @RequestParam(value = "type", required = false) String type,
             @RequestParam(value = "startDate", required = false) String startDate,
             @RequestParam(value = "endDate", required = false) String endDate
     ) {
         try {
-            Integer srcAccountId = Integer.parseInt(accountId);
-            String desAccountNum = (destinationAccountNumber != null && !destinationAccountNumber.isEmpty()) ? destinationAccountNumber : null;
+            Integer srcAccountId = Integer.parseInt(accountId); // Parse accountId to Integer
+            String partnerAccountNum = (partnerAccountNumber != null && !partnerAccountNumber.isEmpty()) ? partnerAccountNumber : null; // Set partnerAccountNum to null if it's empty
 
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss"); // Define the date time format
             LocalDateTime start = (startDate != null && !startDate.isEmpty())
-                    ? LocalDateTime.parse(startDate + "T00:00:00", formatter) : null;
+                    ? LocalDateTime.parse(startDate + "T00:00:00", formatter) : null; // Parse startDate to LocalDateTime
             LocalDateTime end = (endDate != null && !endDate.isEmpty())
-                    ? LocalDateTime.parse(endDate + "T23:59:59", formatter) : null;
+                    ? LocalDateTime.parse(endDate + "T23:59:59", formatter) : null; // Parse endDate to LocalDateTime
 
-            System.out.println("accountId: " + srcAccountId + ", destinationAccountNumber: " + desAccountNum + ", startDate: " + start + ", endDate: " + end);
-
+            // Check if the type is "interbank"
             if ("interbank".equals(type)) {
-                return transactionService.getInterbankTransactionsWithBankName(srcAccountId, desAccountNum, start, end);
+                return transactionService.getUserInterbankTransactions(srcAccountId, partnerAccountNum, start, end);
             } else {
-                return transactionService.getTransactions(srcAccountId, desAccountNum, start, end);
+                return transactionService.getUserTransactions(srcAccountId, partnerAccountNum, start, end);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -67,37 +75,51 @@ public class TransactionController {
         }
     }
 
+    /**
+     * Create a new transaction.
+     * @param transactionRequest Transaction request object.
+     * @return Transaction ID and message.
+     */
     @PostMapping("/create")
     public ResponseEntity<?> createTransaction(@RequestBody TransactionRequest transactionRequest) {
-        // Tính toán phí giao dịch và số tiền
-        BigDecimal fee = transactionRequest.getFee();
-        BigDecimal amount = transactionRequest.getAmount();
+        try {
+            BigDecimal fee = transactionRequest.getFee(); // Get fee from the request
+            BigDecimal amount = transactionRequest.getAmount(); // Get amount from the request
 
-        TransactionRequest newTransactionRequest = TransactionRequest.builder()
-                .sourceAccountId(transactionRequest.getSourceAccountId())
-                .destinationAccountNumber(transactionRequest.getDestinationAccountNumber())
-                .amount(amount)
-                .fee(fee)
-                .feePayer(transactionRequest.getFeePayer())
-                .message(transactionRequest.getMessage())
-                .type(transactionRequest.getType())
-                .build();
+            // Create a new transaction request object
+            TransactionRequest newTransactionRequest = TransactionRequest.builder()
+                    .sourceAccountId(transactionRequest.getSourceAccountId())
+                    .destinationAccountNumber(transactionRequest.getDestinationAccountNumber())
+                    .amount(amount)
+                    .fee(fee)
+                    .feePayer(transactionRequest.getFeePayer())
+                    .message(transactionRequest.getMessage())
+                    .type(transactionRequest.getType())
+                    .build();
 
-        // Lưu giao dịch vào trạng thái chờ xác thực OTP
-        Transaction transaction = transactionService.createPendingTransaction(newTransactionRequest);
+            // Save the transaction
+            Transaction transaction = transactionService.createPendingTransaction(newTransactionRequest);
 
-        // Tạo OTP và gửi qua email
-        String otp = transactionService.generateAndSendOTP(transaction);
+            // Generate and send OTP
+            String otp = transactionService.generateAndSendOTP(transaction);
 
-        return ResponseEntity.ok(new HashMap<String, Object>() {{
-            put("transactionId", transaction.getId());  // Trả về transactionId
-            put("message", "OTP sent to your email.");
-        }});
+            return ResponseEntity.ok(new HashMap<String, Object>() {{
+                put("transactionId", transaction.getId());  // Trả về transactionId
+                put("message", "OTP sent to your email.");
+            }});
+        } catch (IllegalArgumentException e){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
     }
 
+    /**
+     * Verify OTP and complete the transaction.
+     * @param otpRequest OTP verification request.
+     * @return Response message.
+     */
     @PostMapping("/verify-otp")
     public ResponseEntity<?> verifyOtp(@RequestBody OtpVerificationRequest otpRequest) {
-        boolean isVerified = transactionService.verifyOtpAndCompleteTransaction(otpRequest);
+        boolean isVerified = transactionService.verifyOtpAndCompleteTransaction(otpRequest); // Verify OTP
 
         if (isVerified) {
             return ResponseEntity.ok("Transaction completed successfully.");

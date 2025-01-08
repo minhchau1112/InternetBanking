@@ -1,7 +1,6 @@
 package com.example.backend.controller;
 
-import com.example.backend.dto.request.LoginRequest;
-import com.example.backend.dto.request.ResetPasswordRequest;
+import com.example.backend.dto.request.*;
 import com.example.backend.dto.response.*;
 import com.example.backend.exception.EmailNotFoundException;
 import com.example.backend.exception.InvalidException;
@@ -10,6 +9,11 @@ import com.example.backend.exception.RecaptchaException;
 import com.example.backend.model.*;
 import com.example.backend.service.*;
 import com.example.backend.utils.annotation.APIMessage;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -66,6 +70,54 @@ public class AuthenticationController {
     }
 
     @GetMapping("/refresh")
+    @Operation(
+            summary = "Refresh Access Token",
+            description = "Refreshes the access token using a valid refresh token."
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "Refresh token successful",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = LoginResponse.class),
+                    examples = @ExampleObject(
+                            name = "Success Example",
+                            value = "{\n" +
+                                    "  \"status\": 200,\n" +
+                                    "  \"error\": null,\n" +
+                                    "  \"message\": \"Refresh token successful\",\n" +
+                                    "  \"data\": {\n" +
+                                    "    \"user\": {\n" +
+                                    "      \"userID\": 1,\n" +
+                                    "      \"username\": \"customer\",\n" +
+                                    "      \"accountID\": 1,\n" +
+                                    "      \"role\": \"ROLE_CUSTOMER\"\n" +
+                                    "    },\n" +
+                                    "    \"accessToken\": \"access_token\",\n" +
+                                    "    \"expiresIn\": 3600,\n" +
+                                    "    \"tokenType\": \"Bearer\"\n" +
+                                    "  }\n" +
+                                    "}"
+                    )
+            )
+    )
+    @ApiResponse(
+            responseCode = "400",
+            description = "Invalid or expired refresh token",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = RestResponse.class),
+                    examples = @ExampleObject(
+                            name = "Error Example",
+                            value = "{\n" +
+                                    "  \"status\": 400,\n" +
+                                    "  \"error\": \"INVALID_TOKEN\",\n" +
+                                    "  \"message\": \"Invalid or expired temporary token\",\n" +
+                                    "  \"data\": null\n" +
+                                    "}"
+                    )
+            )
+    )
     public ResponseEntity<LoginResponse> getRefreshToken(@CookieValue(name="refresh_token") String refreshToken) throws InvalidException {
         Jwt decodedToken = loginService.checkValidRefreshToken(refreshToken);
         String username = decodedToken.getSubject();
@@ -123,6 +175,71 @@ public class AuthenticationController {
     }
 
     @PostMapping("/login")
+    @Operation(
+            summary = "Login user",
+            description = "Authenticate the user and return an access token along with user details."
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "Login successful",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = LoginResponse.class),
+                    examples = @ExampleObject(
+                            name = "Success Example",
+                            value = "{\n" +
+                                    "  \"status\": 200,\n" +
+                                    "  \"error\": null,\n" +
+                                    "  \"message\": \"Login successful\",\n" +
+                                    "  \"data\": {\n" +
+                                    "    \"user\": {\n" +
+                                    "      \"userID\": 1,\n" +
+                                    "      \"username\": \"john_doe\",\n" +
+                                    "      \"accountID\": 123,\n" +
+                                    "      \"role\": \"ROLE_CUSTOMER\"\n" +
+                                    "    },\n" +
+                                    "    \"accessToken\": \"access_token_value\",\n" +
+                                    "    \"expiresIn\": 3600,\n" +
+                                    "    \"tokenType\": \"Bearer\"\n" +
+                                    "  }\n" +
+                                    "}"
+                    )
+            )
+    )
+    @ApiResponse(
+            responseCode = "400",
+            description = "Invalid input or reCAPTCHA validation failed",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = RestResponse.class),
+                    examples = @ExampleObject(
+                            name = "Error Example",
+                            value = "{\n" +
+                                    "  \"status\": 400,\n" +
+                                    "  \"error\": \"INVALID_RECAPTCHA\",\n" +
+                                    "  \"message\": \"Invalid reCAPTCHA response\",\n" +
+                                    "  \"data\": null\n" +
+                                    "}"
+                    )
+            )
+    )
+    @ApiResponse(
+            responseCode = "401",
+            description = "Unauthorized, invalid credentials",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = RestResponse.class),
+                    examples = @ExampleObject(
+                            name = "Error Example",
+                            value = "{\n" +
+                                    "  \"status\": 401,\n" +
+                                    "  \"error\": \"INVALID_CREDENTIALS\",\n" +
+                                    "  \"message\": \"User not found or incorrect credentials\",\n" +
+                                    "  \"data\": null\n" +
+                                    "}"
+                    )
+            )
+    )
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request,@RequestParam String recaptchaResponse)  {
 
         boolean isRecaptchaValid = verifyRecaptcha(recaptchaResponse);
@@ -178,6 +295,44 @@ public class AuthenticationController {
 
     @PostMapping("/logout")
     @APIMessage("Logout User")
+    @Operation(
+            summary = "Logout user",
+            description = "Logs out the user by invalidating the refresh token and clearing the cookie."
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "Logout successful",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = RestResponse.class),
+                    examples = @ExampleObject(
+                            name = "Success Example",
+                            value = "{\n" +
+                                    "  \"status\": 200,\n" +
+                                    "  \"error\": null,\n" +
+                                    "  \"message\": \"Logout User\",\n" +
+                                    "  \"data\": null\n" +
+                                    "}"
+                    )
+            )
+    )
+    @ApiResponse(
+            responseCode = "401",
+            description = "Full authentication is required to access this resource",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = RestResponse.class),
+                    examples = @ExampleObject(
+                            name = "Error Example",
+                            value = "{\n" +
+                                    "  \"status\": 401,\n" +
+                                    "  \"error\": \"Full authentication is required to access this resource\",\n" +
+                                    "  \"message\": \"Xác thực không hợp lệ !\",\n" +
+                                    "  \"data\": null\n" +
+                                    "}"
+                    )
+            )
+    )
     public ResponseEntity<Void> logout() throws InvalidException {
 
         String username = LoginService.getCurrentUserLogin().isPresent()?LoginService.getCurrentUserLogin().get():null;
@@ -206,8 +361,52 @@ public class AuthenticationController {
 
     @PostMapping("/verify-email")
     @APIMessage("Customer is found")
-    public ResponseEntity<EmailVerifyResponse> findCustomerByEmail(@RequestBody Map<String, String> requestBody) throws EmailNotFoundException {
-        String email = requestBody.get("email");
+    @Operation(
+            summary = "Find customer by email",
+            description = "Finds a customer using the provided email address."
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "Customer found successfully",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = RestResponse.class),
+                    examples = @ExampleObject(
+                            name = "Success Example",
+                            value = "{\n" +
+                                    "  \"status\": 200,\n" +
+                                    "  \"error\": null,\n" +
+                                    "  \"message\": \"Customer is found\",\n" +
+                                    "  \"data\": {\n" +
+                                    "    \"id\": 1,\n" +
+                                    "    \"username\": \"john_doe\",\n" +
+                                    "    \"name\": \"John Doe\",\n" +
+                                    "    \"email\": \"john.doe@example.com\",\n" +
+                                    "    \"phone\": \"1234567890\"\n" +
+                                    "  }\n" +
+                                    "}"
+                    )
+            )
+    )
+    @ApiResponse(
+            responseCode = "404",
+            description = "Email not found",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = RestResponse.class),
+                    examples = @ExampleObject(
+                            name = "Error Example",
+                            value = "{\n" +
+                                    "  \"status\": 404,\n" +
+                                    "  \"error\": \"NOT_FOUND_EMAIL\",\n" +
+                                    "  \"message\": \"The email was not found\",\n" +
+                                    "  \"data\": null\n" +
+                                    "}"
+                    )
+            )
+    )
+    public ResponseEntity<EmailVerifyResponse> findCustomerByEmail(@RequestBody VerifyEmailRequest request) throws EmailNotFoundException {
+        String email = request.getEmail();
         return customerService.findByEmail(email)
                 .map(customer -> {
                     EmailVerifyResponse emailVerifyResponse = new EmailVerifyResponse(
@@ -224,10 +423,48 @@ public class AuthenticationController {
 
     @PostMapping("/forgot-password")
     @APIMessage("Handle forgot password")
-    public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> request) {
+    @Operation(
+            summary = "Handle forgot password",
+            description = "Sends OTP to the user's email for password reset."
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "OTP sent successfully",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = RestResponse.class),
+                    examples = @ExampleObject(
+                            name = "Success Example",
+                            value = "{\n" +
+                                    "  \"status\": 200,\n" +
+                                    "  \"error\": null,\n" +
+                                    "  \"message\": \"Sent OTP code successfully\",\n" +
+                                    "  \"data\": null\n" +
+                                    "}"
+                    )
+            )
+    )
+    @ApiResponse(
+            responseCode = "400",
+            description = "Invalid email",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = RestResponse.class),
+                    examples = @ExampleObject(
+                            name = "Error Example",
+                            value = "{\n" +
+                                    "  \"status\": 400,\n" +
+                                    "  \"error\": \"INVALID_EMAIL\",\n" +
+                                    "  \"message\": \"Invalid email\",\n" +
+                                    "  \"data\": null\n" +
+                                    "}"
+                    )
+            )
+    )
+    public ResponseEntity<?> forgotPassword(@RequestBody ForgotPasswordRequest request) {
         RestResponse<?> res = new RestResponse<>();
 
-        String email = request.get("email");
+        String email = request.getEmail();
         if (email == null || email.isBlank()) {
             res.setStatus(400);
             res.setMessage("Invalid email");
@@ -253,12 +490,50 @@ public class AuthenticationController {
     }
 
     @PostMapping("/verify-reset-otp")
-    @APIMessage("Verify reset OTP")
-    public ResponseEntity<?> verifyResetOtp(@RequestBody Map<String, String> request) throws EmailNotFoundException, OTPNotFoundException {
-        RestResponse<?> res = new RestResponse<>();
+    @Operation(
+            summary = "Verify reset OTP",
+            description = "Verifies the OTP sent to the user's email for password reset"
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "OTP verified successfully",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = RestResponse.class),
+                    examples = @ExampleObject(
+                            name = "Success Example",
+                            value = "{\n" +
+                                    "  \"status\": 200,\n" +
+                                    "  \"error\": null,\n" +
+                                    "  \"message\": \"OTP verified successfully\",\n" +
+                                    "  \"data\": {\n" +
+                                    "    \"temporary_token\": \"393297\"\n" +
+                                    "  }\n" +
+                                    "}"
+                    )
+            )
+    )
+    @ApiResponse(
+            responseCode = "404",
+            description = "Invalid input or OTP",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = RestResponse.class),
+                    examples = @ExampleObject(
+                            name = "Error Example",
+                            value = "{\n" +
+                                    "  \"status\": 404,\n" +
+                                    "  \"error\": \"OTP is not valid\",\n" +
+                                    "  \"message\": \"The OTP was not found\",\n" +
+                                    "  \"data\": null\n" +
+                                    "}"
+                    )
+            )
+    )
+    public ResponseEntity<?> verifyResetOtp(@RequestBody VerifyResetOtpRequest request) throws EmailNotFoundException, OTPNotFoundException {
 
-        String email = request.get("email");
-        String otp = request.get("otp");
+        String email = request.getEmail();
+        String otp = request.getOtp();
 
         if (email == null || email.isBlank()) {
             throw new EmailNotFoundException("Email can not be blank");
@@ -269,20 +544,55 @@ public class AuthenticationController {
         }
 
         String storedOtp = otpService.getOtp(email);
-        if (storedOtp == null) {
-            throw new OTPNotFoundException("OTP is not valid");
-        }
-
-        if (!storedOtp.equals(otp)) {
+        if (storedOtp == null || !storedOtp.equals(otp)) {
             throw new OTPNotFoundException("OTP is not valid");
         }
 
         otpService.deleteOtp(email);
 
-
         return ResponseEntity.ok().body(new VerifyOTPResponse(storedOtp));
     }
 
+    @Operation(
+            summary = "Reset password",
+            description = "Resets the password for the customer using the provided email and new password."
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "Reset password success",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = RestResponse.class),
+                    examples = @ExampleObject(
+                            name = "Success Example",
+                            value = "{\n" +
+                                    "  \"status\": 200,\n" +
+                                    "  \"error\": null,\n" +
+                                    "  \"message\": \"Reset password success.\",\n" +
+                                    "  \"data\": {\n" +
+                                    "    \"message\": \"Reset password success.\"\n" +
+                                    "  }\n" +
+                                    "}"
+                    )
+            )
+    )
+    @ApiResponse(
+            responseCode = "400",
+            description = "Invalid or expired temporary token",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = RestResponse.class),
+                    examples = @ExampleObject(
+                            name = "Error Example",
+                            value = "{\n" +
+                                    "  \"statusCode\": 400,\n" +
+                                    "  \"message\": \"Invalid or expired temporary token\",\n" +
+                                    "  \"data\": null,\n" +
+                                    "  \"error\": \"INVALID_TOKEN\"\n" +
+                                    "}"
+                    )
+            )
+    )
     @PostMapping("/reset-password")
     @APIMessage("Reset password success.")
     public ResponseEntity<ResetPasswordResponse> resetPassword(@RequestBody ResetPasswordRequest request) throws EmailNotFoundException {

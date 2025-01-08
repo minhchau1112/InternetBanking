@@ -1,11 +1,13 @@
-import { useState, useEffect } from 'react';
+import {useEffect, useState} from 'react';
 import axios from 'axios';
-import { toast, ToastContainer } from 'react-toastify';
+import {toast, ToastContainer} from "react-toastify";
+import {createRecipient} from "@/api/recipientAPI.ts";
+import Recipient from "@/pages/customer/Contact.tsx";
 
 const TransactionForm = () => {
     const [activeTab, setActiveTab] = useState('internal'); // "internal" or "external"
     const [accounts, setAccounts] = useState([]);
-    const [recipients, setRecipients] = useState([]);
+    const [recipients, setRecipients] = useState<Recipient[]>([]);
     const [selectedAccount, setSelectedAccount] = useState('');
     const [recipientOption, setRecipientOption] = useState('choose'); // "choose" or "manual"
     const [destinationAccount, setDestinationAccount] = useState('');
@@ -22,6 +24,8 @@ const TransactionForm = () => {
     const [sourceAccountNumber, setSourceAccountNumber] = useState('');
 
     const sourceAccountId = localStorage.getItem('accountId');
+    const user = localStorage.getItem('user') || '';
+    const { userID } = JSON.parse(user);
     const accessToken = localStorage.getItem('access_token');
 
     useEffect(() => {
@@ -35,7 +39,7 @@ const TransactionForm = () => {
                 setAccounts(accountResponse.data.data);
                 setSourceAccountNumber(accountResponse.data.data.accountNumber);
 
-                const recipientResponse = await axios.get(`http://localhost:8888/api/recipients/${sourceAccountId}`, {
+                const recipientResponse = await axios.get(`http://localhost:8888/api/recipients/${userID}`, {
                     headers: { Authorization: `Bearer ${accessToken}` },
                 });
                 console.log("account from user id"+JSON.stringify(recipientResponse.data, null, 2));
@@ -173,7 +177,26 @@ const TransactionForm = () => {
                     { headers: { Authorization: `Bearer ${accessToken}` } }
                 );
                 toast.success('Transaction completed successfully!');
-                setTimeout(() => window.location.reload(), 3000);
+
+                //Lưu người nhận mới
+                const destinationAccountNumber = recipientOption === 'choose' ? selectedRecipient : destinationAccount;
+                if(!recipients.some(recipient => recipient.accountNumber === destinationAccountNumber)){
+                    console.log("aaaa")
+                    const reicipientResponse = await createRecipient(destinationAccountNumber, "", "GROUP2");
+                    toast.success(reicipientResponse);
+                }
+
+                // Trì hoãn reload để người dùng kịp thấy thông báo
+                setTimeout(() => {
+                    // Reload lại trang sau 2 giây
+                    setAmount('');
+                    setFee('');
+                    setFeePayer('SENDER');
+                    setMessage('');
+                    setOtp('');
+                    setTransactionId(null);
+                    setOtpSent(false);
+                }, 3000);
             } catch (error) {
                 toast.error('Invalid or expired OTP.');
             }
@@ -215,6 +238,7 @@ const TransactionForm = () => {
     };
 
     return (
+
         <div className="w-full h-full max-h-screen flex flex-col bg-gray-100 pt-7 px-5">
             {/* Tabs */}
             <div className="flex justify-center border-b border-gray-300">
@@ -414,7 +438,7 @@ const TransactionForm = () => {
                         </div>
                     </div>
                 </div>
-            )}
+                )}
             <ToastContainer />
         </div>
     );

@@ -1,8 +1,14 @@
 import { Edit, Delete, NavigateBefore, NavigateNext } from '@mui/icons-material';
 import {useEffect, useState} from 'react';
-import axios from "axios";
 import {useForm, SubmitHandler} from "react-hook-form";
 import {toast, ToastContainer} from "react-toastify";
+import {
+    createRecipient,
+    deleteRecipients,
+    fetchCustomerRecipients,
+    updateRecipient
+} from "@/api/recipientAPI.ts";
+import NoDataImage from "@/assets/image/nodata.png";
 
 type Customer = {
     createdAt: string,
@@ -22,15 +28,18 @@ type Recipient = {
     bankCode: string,
 }
 
-type FormData = {
+type CreateFormData = {
     accountNumber: string,
     aliasName: string,
-    bankCode: string
+    // bankCode: string
+}
+
+type UpdateFormData = {
+    aliasName: string
 }
 
 const Recipient = () => {
 
-    const [userAccountId] = useState<string>(localStorage.getItem('accountId') || '')
     const [recipients, setRecipients] = useState<Recipient[]>([]);
     const [filteredRecipients, setFilteredRecipients] = useState<Recipient[]>([]);
     const [pageRecipients, setPageRecipients] = useState<Recipient[]>([]);
@@ -38,23 +47,22 @@ const Recipient = () => {
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [totalPage, setTotalPage] = useState<number>(1);
     const [pageLimit] = useState<number>(10);
-    const { register: resC, handleSubmit: subC, formState: { errors: errC } } = useForm<FormData>();
-    const { register: resU, handleSubmit: subU, formState: { errors: errU }, setValue: setU } = useForm<FormData>();
-    const [updatingRecipientId, setUpdatingRecipientId] = useState<number>(-1);
+    const { register: resC, handleSubmit: subC, formState: { errors: errC },
+        reset: resetC } = useForm<CreateFormData>();
+    const { register: resU, handleSubmit: subU, formState: { errors: errU },
+        reset: resetU, setValue: setU } = useForm<UpdateFormData>();
+    const [updatingId, setUpdatingId] = useState<number>(-1);
+    const [updatingAccNum, setUpdatingAccNum] = useState<string>("");
+    const [updatingBankCode, setUpdatingBankCode] = useState<string>("");
     useEffect(() => {
         fetchRecipients();
     }, []);
 
     const fetchRecipients = async () => {
         try {
-            const response = await axios.get(`http://localhost:8888/api/recipients/${userAccountId}`, {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem('access_token')}`,
-                },
-            });
-            const { data } = response.data;
-            setRecipients(data);
-            handleSearch('', data);
+            const response = await fetchCustomerRecipients();
+            setRecipients(response);
+            handleSearch('', response);
         } catch (error) {
             toast.error("Error fetching recipients.");
         }
@@ -99,77 +107,60 @@ const Recipient = () => {
         setCurrentPage(prevPage);
     };
 
-    const handleDelete = async (customerId: number) => {
+    const handleDelete = async (recipientId: number) => {
+        resetU();
+        setUpdatingId(-1);
         try {
-            const response = await axios.delete(`http://localhost:8888/api/recipients/${customerId}`,
-                {
-                    headers: {
-                        Authorization: `Bearer ${localStorage.getItem('access_token')}`,
-                    },
-                }
-            );
-            toast.success(response.data.message);
-            fetchRecipients();
+            const response = await deleteRecipients(recipientId);
+            toast.success(response);
+            await fetchRecipients();
         } catch (err) {
-            const errorMessage = err.response?.data?.message || "An unexpected error occurred.";
-            toast.error(errorMessage);
+            toast.error("Error delete recipient");
         }
     }
 
-    const onSubmitCreate: SubmitHandler<FormData> = async (data) => {
+    const onSubmitCreate: SubmitHandler<CreateFormData> = async (data) => {
+        if(recipients.some(recipient => recipient.accountNumber === data.accountNumber)){
+            toast.error("Recipient available.");
+            return;
+        }
+
         try {
-            const response = await axios.post(`http://localhost:8888/api/recipients`,
-                {
-                    customerId: userAccountId,
-                    accountNumber: data.accountNumber,
-                    aliasName: data.aliasName,
-                    bankCode: data.bankCode,
-                },
-                {
-                    headers: {
-                        Authorization: `Bearer ${localStorage.getItem('access_token')}`,
-                    },
-                }
-                );
-            toast.success(response.data.message);
-            fetchRecipients();
+            const response = await createRecipient(data.accountNumber, data.aliasName, "GROUP2");
+            toast.success(response);
+            resetC();
+            await fetchRecipients();
         } catch (err) {
-            const errorMessage = err.response?.data?.message || "An unexpected error occurred.";
-            toast.error(errorMessage);
+            toast.error("Error create recipient");
         }
     };
 
     const parseUpdateForm = (data: Recipient) => {
-        setU("bankCode", data.bankCode);
-        setU("accountNumber", data.accountNumber);
         setU("aliasName", data.aliasName);
-        setUpdatingRecipientId(data.id);
+        setUpdatingAccNum(data.accountNumber);
+        setUpdatingBankCode(data.bankCode);
+        setUpdatingId(data.id);
     }
-    const onSubmitUpdate: SubmitHandler<FormData> = async (data) => {
+    const onSubmitUpdate: SubmitHandler<UpdateFormData> = async (data) => {
         try {
-            const response = await axios.put(`http://localhost:8888/api/recipients/${updatingRecipientId}`,
-                {
-                    recipientId: updatingRecipientId,
-                    accountNumber: data.accountNumber,
-                    aliasName: data.aliasName,
-                    bankCode: data.bankCode,
-                },
-                {
-                    headers: {
-                        Authorization: `Bearer ${localStorage.getItem('access_token')}`,
-                    },
-                }
-            );
-            toast.success(response.data.message);
-            fetchRecipients();
+            const response = await updateRecipient(
+                updatingId,
+                updatingAccNum,
+                data.aliasName,
+                updatingBankCode
+            )
+
+            toast.success(response);
+            resetU();
+            setUpdatingId(-1);
+            await fetchRecipients();
         } catch (err) {
-            const errorMessage = err.response?.data?.message || "An unexpected error occurred.";
-            toast.error(errorMessage);
+            toast.error("Error update recipient");
         }
     };
     return (
         <div className="w-[calc(100vw-256px)] max-w-full h-screen flex items-center justify-center p-8 bg-gray-100 ">
-            <div className="w-full h-full bg-white p-8 rounded-lg shadow-md">
+            <div className="w-full h-full bg-white p-8 rounded-lg shadow-md overflow-auto">
                 <h1 className="text-3xl font-bold mb-3 text-gray-800 text-left">Manage Customer Recipients</h1>
                 <input
                     className="border border-gray-300 rounded-lg px-[1%] py-1 mb-[1%] w-[20%] text-lg"
@@ -178,70 +169,79 @@ const Recipient = () => {
                     value={searchQuery}
                     onChange={(e) => handleSearch(e.target.value)}
                 />
-                <div className="w-full grid grid-cols-5">
-                    <div className="w-full h-full flex flex-col justify-center items-start col-span-3">
-                        <div className="w-full h-full flex flex-col justify-between px-[2%] pb-[2%] pt-[0.5%] border border-gray-300 rounded-3xl">
-                            <table className="w-full text-lg text-left pb-[1%] border-collapse">
-                                <thead>
-                                <tr className="border-b border-gray-300">
-                                    <th className="py-[1.9%] w-[40%] font-bold">Alias Name</th>
-                                    <th className="py-[1.9%] w-[30%] font-bold">Account Number</th>
-                                    <th className="py-[1.9%] w-[20%] font-bold">Bank Code</th>
-                                    <th className="py-[1.9%] w-[10%]"></th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                {pageRecipients.map((recipient) => (
-                                    <tr key={recipient.id}>
-                                        <td className="py-[1.9%]">{recipient.aliasName}</td>
-                                        <td className="py-[1.9%] text-gray-400">{recipient.accountNumber}</td>
-                                        <td className="py-[1.9%]">{recipient.bankCode}</td>
-                                        <td className="py-[1.9%] flex">
-                                            <button className="bg-transparent p-2"
-                                                    onClick={() => parseUpdateForm(recipient)}>
-                                                <Edit style={{color: "green"}}/>
-                                            </button>
-                                            <button className="bg-transparent p-2"
-                                                    onClick={() => handleDelete(recipient.id)}>
-                                                <Delete style={{color: "red"}}/>
-                                            </button>
-                                        </td>
+                <div className="w-full grid grid-cols-6">
+                    <div className="w-full h-full flex flex-col justify-start items-start col-span-4">
+                        {recipients.length > 0 ? (
+                            <div className="w-full flex flex-col justify-start px-[4%] py-[2%] border border-gray-300 rounded-lg">
+                                <table className="w-full text-lg text-left border-collapse">
+                                    <thead>
+                                    <tr className="border-b border-gray-300">
+                                        <th className="py-2 w-[40%] font-bold">Alias Name</th>
+                                        <th className="py-2 w-[30%] font-bold">Account Number</th>
+                                        <th className="py-2 w-[20%] font-bold">Bank Code</th>
+                                        <th className="py-2 w-[10%]"></th>
                                     </tr>
-                                ))}
-                                </tbody>
-                            </table>
-                            <div className="flex justify-center items-center mt-[2%] space-x-[1.5%]">
-                                <button disabled={(currentPage == 1)} onClick={() => handlePrevPage()}
-                                        className="py-1 px-1 bg-black rounded-full disabled:opacity-50">
-                                    <NavigateBefore style={{color: "white", fontSize: 30}}/></button>
-                                <p className="text-lg">Page {currentPage}/{totalPage}</p>
-                                <button disabled={(currentPage == totalPage)} onClick={() => handleNextPage()}
-                                        className="py-1 px-1 bg-black rounded-full disabled:opacity-50">
-                                    <NavigateNext style={{color: "white", fontSize: 30}}/></button>
+                                    </thead>
+                                    <tbody>
+                                    {pageRecipients.map((recipient) => (
+                                        <tr key={recipient.id}>
+                                            <td className="h-fit py-2">{recipient.aliasName}</td>
+                                            <td className="h-fit py-2 text-gray-400">{recipient.accountNumber}</td>
+                                            <td className="h-fit py-2">{recipient.bankCode}</td>
+                                            <td className="h-fit py-2 flex">
+                                                <button className="bg-transparent p-2"
+                                                        onClick={() => parseUpdateForm(recipient)}>
+                                                    <Edit style={{color: "green"}}/>
+                                                </button>
+                                                <button className="bg-transparent p-2"
+                                                        onClick={() => handleDelete(recipient.id)}>
+                                                    <Delete style={{color: "red"}}/>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    </tbody>
+                                </table>
+                                <div className="flex justify-center items-center mt-[1%] space-x-[2%]">
+                                    <button disabled={(currentPage == 1)} onClick={() => handlePrevPage()}
+                                            className="py-1 px-1 bg-black rounded-full disabled:opacity-50">
+                                        <NavigateBefore style={{color: "white", fontSize: 30}}/></button>
+                                    <p className="text-lg">Page {currentPage}/{totalPage}</p>
+                                    <button disabled={(currentPage == totalPage)} onClick={() => handleNextPage()}
+                                            className="py-1 px-1 bg-black rounded-full disabled:opacity-50">
+                                        <NavigateNext style={{color: "white", fontSize: 30}}/></button>
+                                </div>
                             </div>
-                        </div>
+                        ) : (
+                            <div className="flex flex-col items-center mt-10">
+                                <img src={NoDataImage} alt="No data" className="w-1/3" />
+                                <p className="text-gray-500 mt-4">
+                                    You don't have any contact yet.
+                                </p>
+                            </div>
+                        )}
                     </div>
 
-                    <div className="w-full h-full flex flex-col justify-between items-start col-span-2 space-y-1">
-                        <div className="w-full px-[2%] pb-[2%] pt-[2%] ml-[1%] border border-gray-300 rounded-3xl">
-                            <h1 className="w-full text-2xl font-bold text-gray-800  mb-4 text-center">
-                                Add New Contact</h1>
-                            <form onSubmit={subC(onSubmitCreate)} className="space-y-6 w-full">
-                                <div>
-                                    <label className="block text-gray-700 text-md mb-1">Bank Code</label>
-                                    <div className="flex flex-col">
-                                        <input
-                                            {...resC('bankCode', {required: "Bank Code is required"})}
-                                            className="border border-gray-300 rounded-lg px-2 py-1 w-full text-lg"
-                                        />
-                                        <div className="text-red-500 text-md">
-                                            {errC.bankCode?.message && String(errC.bankCode.message)}
-                                        </div>
-                                    </div>
-                                </div>
+                    <div className="w-full h-full flex flex-col items-start col-span-2 space-y-4">
+                        <div className="w-full px-8 py-8 ml-4 border border-gray-300 rounded-lg">
+                            <h1 className="w-full text-2xl font-bold text-gray-800 mb-1 text-center">
+                                New Contact</h1>
+                            <form onSubmit={subC(onSubmitCreate)} className="space-y-2 w-full">
+                                {/*<div>*/}
+                                {/*    <label className="block text-gray-700 text-sm mb-0">Bank Code</label>*/}
+                                {/*    <div className="flex flex-col">*/}
+                                {/*        <input*/}
+                                {/*            {...resC('bankCode', {required: "Bank Code is required"})}*/}
+                                {/*            className="border border-gray-300 rounded-lg px-2 py-1 w-full text-lg"*/}
+                                {/*        />*/}
+                                {/*        <div className="text-red-500 text-md">*/}
+                                {/*            {errC.bankCode?.message && String(errC.bankCode.message)}*/}
+                                {/*        </div>*/}
+                                {/*    </div>*/}
+                                {/*</div>*/}
 
                                 <div>
-                                    <label className="block text-gray-700 text-md mb-1">Account Number</label>
+                                    <label className="block text-gray-700 text-sm mb-0">Account Number</label>
                                     <div className="flex flex-col">
                                         <input
                                             {...resC('accountNumber', {
@@ -256,7 +256,7 @@ const Recipient = () => {
                                 </div>
 
                                 <div>
-                                    <label className="block text-gray-700 text-md mb-1">Alias Name</label>
+                                    <label className="block text-gray-700 text-sm mb-0">Alias Name</label>
                                     <div className="flex flex-col">
                                         <input
                                             {...resC('aliasName')}
@@ -271,7 +271,7 @@ const Recipient = () => {
                                 <div className="text-center">
                                     <button
                                         type="submit"
-                                        className="bg-black hover:bg-blue-700 text-white px-3 py-1 rounded-lg text-lg"
+                                        className="w-full bg-black hover:bg-blue-700 text-white px-3 py-1 rounded-lg text-lg"
                                     >
                                         Add Contact
                                     </button>
@@ -280,64 +280,38 @@ const Recipient = () => {
 
                         </div>
 
-                        <div className="w-full px-[2%] pb-[2%] pt-[2%] ml-[1%] border border-gray-300 rounded-3xl">
-                            <h1 className="w-full text-2xl font-bold text-gray-800  mb-4 text-center">
-                                Edit Contact Profile</h1>
-                            <form onSubmit={subU(onSubmitUpdate)} className="space-y-6 w-full">
-                                <div>
-                                    <label className="block text-gray-700 text-md mb-1">Bank Code</label>
-                                    <div className="flex flex-col">
-                                        <input
-                                            {...resU('bankCode', {required: "Bank Code is required"})}
-                                            disabled={true}
-                                            className="border border-gray-300 rounded-lg px-2 py-1 w-full text-lg disabled:bg-gray-300"
-                                        />
-                                        <div className="text-red-500 text-md">
-                                            {errU.bankCode?.message && String(errU.bankCode.message)}
+                        { updatingId !== -1 &&
+                            <div className="w-full px-8 py-8 ml-4 border border-gray-300 rounded-lg">
+                                <h1 className="w-full text-2xl font-bold text-gray-800 mb-0 text-center">
+                                    {updatingAccNum}</h1>
+                                <h2 className="w-full text-lg font-light text-gray-300 mb-1 text-center">
+                                    {updatingBankCode}</h2>
+                                <form onSubmit={subU(onSubmitUpdate)} className="space-y-4 w-full">
+                                    <div>
+                                        <label className="block text-gray-700 text-sm mb-0">Alias Name</label>
+                                        <div className="flex flex-col">
+                                            <input
+                                                {...resU('aliasName')}
+                                                className="border border-gray-300 rounded-lg px-2 py-1 w-full text-lg"
+                                            />
+                                            <div className="text-red-500 text-md">
+                                                {errU.aliasName?.message && String(errU.aliasName.message)}
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                <div>
-                                    <label className="block text-gray-700 text-md mb-1">Account Number</label>
-                                    <div className="flex flex-col">
-                                        <input
-                                            {...resU('accountNumber', {
-                                                required: "Account Number is required",
-                                            })}
-                                            disabled={true}
-                                            className="border border-gray-300 rounded-lg px-2 py-1 w-full text-lg disabled:bg-gray-300"
-                                        />
-                                        <div className="text-red-500 text-md">
-                                            {errU.accountNumber?.message && String(errU.accountNumber.message)}
-                                        </div>
+                                    <div className="text-center">
+                                        <button
+                                            type="submit"
+                                            className="w-full bg-black hover:bg-blue-700 text-white px-3 py-1 rounded-lg text-lg"
+                                        >
+                                            Change
+                                        </button>
                                     </div>
-                                </div>
+                                </form>
 
-                                <div>
-                                    <label className="block text-gray-700 text-md mb-1">Alias Name</label>
-                                    <div className="flex flex-col">
-                                        <input
-                                            {...resU('aliasName')}
-                                            className="border border-gray-300 rounded-lg px-2 py-1 w-full text-lg"
-                                        />
-                                        <div className="text-red-500 text-md">
-                                            {errU.aliasName?.message && String(errU.aliasName.message)}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="text-center">
-                                    <button
-                                        type="submit"
-                                        className="bg-black hover:bg-blue-700 text-white px-3 py-1 rounded-lg text-lg"
-                                    >
-                                        Change
-                                    </button>
-                                </div>
-                            </form>
-
-                        </div>
+                            </div>
+                        }
                     </div>
                 </div>
             </div>

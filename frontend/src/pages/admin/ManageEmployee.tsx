@@ -1,6 +1,8 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
 import { toast, ToastContainer } from "react-toastify";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 type Employee = {
     id: number;
@@ -12,7 +14,10 @@ const ManageEmployee = () => {
     const [employees, setEmployees] = useState<Employee[]>([]);
     const [currentEmployee, setCurrentEmployee] = useState<Employee | null>(null);
     const [formData, setFormData] = useState({ name: '', status: '' });
-
+    const [searchTerm, setSearchTerm] = useState('');
+    const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>([]);
+    
+    
     useEffect(() => {
         fetchEmployees();
     }, []);
@@ -25,6 +30,7 @@ const ManageEmployee = () => {
             }
             const data = await response.json();
             setEmployees(data);
+            setFilteredEmployees(data);
         } catch (error) {
             // toast.error('Error fetching employees: ' + error.message);
             toast.error('Error fetching employees: ' + (error as any).message);
@@ -83,44 +89,51 @@ const ManageEmployee = () => {
         }
     };
 
+    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const term = e.target.value;
+        setSearchTerm(term);
+        const filtered = employees.filter(employee => employee.name.toLowerCase().includes(term.toLowerCase()));
+        setFilteredEmployees(filtered);
+    };
+
     return (
         <div className="p-8">
-            <h1 className="text-3xl font-bold mb-6">Admin Employee Management</h1>
-            <form onSubmit={handleSubmit} className="mb-6">
-                <input
+            <h1 className="text-3xl font-bold mb-6">Employee Management</h1>
+            <div className="mb-4 flex justify-between items-center">
+                <Input
                     type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    placeholder="Name"
-                    required
-                    className="border p-2 mr-2"
+                    placeholder="Search by name"
+                    value={searchTerm}
+                    onChange={handleSearchChange}
+                    className="mr-2"
                 />
-                <input
-                    type="text"
-                    name="status"
-                    value={formData.status}
-                    onChange={handleInputChange}
-                    placeholder="Status"
-                    required
-                    className="border p-2 mr-2"
-                />
-                <button type="submit" className="bg-blue-600 text-white p-2">
-                    {currentEmployee ? 'Update Employee' : 'Add Employee'}
-                </button>
-            </form>
-
-            <ul>
-                {employees.map(employee => (
-                    <li key={employee.id} className="flex justify-between items-center mb-2">
-                        <span>{employee.name} - {employee.status}</span>
-                        <div>
-                            <button onClick={() => handleEdit(employee)} className="bg-yellow-500 text-white p-1 mr-2">Edit</button>
-                            <button onClick={() => handleDelete(employee.id)} className="bg-red-500 text-white p-1">Delete</button>
+                <Button onClick={() => setCurrentEmployee(null)} variant="default">
+                    + Add Employee
+                </Button>
             </div>
-                    </li>
-                ))}
-            </ul>
+            <table className="min-w-full border">
+                <thead>
+                    <tr>
+                        <th className="border p-2">ID</th>
+                        <th className="border p-2">Name</th>
+                        <th className="border p-2">Status</th>
+                        <th className="border p-2">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {filteredEmployees.sort((a, b) => a.id - b.id).map(employee => (
+                        <tr key={employee.id}>
+                            <td className="border p-2">{employee.id}</td>
+                            <td className="border p-2">{employee.name}</td>
+                            <td className="border p-2">{employee.status}</td>
+                            <td className="border p-2">
+                                <Button onClick={() => handleEdit(employee)} variant="secondary" className="mr-2">Edit</Button>
+                                <Button onClick={() => handleDelete(employee.id)} variant="destructive">Delete</Button>
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
             <ToastContainer />
         </div>
     );

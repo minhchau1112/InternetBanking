@@ -20,17 +20,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import io.swagger.v3.oas.annotations.Operation;
 
+import java.io.IOException;
+
 @RestController
 @RequestMapping("/api/debt-reminders")
 public class DebtReminderController {
 
     private final DebtReminderService debtReminderService;
-    private final NotificationHandler notificationHandler;
     private final InternalTransferService internalTransferService;
 
-    public DebtReminderController(DebtReminderService debtReminderService, NotificationHandler notificationHandler, InternalTransferService internalTransferService) {
+    public DebtReminderController(DebtReminderService debtReminderService, InternalTransferService internalTransferService) {
         this.debtReminderService = debtReminderService;
-        this.notificationHandler = notificationHandler;
         this.internalTransferService = internalTransferService;
     }
 
@@ -43,8 +43,6 @@ public class DebtReminderController {
                 request.getAmount(),
                 request.getMessage()
         );
-
-        notificationHandler.sendNotification("New debt reminder created: " + reminder.getMessage(), String.valueOf(request.getCreatorAccountId()));
 
         return ResponseEntity.status(HttpStatus.CREATED).body(reminder);
     }
@@ -80,10 +78,8 @@ public class DebtReminderController {
     @APIMessage("Cancel debt reminder success")
     public ResponseEntity<Void> cancelDebtReminder(@PathVariable Integer debtReminderId,
                                                    @RequestParam Integer requesterAccountId,
-                                                   @RequestBody CancelDebtReminderRequest request) throws DebtReminderNotFoundException {
+                                                   @RequestBody CancelDebtReminderRequest request) throws DebtReminderNotFoundException, IOException {
         debtReminderService.cancelDebtReminder(debtReminderId, request, requesterAccountId);
-
-//        notificationHandler.sendNotification("This debt reminder cancelled!", requesterAccountId);
 
         return ResponseEntity.ok(null);
     }

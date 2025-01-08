@@ -45,11 +45,11 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(
                         authz -> authz
                                 .requestMatchers(PUBLIC_URLS).permitAll()
+                                .requestMatchers("/ws/**").permitAll()
                                 .requestMatchers("/admin/**").hasRole("ADMIN")
                                 .requestMatchers("/customer/**").hasRole("CUSTOMER")
                                 .requestMatchers("/employee/**").hasRole("EMPLOYEE")
                                 .requestMatchers("/api/interbank/**").permitAll()
-                                .requestMatchers("/ws/**").permitAll()
                                 .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer((oauth2)->oauth2.jwt(Customizer.withDefaults())

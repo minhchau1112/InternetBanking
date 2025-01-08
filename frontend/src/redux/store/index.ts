@@ -1,11 +1,13 @@
 import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "../slices/authSlice.ts";
 import otpReducer from "../slices/otpSlice.ts";
+import debtReminderReducer from "../slices/debtReminderSlice.ts";
 
 export const store = configureStore({
     reducer: {
         auth: authReducer,
         otp: otpReducer,
+        debtReminder: debtReminderReducer,
     },
 });
 

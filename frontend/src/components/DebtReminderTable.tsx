@@ -410,6 +410,7 @@ const DebtReminderTable: React.FC<DataTableProps> = ({ status = 'PENDING', type 
 	}, [type, id, status, page, pageSize]);
 
 	return (
+		
 		<Box sx=
 				{{ 
 					height: 630, 

@@ -9,21 +9,28 @@ import com.example.backend.model.Account;
 import com.example.backend.model.DebtReminder;
 import com.example.backend.repository.AccountRepository;
 import com.example.backend.repository.DebtReminderRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
+
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+@Slf4j
 @Service
 public class DebtReminderService {
 
     private final DebtReminderRepository debtReminderRepository;
     private final AccountRepository accountRepository;
 
-    public DebtReminderService(DebtReminderRepository debtReminderRepository, AccountRepository accountRepository) {
+    private final SimpMessagingTemplate messagingTemplate;
+    public DebtReminderService(DebtReminderRepository debtReminderRepository, AccountRepository accountRepository, SimpMessagingTemplate messagingTemplate) {
         this.debtReminderRepository = debtReminderRepository;
         this.accountRepository = accountRepository;
+        this.messagingTemplate = messagingTemplate;
     }
 
     public DebtReminder createDebtReminder(Integer creatorAccountId, Integer debtorAccountId, BigDecimal amount, String message) throws DebtReminderNotFoundException {
@@ -42,7 +49,10 @@ public class DebtReminderService {
         debtReminder.setCreatedAt(LocalDateTime.now());
         debtReminder.setUpdatedAt(LocalDateTime.now());
 
-        return debtReminderRepository.save(debtReminder);
+        DebtReminder savedDebtReminder = debtReminderRepository.save(debtReminder);
+
+        sendToUser(debtReminder.getDebtorAccount().getId(), debtReminder.getCreatorAccount().getCustomer().getName() + " vừa tạo 1 nhắc nợ cho bạn");
+        return savedDebtReminder;
     }
 
     public Page<GetDebtReminderForCreatorResponse> getDebtRemindersForCreator(Integer creatorAccountId, DebtReminderStatus status, Pageable pageable) throws DebtReminderNotFoundException {
@@ -67,7 +77,7 @@ public class DebtReminderService {
         return debtReminderRepository.findByDebtorAccountIdAAndStatus(debtorAccountId, status, pageable);
     }
 
-    public void cancelDebtReminder(Integer debtReminderId, CancelDebtReminderRequest request, Integer requesterAccountId) throws DebtReminderNotFoundException {
+    public void cancelDebtReminder(Integer debtReminderId, CancelDebtReminderRequest request, Integer requesterAccountId) throws DebtReminderNotFoundException, IOException {
         DebtReminder debtReminder = debtReminderRepository.findById(debtReminderId)
                 .orElseThrow(() -> new DebtReminderNotFoundException("Debt reminder not found"));
 
@@ -79,8 +89,21 @@ public class DebtReminderService {
         debtReminder.setUpdatedAt(LocalDateTime.now());
 
         debtReminderRepository.save(debtReminder);
-    }
 
+        if (debtReminder.getCreatorAccount().getId().equals(requesterAccountId)) {
+            // Nếu người huỷ là người tạo nhắc nợ => Gửi thông báo cho người nợ
+            log.info("Người hủy là người tạo nhắc nợ => Gửi thông báo cho người nợ");
+            sendToUser(debtReminder.getDebtorAccount().getId(), "Nhắc nợ từ " + debtReminder.getCreatorAccount().getCustomer().getName() + " đã bị hủy. Lý do: " + request.getCancellationReason());
+        } else {
+            // Nếu người huỷ là người nợ => Gửi thông báo cho người gửi
+            log.info("Người huỷ là người khác => Gửi thông báo cho người gửi");
+            sendToUser(debtReminder.getCreatorAccount().getId(), debtReminder.getDebtorAccount().getCustomer().getName() + " đã hủy 1 nhắc nợ mà bạn tạo. Lý do: " + request.getCancellationReason());
+        }
+    }
+    public void sendToUser(Integer userId, String message) {
+        log.info("sendToUser: " + userId);
+        messagingTemplate.convertAndSendToUser(userId.toString(), "/queue/notifications", message);
+    }
     public void payDebtReminder(Integer debtReminderId) throws DebtReminderNotFoundException {
         DebtReminder debtReminder = debtReminderRepository.findById(debtReminderId)
                 .orElseThrow(() -> new DebtReminderNotFoundException("Debt reminder not found"));
@@ -89,6 +112,8 @@ public class DebtReminderService {
         debtReminder.setUpdatedAt(LocalDateTime.now());
 
         debtReminderRepository.save(debtReminder);
+
+        sendToUser(debtReminder.getCreatorAccount().getId(), debtReminder.getDebtorAccount().getCustomer().getName() + " đã thanh toán 1 nhắc nợ");
     }
 }
 

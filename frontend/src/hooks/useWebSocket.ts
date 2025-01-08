@@ -1,32 +1,45 @@
 import { useEffect, useState } from "react";
+import { Client, Message } from "@stomp/stompjs"; 
 
-const useWebSocket = (url: string) => {
-  const [messages, setMessages] = useState<string[]>([]); 
+interface UseSocketHookProps {
+  userId: string; 
+}
+
+const useWebSocket = ({ userId }: UseSocketHookProps) => {
+  const [message, setMessage] = useState<string | null>(null);
+  const [client, setClient] = useState<Client | null>(null); 
+  const serverUrl = "ws://localhost:8888/ws";
+
   useEffect(() => {
-    const socket = new WebSocket(url);
+    const socketClient = new Client({
+      brokerURL: serverUrl,
+      connectHeaders: {
 
-    socket.onmessage = (event) => {
-      setMessages((prev) => [...prev, event.data]);  
-    };
+      },
+      debug: (str: string) => console.log(str),
+      onConnect: () => {
+        console.log("Connected to WebSocket");
+        
+        socketClient.subscribe(`/user/${userId}/queue/notifications`, (msg: Message) => {
+          setMessage(msg.body); 
+        });
+      },
+      onStompError: (frame: any) => {
+        console.error("Error occurred: " + frame.headers["message"]);
+      },
+    });
 
-    socket.onopen = () => {
-      console.log("WebSocket connected");
-    };
-
-    socket.onclose = () => {
-      console.log("WebSocket disconnected");
-    };
-
-    socket.onerror = (error) => {
-      console.error("WebSocket error:", error);
-    };
+    socketClient.activate();
+    setClient(socketClient);
 
     return () => {
-      socket.close();  
+      socketClient.deactivate();
+      setClient(null); 
     };
-  }, [url]);
+  }, [userId]);
 
-  return messages; 
+
+  return message;
 };
 
 export default useWebSocket;

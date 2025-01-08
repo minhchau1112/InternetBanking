@@ -118,7 +118,10 @@ public class TransactionService {
 
         // Gửi OTP qua email
         String email = request.getSourceAccount().getCustomer().getEmail();
-        emailService.sendEmail(email, "Transaction OTP", "Your OTP is: " + otp);
+//        emailService.sendEmail(email, "Transaction OTP", "Your OTP is: " + otp);
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("OTP_CODE", otp);
+        emailService.sendEmailFromTemplateSync(email, "Transaction OTP", "otp", variables);
 
         // Lưu OTP vào cache hoặc cơ sở dữ liệu (chọn cache cho nhanh)
         otpCache.put(request.getId(), otp);

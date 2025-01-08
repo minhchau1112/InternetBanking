@@ -67,6 +67,35 @@ public class TransactionController {
         }
     }
 
+    @GetMapping("/customer")
+    public List<?> getCustomerTransactions(
+            @RequestParam(value = "accountId") String accountId,
+            @RequestParam(value = "type", required = false) String type,
+            @RequestParam(value = "startDate", required = false) String startDate,
+            @RequestParam(value = "endDate", required = false) String endDate
+    ) {
+        try {
+            Integer srcAccountId = Integer.parseInt(accountId);
+
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+            LocalDateTime start = (startDate != null && !startDate.isEmpty())
+                    ? LocalDateTime.parse(startDate + "T00:00:00", formatter) : null;
+            LocalDateTime end = (endDate != null && !endDate.isEmpty())
+                    ? LocalDateTime.parse(endDate + "T23:59:59", formatter) : null;
+
+//            System.out.println("accountId: " + srcAccountId + ", destinationAccountNumber: " + desAccountNum + ", startDate: " + start + ", endDate: " + end);
+
+            if ("interbank".equals(type)) {
+                return transactionService.getInterbankTransactionsWithAccountId(srcAccountId, start, end);
+            } else {
+                return transactionService.getInterbankTransactionsWithAccountId(srcAccountId, start, end);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Error processing request: " + e.getMessage());
+        }
+    }
+
     @PostMapping("/create")
     public ResponseEntity<?> createTransaction(@RequestBody TransactionRequest transactionRequest) {
         // Tính toán phí giao dịch và số tiền

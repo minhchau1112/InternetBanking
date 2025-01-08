@@ -29,7 +29,6 @@ public class KeyService {
     public PublicKey getRSAPublicKey(String bankCode) throws Exception {
         LinkedBank bank = linkedBankRepository.findByBankCodeAndType(bankCode,"RSA")
                 .orElseThrow(() -> new IllegalArgumentException("Bank not found"));
-        System.out.println(bank.getTheirPublicKey());
         String publicKeyEncoded = bank.getTheirPublicKey().replace("-----BEGIN PUBLIC KEY-----",
                 "").replace("-----END PUBLIC KEY-----", "").replaceAll("\\s", "").replace(
                         "\n", ""); // Assuming you store publicKey securely.

@@ -123,24 +123,24 @@ const TransactionHistory = () => {
                     <input
                         type="text"
                         placeholder="Số tài khoản"
-                        className="border border-gray-300 rounded-lg p-2 flex-1 text-white"
+                        className="border border-gray-300 rounded-lg p-2 flex-1 text-black"
                         value={destinationAccountNumber}
                         onChange={(e) => setDestinationAccountNumber(e.target.value)}
                     />
                     <input
                         type="date"
-                        className="border border-gray-300 rounded-lg p-2 text-white"
+                        className="border border-gray-300 rounded-lg p-2 text-black"
                         value={startDate}
                         onChange={(e) => setStartDate(e.target.value)}
                     />
                     <input
                         type="date"
-                        className="border border-gray-300 rounded-lg p-2 text-white"
+                        className="border border-gray-300 rounded-lg p-2 text-black"
                         value={endDate}
                         onChange={(e) => setEndDate(e.target.value)}
                     />
                     <select
-                        className="border border-gray-300 rounded-lg p-2 text-white"
+                        className="border border-gray-300 rounded-lg p-2 text-black"
                         value={transactionType}
                         onChange={(e) => setTransactionType(e.target.value as 'internal' | 'interbank')}
                     >
@@ -156,12 +156,12 @@ const TransactionHistory = () => {
                 </div>
 
                 {/* Tabs */}
-                <div className="flex border-b p-6 flex flex-col sm:flex-row items-center gap-4">
+                <div className="flex border-b p-6 flex-col sm:flex-row items-center gap-4">
                     {['all', 'in', 'out'].map((tab) => (
                         <button
                             key={tab}
                             onClick={() => handleTabChange(tab as 'all' | 'in' | 'out')}
-                            className={`w-1/3 p-4 text-center font-semibold text-white ${
+                            className={`w-1/3 p-4 text-center font-semibold text-black ${
                                 activeTab === tab ? 'border-b-4 border-blue-500 text-blue-600' : 'text-gray-500'
                             }`}
                         >
@@ -184,7 +184,7 @@ const TransactionHistory = () => {
                             >
                                 <div>
                                     <p className="font-semibold">{transaction.description}</p>
-                                    {transaction.type.startsWith('interbank') && (
+                                    {transaction.type.startsWith('interbank') && 'bankName' in transaction && (
                                         <p className="text-sm text-gray-600">Ngân hàng: {transaction.bankName}</p>
                                     )}
                                     <p className="text-sm text-gray-600">{new Date(transaction.date).toLocaleDateString()}</p>
@@ -196,8 +196,7 @@ const TransactionHistory = () => {
                                             : 'text-red-500'
                                     }`}
                                 >
-                                    {transaction.type === 'received' || transaction.type === 'interbank_received' ? '+' : '-'}
-                                    {transaction.amount.toLocaleString()}₫
+                                    {transaction.type === 'received' || transaction.type === 'interbank_received' ? '+' : '-'}                                    {transaction.amount.toLocaleString()}₫
                                 </div>
                             </div>
                         ))

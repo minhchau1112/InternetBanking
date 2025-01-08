@@ -65,6 +65,20 @@ public class TransactionService {
         }).collect(Collectors.toList());
     }
 
+    public List<InterbankTransactionResponse> getInterbankTransactionsWithAccountId(
+            Integer accountId,
+            LocalDateTime startDate,
+            LocalDateTime endDate
+    ) {
+        List<InterbankTransaction> transactions = interbankTransactionRepository.findInterbankTransactionsWithAccountId(accountId, startDate, endDate);
+        return transactions.stream().map(transaction ->{
+            String bankName = linkedBankRepository.findByBankCode(transaction.getExternalBankCode())
+                    .map(LinkedBank::getName)
+                    .orElse("Unknown Bank");
+            return new InterbankTransactionResponse(transaction, bankName);
+        }).collect(Collectors.toList());
+    }
+
     public String generateAndSendOTP(Transaction request) {
         String otp = String.valueOf((int) ((Math.random() * 9000) + 1000)); // Generate 4-digit OTP
 

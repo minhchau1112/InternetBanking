@@ -3,6 +3,7 @@ import axios from 'axios';
 import {toast, ToastContainer} from "react-toastify";
 import {createRecipient, fetchCustomerRecipients} from "@/api/recipientAPI.ts";
 import Recipient from "@/pages/customer/Contact.tsx";
+import NoDataImage from "@/assets/image/nodata.png";
 
 const TransactionForm = () => {
     const [amount, setAmount] = useState('');
@@ -225,15 +226,24 @@ const TransactionForm = () => {
 
                 <div className="w-full h-full col-span-1 border-l-[1px] border-gray-200 ml-8 flex flex-col">
                     <h1 className="text-xl font-semibold text-gray-700 pl-4 mb-2">Contact</h1>
-                    <div className="w-full max-h-[525px] flex-1 flex flex-col overflow-auto overflow-y-scroll">
-                        {recipients.map((recipient) => (
-                            <div key={recipient.id} onClick={() => setDestinationAccount(recipient.accountNumber)}
-                                    className="w-full flex flex-col justify-center hover:bg-amber-200 pl-4 py-2 space-y-1">
-                                <p className="text-md font-bold">{recipient.aliasName}</p>
-                                <p className="text-sm font-light text-gray-400">{recipient.accountNumber}</p>
-                            </div>
-                        ))}
-                    </div>
+                    {recipients.length > 0 ? (
+                        <div className="w-full max-h-[525px] flex-1 flex flex-col overflow-auto overflow-y-scroll">
+                            {recipients.map((recipient) => (
+                                <div key={recipient.id} onClick={() => setDestinationAccount(recipient.accountNumber)}
+                                        className="w-full flex flex-col justify-center hover:bg-amber-200 pl-4 py-2 space-y-1">
+                                    <p className="text-md font-bold">{recipient.aliasName}</p>
+                                    <p className="text-sm font-light text-gray-400">{recipient.accountNumber}</p>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="flex flex-col items-center mt-4">
+                            <img src={NoDataImage} alt="No data" className="w-1/3" />
+                            <p className="text-gray-500 mt-2">
+                                You don't have any contact yet.
+                            </p>
+                        </div>
+                    )}
                 </div>
                 <ToastContainer/>
             </div>

@@ -48,7 +48,6 @@ public class RecipientService {
         } else {
             aliasName = createRequest.getAliasName();
         }
-        System.out.println("Alias Name: " + aliasName);
 
         Recipient recipient = Recipient.builder()
                 .customer(customer)
@@ -65,11 +64,14 @@ public class RecipientService {
 
         Recipient existingRecipient = recipientRepository.findById(updateRequest.getRecipientId()).get();
 
-        if(!updateRequest.getAliasName().isEmpty()){
-            existingRecipient.setAliasName(updateRequest.getAliasName());
+        if(Objects.equals(updateRequest.getBankCode(), "GROUP2")){
+            Account account = accountRepository.findByAccountNumber(updateRequest.getAccountNumber()).get();
+            String aliasName = (!updateRequest.getAliasName().isEmpty()) ?
+                    updateRequest.getAliasName() : account.getCustomer().getName();
+            existingRecipient.setAliasName(aliasName);
         } else {
-            String aliasName = accountRepository.findByAccountNumber(updateRequest.getAccountNumber()).get()
-                    .getCustomer().getName();
+            String aliasName = (!updateRequest.getAliasName().isEmpty()) ?
+                    updateRequest.getAliasName() : existingRecipient.getAliasName();
             existingRecipient.setAliasName(aliasName);
         }
 

@@ -21,10 +21,10 @@ export const fetchCustomerRecipients = async () => {
             },
         });
 
-        console.log(response.data.data);
         return response.data.data;
     } catch (error) {
         console.error(error);
+        return Promise.reject(error);
     }
 };
 
@@ -40,10 +40,10 @@ export const deleteRecipients = async (recipientId: number) => {
             }
         );
 
-        console.log(response.data.message);
         return response.data.message;
     } catch (error) {
         console.error(error);
+        return Promise.reject(error);
     }
 };
 
@@ -87,6 +87,7 @@ export const createRecipient = async (accountNumber:string, aliasName:string, ba
         return response.data.message;
     } catch (error) {
         console.error(error);
+        return Promise.reject(error);
     }
 };
 
@@ -108,10 +109,10 @@ export const updateRecipient = async (updatingRecipientId:number, accountNumber:
             }
         );
 
-        console.log(response.data.message);
         return response.data.message;
     } catch (error) {
         console.error(error);
+        return Promise.reject(error);
     }
 };
 
@@ -130,9 +131,9 @@ export const getWNCAcccount = async (accountNumber:string) => {
                 },
             });
 
-        console.log(response.data.data);
         return response.data.data;
     } catch (error) {
         console.log("WNC account not found.");
+        return Promise.reject(error);
     }
 };

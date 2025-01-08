@@ -1,15 +1,19 @@
 package com.example.backend.service;
 
+import com.example.backend.dto.request.OtpVerificationRequest;
 import com.example.backend.dto.response.interbank.DepositInterbankRequest;
 import com.example.backend.enums.InterbankTransactionStatus;
 import com.example.backend.model.Account;
 import com.example.backend.model.InterbankTransaction;
+import com.example.backend.model.Transaction;
 import com.example.backend.repository.InterbankTransactionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class InterbankService {
@@ -19,6 +23,11 @@ public class InterbankService {
 
     @Autowired
     private AccountService accountService;
+
+    @Autowired
+    private EmailService emailService;
+
+    private final Map<Integer, String> otpCache = new HashMap<>();
 
     public InterbankService() {
     }
@@ -96,8 +105,35 @@ public class InterbankService {
 
         // Save the transaction
         interbankTransactionRepository.save(transaction);
+        String otp = String.valueOf((int) ((Math.random() * 9000) + 1000)); // Generate 4-digit OTP
+        otpCache.put(transaction.getId(),otp);
+        // get email from source account if incoming transaction, else dont sent otp
+        if(!isIncoming){
+            String email = transaction.getSourceAccount().getCustomer().getEmail();
+            Map<String, Object> variables = new HashMap<>();
+            variables.put("OTP_CODE", otp);
+            emailService.sendEmailFromTemplateSync(email, "Transaction OTP", "otp", variables);
+        }
 
         return transaction;
+    }
+
+    public boolean verifyOtpAndCompleteTransaction(OtpVerificationRequest otpRequest) {
+        String cachedOtp = otpCache.get(otpRequest.getTransactionId());
+        if (cachedOtp != null && cachedOtp.equals(otpRequest.getOtp())) {
+            // Hoàn tất giao dịch
+            InterbankTransaction transaction = interbankTransactionRepository.findById(otpRequest.getTransactionId())
+                    .orElseThrow(() -> new IllegalArgumentException("Transaction not found"));
+
+            transaction.setStatus(InterbankTransactionStatus.COMPLETED);
+            transaction.setCompletedAt(LocalDateTime.now());
+            interbankTransactionRepository.save(transaction);
+
+            // Xóa OTP khỏi cache
+            otpCache.remove(otpRequest.getTransactionId());
+            return true;
+        }
+        return false;
     }
 
 }

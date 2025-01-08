@@ -2,19 +2,28 @@ package com.example.backend.controller;
 
 import com.example.backend.dto.request.OtpVerificationRequest;
 import com.example.backend.dto.request.TransactionRequest;
+import com.example.backend.dto.response.InterbankTransactionResponse;
+import com.example.backend.dto.response.TransactionResponse;
 import com.example.backend.model.Account;
 import com.example.backend.model.Transaction;
 import com.example.backend.repository.AccountRepository;
 import com.example.backend.repository.CustomerRepository;
 import com.example.backend.service.TransactionService;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -45,11 +54,16 @@ public class TransactionController {
      * @param endDate End date of the transaction.
      * @return List of transactions.
      */
+    @Operation(summary = "Get transactions", description = "Retrieve transactions based on filters")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "List of transactions retrieved successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid input parameters", content = @Content),
+            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+    })
     @GetMapping
     public List<?> getTransactions(
             @RequestParam(value = "accountId") String accountId,
             @RequestParam(value = "partnerAccountNumber", required = false) String partnerAccountNumber,
-            @RequestParam(value = "type", required = false) String type,
             @RequestParam(value = "startDate", required = false) String startDate,
             @RequestParam(value = "endDate", required = false) String endDate
     ) {
@@ -63,12 +77,45 @@ public class TransactionController {
             LocalDateTime end = (endDate != null && !endDate.isEmpty())
                     ? LocalDateTime.parse(endDate + "T23:59:59", formatter) : null; // Parse endDate to LocalDateTime
 
-            // Check if the type is "interbank"
-            if ("interbank".equals(type)) {
-                return transactionService.getUserInterbankTransactions(srcAccountId, partnerAccountNum, start, end);
-            } else {
-                return transactionService.getUserTransactions(srcAccountId, partnerAccountNum, start, end);
-            }
+            List<?> internalTransactions = transactionService.getUserTransactions(srcAccountId, partnerAccountNum, start, end);
+            List<?> interbankTransactions = transactionService.getUserInterbankTransactions(srcAccountId, partnerAccountNum, start, end);
+
+            // Combine both lists
+            List<Object> allTransactions = new ArrayList<>();
+            allTransactions.addAll(internalTransactions);
+            allTransactions.addAll(interbankTransactions);
+
+            return allTransactions;
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Error processing request: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/employee")
+    public List<?> getCustomerTransactions(
+            @RequestParam(value = "partnerAccountNumber", required = false) String partnerAccountNumber,
+            @RequestParam(value = "startDate", required = false) String startDate,
+            @RequestParam(value = "endDate", required = false) String endDate
+    ) {
+        try {
+            String partnerAccountNum = (partnerAccountNumber != null && !partnerAccountNumber.isEmpty()) ? partnerAccountNumber : null;
+
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+            LocalDateTime start = (startDate != null && !startDate.isEmpty())
+                    ? LocalDateTime.parse(startDate + "T00:00:00", formatter) : null;
+            LocalDateTime end = (endDate != null && !endDate.isEmpty())
+                    ? LocalDateTime.parse(endDate + "T23:59:59", formatter) : null;
+
+            List<?> internalTransactions = transactionService.getUserTransactionsByAccountNumber(partnerAccountNum, start, end);
+            List<?> interbankTransactions = transactionService.getUserInterbankTransactionsByAccountNumber(partnerAccountNum, start, end);
+
+            // Combine both lists
+            List<Object> allTransactions = new ArrayList<>();
+            allTransactions.addAll(internalTransactions);
+            allTransactions.addAll(interbankTransactions);
+
+            return allTransactions;
         } catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException("Error processing request: " + e.getMessage());
@@ -80,6 +127,14 @@ public class TransactionController {
      * @param transactionRequest Transaction request object.
      * @return Transaction ID and message.
      */
+    @Operation(summary = "Create a new transaction", description = "Initiate a new transaction and send OTP")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Transaction created and OTP sent",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = Transaction.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid transaction details", content = @Content),
+            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+    })
     @PostMapping("/create")
     public ResponseEntity<?> createTransaction(@RequestBody TransactionRequest transactionRequest) {
         try {
@@ -117,6 +172,12 @@ public class TransactionController {
      * @param otpRequest OTP verification request.
      * @return Response message.
      */
+    @Operation(summary = "Verify OTP", description = "Verify the OTP and complete the transaction")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Transaction completed successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid or expired OTP", content = @Content),
+            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+    })
     @PostMapping("/verify-otp")
     public ResponseEntity<?> verifyOtp(@RequestBody OtpVerificationRequest otpRequest) {
         boolean isVerified = transactionService.verifyOtpAndCompleteTransaction(otpRequest); // Verify OTP

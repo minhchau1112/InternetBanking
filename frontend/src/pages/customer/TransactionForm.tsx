@@ -1,14 +1,13 @@
 import {useEffect, useState} from 'react';
 import axios from 'axios';
 import {toast, ToastContainer} from "react-toastify";
-import {createRecipient, fetchCustomerRecipients} from "@/api/recipientAPI.ts";
+import {createRecipient} from "@/api/recipientAPI.ts";
 import Recipient from "@/pages/customer/Contact.tsx";
-import NoDataImage from "@/assets/image/nodata.png";
 
 const TransactionForm = () => {
     const [activeTab, setActiveTab] = useState('internal'); // "internal" or "external"
     const [accounts, setAccounts] = useState([]);
-    const [recipients, setRecipients] = useState([]);
+    const [recipients, setRecipients] = useState<Recipient[]>([]);
     const [selectedAccount, setSelectedAccount] = useState('');
     const [recipientOption, setRecipientOption] = useState('choose'); // "choose" or "manual"
     const [destinationAccount, setDestinationAccount] = useState('');
@@ -19,13 +18,14 @@ const TransactionForm = () => {
     const [otpSent, setOtpSent] = useState(false);
     const [transactionId, setTransactionId] = useState(null);
     const [loading, setLoading] = useState(false);
-    const [recipients, setRecipients] = useState<Recipient[]>([]);
     const [fee, setFee] = useState('');
     const [feePayer, setFeePayer] = useState('SENDER');
     const [accountOwner, setAccountOwner] = useState('');
     const [sourceAccountNumber, setSourceAccountNumber] = useState('');
 
     const sourceAccountId = localStorage.getItem('accountId');
+    const user = localStorage.getItem('user') || '';
+    const { userID } = JSON.parse(user);
     const accessToken = localStorage.getItem('access_token');
 
     useEffect(() => {
@@ -39,7 +39,7 @@ const TransactionForm = () => {
                 setAccounts(accountResponse.data.data);
                 setSourceAccountNumber(accountResponse.data.data.accountNumber);
 
-                const recipientResponse = await axios.get(`http://localhost:8888/api/recipients/${sourceAccountId}`, {
+                const recipientResponse = await axios.get(`http://localhost:8888/api/recipients/${userID}`, {
                     headers: { Authorization: `Bearer ${accessToken}` },
                 });
                 console.log("account from user id"+JSON.stringify(recipientResponse.data, null, 2));
@@ -179,24 +179,24 @@ const TransactionForm = () => {
                 toast.success('Transaction completed successfully!');
 
                 //Lưu người nhận mới
-            if(!recipients.some(recipient => recipient.accountNumber === destinationAccount)){
-                const reicipientResponse = await createRecipient(destinationAccount, "", "GROUP2");
-                toast.success(reicipientResponse);
-            }
+                const destinationAccountNumber = recipientOption === 'choose' ? selectedRecipient : destinationAccount;
+                if(!recipients.some(recipient => recipient.accountNumber === destinationAccountNumber)){
+                    console.log("aaaa")
+                    const reicipientResponse = await createRecipient(destinationAccountNumber, "", "GROUP2");
+                    toast.success(reicipientResponse);
+                }
 
                 // Trì hoãn reload để người dùng kịp thấy thông báo
-            setTimeout(() => {
-                // Reload lại trang sau 2 giây
-                setAmount('');
-                setFee('');
-                setFeePayer('SENDER');
-                setType('TRANSFER');
-                setMessage('');
-                setOtp('');
-                setTransactionId(null);
-                setOtpSent(false);
-                fetchRecipients();
-            }, 3000);
+                setTimeout(() => {
+                    // Reload lại trang sau 2 giây
+                    setAmount('');
+                    setFee('');
+                    setFeePayer('SENDER');
+                    setMessage('');
+                    setOtp('');
+                    setTransactionId(null);
+                    setOtpSent(false);
+                }, 3000);
             } catch (error) {
                 toast.error('Invalid or expired OTP.');
             }
@@ -237,35 +237,8 @@ const TransactionForm = () => {
         }
     };
 
-    const fetchRecipients = async () => {
-        try {
-            const response = await fetchCustomerRecipients();
-            setRecipients(response);
-        } catch (error) {
-            toast.error("Error fetching recipients.");
-        }
-    };
-
-    useEffect(() => {
-        fetchRecipients();
-    }, []);
-
-
     return (
-        // <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
-        //  <div className="bg-white shadow-lg rounded-lg p-8 w-full max-w-3xl grid grid-cols-3">
-        //         <div className="relative col-span-2">
-        //             <h2 className="text-2xl font-semibold text-gray-700 mb-6">Transaction Form</h2>
-        //             <div className="space-y-4">
-        //                 <div>
-        //                     <label className="block text-gray-700 font-medium mb-2">Destination Account Number</label>
-        //                     <input
-        //                         type="text"
-        //                         placeholder="Enter destination account"
-        //                         value={destinationAccount}
-        //                         onChange={(e) => setDestinationAccount(e.target.value)}
-        //                         className="w-full p-3 border border-gray-300 rounded-lg bg-gray-800 text-white placeholder-gray-400"
-        //                     />
+
         <div className="w-full h-full max-h-screen flex flex-col bg-gray-100 pt-7 px-5">
             {/* Tabs */}
             <div className="flex justify-center border-b border-gray-300">
@@ -464,75 +437,8 @@ const TransactionForm = () => {
                             </button>
                         </div>
                     </div>
-            //         <button
-            //             onClick={handleTransaction}
-            //             disabled={loading} // Disable khi đang tải
-            //             className={`py-2 px-6 rounded-lg font-semibold ${
-            //                 loading
-            //                     ? 'bg-gray-500 text-gray-300 cursor-not-allowed'
-            //                     : 'bg-blue-500 text-white hover:bg-blue-600'
-            //             }`}
-            //         >
-            //             {loading ? 'Submitting...' : 'Submit'}
-            //         </button>
-
-            //         {otpSent && (
-            //             <div
-            //                 className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
-            //                 <div className="bg-white p-6 rounded-lg shadow-lg w-[90%] max-w-md">
-            //                     <h3 className="text-lg font-bold mb-4">OTP Verification</h3>
-            //                     <input
-            //                         type="text"
-            //                         placeholder="Enter OTP"
-            //                         value={otp}
-            //                         onChange={(e) => setOtp(e.target.value)}
-            //                         className="w-full p-3 border border-gray-300 rounded-lg mb-4 text-white"
-            //                     />
-            //                     <div className="flex justify-end space-x-4">
-            //                         <button
-            //                             onClick={handleOtpVerification}
-            //                             className="bg-blue-500 text-white font-semibold py-2 px-6 rounded-lg hover:bg-blue-600"
-            //                         >
-            //                             Verify OTP
-            //                         </button>
-            //                         <button
-            //                             onClick={() => setOtpSent(false)}
-            //                             className="bg-gray-300 text-gray-700 font-semibold py-2 px-6 rounded-lg hover:bg-gray-400"
-            //                         >
-            //                             Cancel
-            //                         </button>
-            //                     </div>
-            //                 </div>
-            //             </div>
-            //         )}
-            //     </div>
-
-
-            //     <div className="w-full h-full col-span-1 border-l-[1px] border-gray-200 ml-8 flex flex-col">
-            //         <h1 className="text-xl font-semibold text-gray-700 pl-4 mb-2">Contact</h1>
-            //         {recipients.length > 0 ? (
-            //             <div className="w-full max-h-[525px] flex-1 flex flex-col overflow-auto overflow-y-scroll">
-            //                 {recipients.map((recipient) => (
-            //                     <div key={recipient.id} onClick={() => setDestinationAccount(recipient.accountNumber)}
-            //                             className="w-full flex flex-col justify-center hover:bg-amber-200 pl-4 py-2 space-y-1">
-            //                         <p className="text-md font-bold">{recipient.aliasName}</p>
-            //                         <p className="text-sm font-light text-gray-400">{recipient.accountNumber}</p>
-            //                     </div>
-            //                 ))}
-            //             </div>
-            //         ) : (
-            //             <div className="flex flex-col items-center mt-4">
-            //                 <img src={NoDataImage} alt="No data" className="w-1/3" />
-            //                 <p className="text-gray-500 mt-2">
-            //                     You don't have any contact yet.
-            //                 </p>
-            //             </div>
-            //         )}
-            //     </div>
-            //     <ToastContainer/>
-            // </div>
                 </div>
-            )}
+                )}
             <ToastContainer />
         </div>
     );

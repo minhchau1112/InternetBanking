@@ -53,13 +53,17 @@ const TransactionForm = () => {
                     sourceAccountId: selectedAccount,
                     destinationAccountNumber: destinationAccount,
                     amount,
+                    fee,
+                    feePayer,
+                    type:"TRANSFER",
                     message,
                 },
                 {
                     headers: { Authorization: `Bearer ${accessToken}` },
                 }
             );
-            setTransactionId(response.data.transactionId);
+            console.log("transaction response"+JSON.stringify(response.data, null, 2));
+            setTransactionId(response.data.data.transactionId);
             setOtpSent(true);
         } catch (error) {
             toast.error('Error creating transaction.');

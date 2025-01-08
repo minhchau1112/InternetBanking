@@ -15,6 +15,7 @@ import com.example.backend.repository.TransactionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -90,6 +91,13 @@ public class TransactionService {
         Account sourceAccount = accountRepository.findById(request.getSourceAccountId())
                 .orElseThrow(() -> new IllegalArgumentException("Source account not found"));
 
+        if(String.valueOf(request.getType()).equals("TRANSFER") || String.valueOf(request.getType()).equals("DEPOSIT")) {
+            boolean hasBalance = hasSufficientBalance(sourceAccount, request.getAmount(), request.getFee(), String.valueOf(request.getFeePayer()));
+            if(!hasBalance) {
+                throw new IllegalArgumentException("Insufficient balance for the transaction");
+            }
+        }
+
         Account destinationAccount = accountRepository.findByAccountNumber(request.getDestinationAccountNumber())
                 .orElseThrow(() -> new IllegalArgumentException("Destination account not found"));
 
@@ -117,6 +125,28 @@ public class TransactionService {
             // Hoàn tất giao dịch
             Transaction transaction = transactionRepository.findById(otpRequest.getTransactionId())
                     .orElseThrow(() -> new IllegalArgumentException("Transaction not found"));
+
+            // Kiểm tra loại giao dịch
+            if (String.valueOf(transaction.getType()).equals("TRANSFER") || String.valueOf(transaction.getType()).equals("DEPOSIT")) {
+                BigDecimal amount = transaction.getAmount();
+                BigDecimal fee = transaction.getFee();
+                String feePayer = String.valueOf(transaction.getFeePayer());
+
+                Account sourceAccount = transaction.getSourceAccount();
+                Account destinationAccount = transaction.getDestinationAccount();
+
+                // Cập nhật số dư cho tài khoản nguồn
+                BigDecimal totalDeduction = feePayer.equals("SENDER") ? amount.add(fee) : amount;
+                sourceAccount.setBalance(sourceAccount.getBalance().subtract(totalDeduction));
+
+                // Cập nhật số dư cho tài khoản đích
+                totalDeduction = feePayer.equals("RECEIVER") ? amount.subtract(fee) : amount;
+                destinationAccount.setBalance(destinationAccount.getBalance().add(totalDeduction));
+
+                accountRepository.save(sourceAccount);
+                accountRepository.save(destinationAccount);
+            }
+
             transaction.setStatus("COMPLETED");
             transaction.setOtpVerified(true);
             transaction.setCompletedAt(LocalDateTime.now());
@@ -127,6 +157,11 @@ public class TransactionService {
             return true;
         }
         return false;
+    }
+
+    public boolean hasSufficientBalance(Account account, BigDecimal amount, BigDecimal fee, String feePayer) {
+        BigDecimal totalDeduction = feePayer.equals("SENDER") ? amount.add(fee) : amount;
+        return account.getBalance().compareTo(totalDeduction) >= 0;
     }
 
 }

@@ -67,30 +67,33 @@ public class TransactionController {
 
     @PostMapping("/create")
     public ResponseEntity<?> createTransaction(@RequestBody TransactionRequest transactionRequest) {
-        // Tính toán phí giao dịch và số tiền
-        BigDecimal fee = transactionRequest.getFee();
-        BigDecimal amount = transactionRequest.getAmount();
+        try {
+            BigDecimal fee = transactionRequest.getFee();
+            BigDecimal amount = transactionRequest.getAmount();
 
-        TransactionRequest newTransactionRequest = TransactionRequest.builder()
-                .sourceAccountId(transactionRequest.getSourceAccountId())
-                .destinationAccountNumber(transactionRequest.getDestinationAccountNumber())
-                .amount(amount)
-                .fee(fee)
-                .feePayer(transactionRequest.getFeePayer())
-                .message(transactionRequest.getMessage())
-                .type(transactionRequest.getType())
-                .build();
+            TransactionRequest newTransactionRequest = TransactionRequest.builder()
+                    .sourceAccountId(transactionRequest.getSourceAccountId())
+                    .destinationAccountNumber(transactionRequest.getDestinationAccountNumber())
+                    .amount(amount)
+                    .fee(fee)
+                    .feePayer(transactionRequest.getFeePayer())
+                    .message(transactionRequest.getMessage())
+                    .type(transactionRequest.getType())
+                    .build();
 
-        // Lưu giao dịch vào trạng thái chờ xác thực OTP
-        Transaction transaction = transactionService.createPendingTransaction(newTransactionRequest);
+            // Lưu giao dịch vào trạng thái chờ xác thực OTP
+            Transaction transaction = transactionService.createPendingTransaction(newTransactionRequest);
 
-        // Tạo OTP và gửi qua email
-        String otp = transactionService.generateAndSendOTP(transaction);
+            // Tạo OTP và gửi qua email
+            String otp = transactionService.generateAndSendOTP(transaction);
 
-        return ResponseEntity.ok(new HashMap<String, Object>() {{
-            put("transactionId", transaction.getId());  // Trả về transactionId
-            put("message", "OTP sent to your email.");
-        }});
+            return ResponseEntity.ok(new HashMap<String, Object>() {{
+                put("transactionId", transaction.getId());  // Trả về transactionId
+                put("message", "OTP sent to your email.");
+            }});
+        } catch (IllegalArgumentException e){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
     }
 
     @PostMapping("/verify-otp")

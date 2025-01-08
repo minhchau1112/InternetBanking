@@ -101,7 +101,7 @@ const Sidebar: React.FC<SidebarProps> = ({ userType }) => {
               <NavLink to="/deposit" className={getNavLinkClass}>
                 <AccountBalanceOutlined /> Deposit
               </NavLink>
-              <NavLink to="/history" className={getNavLinkClass}>
+              <NavLink to="/employee-transaction" className={getNavLinkClass}>
                 <EqualizerOutlined /> History
               </NavLink>
             </>

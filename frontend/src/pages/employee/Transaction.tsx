@@ -1,6 +1,15 @@
 import { useState } from 'react';
 import NoDataImage from '@/assets/image/nodata.png';
 import axios from "axios";
+import { useSelector, useDispatch } from "react-redux";
+import { RootState, AppDispatch } from "../../redux/store";
+import {
+    setTransactions,
+    setFilteredTransactions,
+    setActiveTab,
+    setError,
+    setSortOrder,
+} from "../../redux/slices/transactionsSlice";
 
 type BaseTransaction = {
     id: number;
@@ -22,49 +31,53 @@ type InterbankTransaction = BaseTransaction & {
 type CombinedTransaction = InternalTransaction | InterbankTransaction;
 
 const TransactionHistory = () => {
-    const [activeTab, setActiveTab] = useState<'all' | 'in' | 'out'>('all');
+    // const [activeTab, setActiveTab] = useState<'all' | 'in' | 'out'>('all');
     const [sourceAccountId] = useState<string>(localStorage.getItem('accountId') || '');
     const [partnerAccountNumber, setPartnerAccountNumber] = useState<string>('');
-    const [transactionType, setTransactionType] = useState<'internal' | 'interbank'>('internal');
     const [startDate, setStartDate] = useState<string>('');
     const [endDate, setEndDate] = useState<string>('');
-    const [allTransactions, setAllTransactions] = useState<CombinedTransaction[]>([]);
-    const [filteredTransactions, setFilteredTransactions] = useState<CombinedTransaction[]>([]);
-    const [error, setError] = useState<string | null>(null);
-    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+    // const [allTransactions, setAllTransactions] = useState<CombinedTransaction[]>([]);
+    // const [filteredTransactions, setFilteredTransactions] = useState<CombinedTransaction[]>([]);
+    // const [error, setError] = useState<string | null>(null);
+    // const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+
+    const dispatch = useDispatch<AppDispatch>();
+
+    const {
+        allTransactions,
+        filteredTransactions,
+        activeTab,
+        error,
+        sortOrder,
+    } = useSelector((state: RootState) => state.transactions);
 
     // Hàm fetch dữ liệu giao dịch từ API
     const fetchTransactions = async () => {
         try {
-            setError(null); // Clear previous errors
-            const token = localStorage.getItem('access_token');
-            const response = await axios.get('http://localhost:8888/api/transactions', {
-                method: 'GET',
+            dispatch(setError(null)); // Clear previous errors
+            const token = localStorage.getItem("access_token");
+            const response = await axios.get("http://localhost:8888/api/transactions/employee", {
                 headers: {
-                    'Authorization': `Bearer ${token}`,
+                    Authorization: `Bearer ${token}`,
                 },
-                params: new URLSearchParams({
-                    accountId: sourceAccountId || '',
-                    partnerAccountNumber: partnerAccountNumber || '',
-                    startDate: startDate || '',
-                    endDate: endDate || '',
-                    type: transactionType || 'internal', // This will fetch both if not filtered
+                params: {
+                    partnerAccountNumber: partnerAccountNumber || "",
+                    startDate: startDate || "",
+                    endDate: endDate || "",
                     tab: activeTab,
-                }),
+                },
             });
     
-            const data = await response.data.data;
+            const data = response.data.data;
     
             if (data.length === 0) {
-                setError('Không có dữ liệu giao dịch.');
+                dispatch(setError("Không có dữ liệu giao dịch."));
                 return;
             }
     
-            console.log(data);
-            // Map response data into transactions array
-            const transactions: CombinedTransaction[] = data.map((item: any) => {
+            const transactions = data.map((item: any) => {
                 const transaction = item.transaction;
-                if (item.bankName) { // Interbank transaction
+                if (item.bankName) {
                     return {
                         id: transaction.id,
                         amount: transaction.amount,
@@ -72,31 +85,31 @@ const TransactionHistory = () => {
                         description: transaction.message,
                         bankName: item.bankName,
                         tab: item.tab,
-                        accountNumber: item.externalAccount
+                        accountNumber: item.externalAccount,
                     } as InterbankTransaction;
-                } else { // Internal transaction
+                } else {
                     return {
                         id: transaction.id,
                         type: transaction.type,
                         amount: transaction.amount,
                         date: transaction.createdAt,
                         description: transaction.message,
-                        accountNumber: transaction.sourceAccount.id === parseInt(sourceAccountId) ? transaction.destinationAccount.accountNumber : transaction.sourceAccount.accountNumber,
+                        accountNumber: transaction.sourceAccount.id === parseInt(sourceAccountId)
+                            ? transaction.destinationAccount.accountNumber
+                            : transaction.sourceAccount.accountNumber,
                         tab: item.tab,
                     } as InternalTransaction;
                 }
             });
-
-            // print out the transactions through mapping
-            // transactions.forEach(transaction => console.log(transaction));
     
-            setAllTransactions(transactions); // Store all transactions
-            filterByTab(transactions, activeTab); // Filter by tab (all, in, out)
+            dispatch(setTransactions(transactions));
+            filterByTab(transactions, activeTab);
         } catch (err) {
-            setError('Không thể tải dữ liệu. Vui lòng thử lại sau.');
-            console.error('Failed to fetch transactions:', err);
+            dispatch(setError("Không thể tải dữ liệu. Vui lòng thử lại sau."));
+            console.error("Failed to fetch transactions:", err);
         }
-    };    
+    };
+        
 
     // Hàm tìm kiếm
     const handleSearch = () => {
@@ -125,20 +138,22 @@ const TransactionHistory = () => {
                     transaction.tab === 'out'
             );
         }
-        setFilteredTransactions(filtered);
+        const sorted = sortTransactions(filtered); // Apply sorting
+        dispatch(setFilteredTransactions(sorted));
     };
 
     // Hàm thay đổi tab
     const handleTabChange = (tab: 'all' | 'in' | 'out') => {
-        setActiveTab(tab);
+        dispatch(setActiveTab(tab));
         filterByTab(allTransactions, tab);
     };
 
     // Toggle sort order
     const toggleSortOrder = () => {
         const newOrder = sortOrder === 'asc' ? 'desc' : 'asc';
-        setSortOrder(newOrder);
-        setFilteredTransactions(sortTransactions(filteredTransactions));
+        dispatch(setSortOrder(newOrder));
+        const sorted = sortTransactions(filteredTransactions); // Apply sorting after toggling the order
+        dispatch(setFilteredTransactions(sorted));
     };
 
     return (

@@ -22,4 +22,15 @@ public interface TransactionRepository extends JpaRepository<Transaction, Intege
             LocalDateTime startDate,
             LocalDateTime endDate
     );
+
+    // Truy vấn theo source account id và destination account id (nếu có)
+    @Query("SELECT t FROM Transaction t " +
+            "WHERE (:accountNumber IS NULL OR t.sourceAccount.accountNumber = :accountNumber OR t.destinationAccount.accountNumber = :accountNumber) " +
+            "AND (:startDate IS NULL OR t.createdAt >= :startDate) " +
+            "AND (:endDate IS NULL OR t.createdAt <= :endDate)")
+    List<Transaction> findAllTransactionsByAccountNumber(
+            String accountNumber,
+            LocalDateTime startDate,
+            LocalDateTime endDate
+    );
 }

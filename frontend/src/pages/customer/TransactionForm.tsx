@@ -18,6 +18,8 @@ const TransactionForm = () => {
     const [loading, setLoading] = useState(false);
     const [fee, setFee] = useState('');
     const [feePayer, setFeePayer] = useState('SENDER');
+    const [accountOwner, setAccountOwner] = useState('');
+    const [sourceAccountNumber, setSourceAccountNumber] = useState('');
 
     const sourceAccountId = localStorage.getItem('accountId');
     const accessToken = localStorage.getItem('access_token');
@@ -31,6 +33,7 @@ const TransactionForm = () => {
                 });
                 console.log("account from user id"+JSON.stringify(accountResponse.data, null, 2));
                 setAccounts(accountResponse.data.data);
+                setSourceAccountNumber(accountResponse.data.data.accountNumber);
 
                 const recipientResponse = await axios.get(`http://localhost:8888/api/recipients/${sourceAccountId}`, {
                     headers: { Authorization: `Bearer ${accessToken}` },
@@ -44,33 +47,113 @@ const TransactionForm = () => {
         fetchAccountsAndRecipients();
     }, [accessToken]);
 
-    const handleTransaction = async () => {
-        setLoading(true);
-        try {
-            const destinationAccountNumber = recipientOption === 'choose' ? selectedRecipient : destinationAccount;
-
-            const response = await axios.post(
-                'http://localhost:8888/api/transactions/create',
-                {
-                    sourceAccountId: selectedAccount,
-                    destinationAccountNumber: destinationAccountNumber,
-                    amount,
-                    fee,
-                    feePayer,
-                    type:"TRANSFER",
-                    message,
-                },
-                {
-                    headers: { Authorization: `Bearer ${accessToken}` },
+    useEffect(() => {
+        if(activeTab === 'internal'){
+            const delayDebounceFn = setTimeout(async () => {
+                if (destinationAccount) {
+                    try {
+                        const response = await axios.get(`http://localhost:8888/api/accounts/${destinationAccount}`, {
+                            headers: { Authorization: `Bearer ${accessToken}` },
+                        });
+                        console.log("account owner"+JSON.stringify(response.data, null, 2));
+                        setAccountOwner(response.data.data.ownerName);
+                    } catch (error) {
+                        console.error('Error fetching account owner:', error);
+                        setAccountOwner('');
+                    }
+                } else {
+                    setAccountOwner('');
                 }
-            );
-            console.log("transaction response"+JSON.stringify(response.data, null, 2));
-            setTransactionId(response.data.data.transactionId);
-            setOtpSent(true);
-        } catch (error) {
-            toast.error('Error creating transaction.');
-        } finally {
-            setLoading(false);
+            }, 500); // Delay of 500ms
+
+            return () => clearTimeout(delayDebounceFn);
+        }
+        else if(activeTab === 'external'){
+            const delayDebounceFn = setTimeout(async () => {
+                if (destinationAccount) {
+                    try {
+                        const response = await axios.post(`http://localhost:8888/api/interbank/get-account-info/`, 
+                        {
+                            account_number: destinationAccount
+                        }, 
+                        {
+                            headers: { Authorization: `Bearer ${accessToken}` }
+                        });
+                        console.log("account owner"+JSON.stringify(response.data, null, 2));
+                        setAccountOwner(response.data.data.lastName + " " + response.data.data.firstName);
+                    } catch (error) {
+                        console.error('Error fetching account owner:', error);
+                        setAccountOwner('');
+                    }
+                } else {
+                    setAccountOwner('');
+                }
+            }, 500); // Delay of 500ms
+
+            return () => clearTimeout(delayDebounceFn);
+        }
+    }, [destinationAccount, accessToken]);
+
+    const handleTransaction = async () => {
+        if(activeTab === 'internal'){
+            setLoading(true);
+            try {
+                const destinationAccountNumber = recipientOption === 'choose' ? selectedRecipient : destinationAccount;
+
+                const response = await axios.post(
+                    'http://localhost:8888/api/transactions/create',
+                    {
+                        sourceAccountId: selectedAccount,
+                        destinationAccountNumber: destinationAccountNumber,
+                        amount,
+                        fee,
+                        feePayer,
+                        type:"TRANSFER",
+                        message,
+                    },
+                    {
+                        headers: { Authorization: `Bearer ${accessToken}` },
+                    }
+                );
+                console.log("transaction response"+JSON.stringify(response.data, null, 2));
+                setTransactionId(response.data.data.transactionId);
+                setOtpSent(true);
+            } catch (error) {
+                toast.error('Error creating transaction.');
+            } finally {
+                setLoading(false);
+            }
+        }
+        else if(activeTab === 'external'){
+            setLoading(true);
+            try {
+                const destinationAccountNumber = recipientOption === 'choose' ? selectedRecipient : destinationAccount;
+
+                const response = await axios.post(
+                    'http://localhost:8888/api/interbank/create',
+                    {
+                        sender_account_number: sourceAccountNumber,
+                        sender_bank_code: "GROUP2",
+                        recipient_account_number: destinationAccountNumber,
+                        amount: amount,
+                        transaction_type: "interbank",
+                        fee_payer: feePayer.toLowerCase(),
+                        fee_amount: fee,
+                        description: message,
+                        status: "pending"
+                    },
+                    {
+                        headers: { Authorization: `Bearer ${accessToken}` },
+                    }
+                );
+                console.log("transaction response"+JSON.stringify(response.data, null, 2));
+                setTransactionId(response.data.data.payload);
+                setOtpSent(true);
+            } catch (error) {
+                toast.error('Error creating transaction.');
+            } finally {
+                setLoading(false);
+            }
         }
     };
 
@@ -82,16 +165,52 @@ const TransactionForm = () => {
     }, [amount]);
 
     const handleOtpVerification = async () => {
-        try {
-            await axios.post(
-                'http://localhost:8888/api/transactions/verify-otp',
-                { transactionId, otp },
-                { headers: { Authorization: `Bearer ${accessToken}` } }
-            );
-            toast.success('Transaction completed successfully!');
-            setTimeout(() => window.location.reload(), 3000);
-        } catch (error) {
-            toast.error('Invalid or expired OTP.');
+        if(activeTab === 'internal'){
+            try {
+                await axios.post(
+                    'http://localhost:8888/api/transactions/verify-otp',
+                    { transactionId, otp },
+                    { headers: { Authorization: `Bearer ${accessToken}` } }
+                );
+                toast.success('Transaction completed successfully!');
+                setTimeout(() => window.location.reload(), 3000);
+            } catch (error) {
+                toast.error('Invalid or expired OTP.');
+            }
+        }
+        else if(activeTab === 'external'){
+            try {
+                await axios.post(
+                    'http://localhost:8888/api/interbank/verify-otp',
+                    { transactionId, otp },
+                    { headers: { Authorization: `Bearer ${accessToken}` } }
+                );
+        
+                // Call the transfer API after OTP verification
+                const destinationAccountNumber = recipientOption === 'choose' ? selectedRecipient : destinationAccount;
+                await axios.post(
+                    'http://localhost:8888/api/interbank/transfer',
+                    {
+                        sender_account_number: sourceAccountNumber,
+                        sender_bank_code: "GROUP2",
+                        recipient_account_number: destinationAccountNumber,
+                        amount: amount,
+                        transaction_type: "interbank",
+                        fee_payer: feePayer.toLowerCase(),
+                        fee_amount: fee,
+                        description: message,
+                        status: "pending"
+                    },
+                    {
+                        headers: { Authorization: `Bearer ${accessToken}` },
+                    }
+                );
+        
+                toast.success('Transaction completed successfully!');
+                setTimeout(() => window.location.reload(), 3000);
+            } catch (error) {
+                toast.error('Invalid or expired OTP or transfer failed.');
+            }
         }
     };
 
@@ -180,15 +299,29 @@ const TransactionForm = () => {
                             </select>
                         </div>
                     ) : (
-                        <div className="mb-4">
-                            <label className="block text-gray-700 font-medium mb-2">Destination Account Number</label>
-                            <input
-                                type="text"
-                                value={destinationAccount}
-                                onChange={(e) => setDestinationAccount(e.target.value)}
-                                placeholder="Enter destination account"
-                                className="w-full p-3 border border-gray-300 rounded-lg"
-                            />
+                        <div className="flex space-x-4">
+                            <div className='w-full'>
+                                <label className="block text-gray-700 font-medium mb-2">Destination Account Number</label>
+                                <input
+                                    type="text"
+                                    value={destinationAccount}
+                                    onChange={(e) => setDestinationAccount(e.target.value)}
+                                    placeholder="Enter destination account"
+                                    className="w-full p-3 border border-gray-300 rounded-lg"
+                                />
+                            </div>
+                            <div className='w-full'>
+                                <label className="block text-gray-700 font-medium mb-2">Account's Owner</label>
+                                <input
+                                    type="text"
+                                    value={accountOwner}
+                                    onChange={(e) => setDestinationAccount(e.target.value)}
+                                    placeholder="Account's Owner"
+                                    className="w-full p-3 border border-gray-300 rounded-lg bg-gray-200"
+                                    disabled
+                                    readOnly
+                                />
+                            </div>
                         </div>
                     )}
 

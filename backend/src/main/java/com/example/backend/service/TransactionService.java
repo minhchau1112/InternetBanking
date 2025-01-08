@@ -68,7 +68,7 @@ public class TransactionService {
     ) {
         List<InterbankTransaction> transactions = interbankTransactionRepository.findInterbankTransactionsWithBankName(sourceAccountId, destinationAccountNum, startDate, endDate);
         return transactions.stream().map(transaction ->{
-           String bankName = linkedBankRepository.findByBankCode(transaction.getDestinationBankCode())
+           String bankName = linkedBankRepository.findByBankCode(transaction.getExternalBankCode())
                    .map(LinkedBank::getName)
                    .orElse("Unknown Bank");
            return new InterbankTransactionResponse(transaction, bankName);

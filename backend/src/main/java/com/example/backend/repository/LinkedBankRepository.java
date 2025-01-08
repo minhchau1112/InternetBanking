@@ -9,4 +9,5 @@ import java.util.Optional;
 @Repository
 public interface LinkedBankRepository extends JpaRepository<LinkedBank, Integer> {
     Optional<LinkedBank> findByBankCode(String bankCode);
+    Optional<LinkedBank> findByBankCodeAndType(String bankCode, String type);
 }

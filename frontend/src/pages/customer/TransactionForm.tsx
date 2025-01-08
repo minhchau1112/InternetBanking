@@ -47,11 +47,13 @@ const TransactionForm = () => {
     const handleTransaction = async () => {
         setLoading(true);
         try {
+            const destinationAccountNumber = recipientOption === 'choose' ? selectedRecipient : destinationAccount;
+
             const response = await axios.post(
                 'http://localhost:8888/api/transactions/create',
                 {
                     sourceAccountId: selectedAccount,
-                    destinationAccountNumber: destinationAccount,
+                    destinationAccountNumber: destinationAccountNumber,
                     amount,
                     fee,
                     feePayer,
@@ -94,7 +96,7 @@ const TransactionForm = () => {
     };
 
     return (
-        <div className="w-full h-full flex flex-col bg-gray-100 mt-5">
+        <div className="w-full h-full max-h-screen flex flex-col bg-gray-100 pt-7 px-5">
             {/* Tabs */}
             <div className="flex justify-center border-b border-gray-300">
                 <button
@@ -116,8 +118,8 @@ const TransactionForm = () => {
             </div>
 
             {/* Form Content */}
-            <div className="flex-grow p-6 w-full h-full">
-                <div className="max-w-lg mx-auto bg-white shadow-md rounded-lg p-6">
+            <div className="flex-grow py-6 w-full h-full max-h-screen overflow-auto">
+                <div className="max-w-full mx-auto bg-white shadow-md rounded-lg px-6 py-2">
                     {/* Select account to pay from */}
                     <div className="mb-4">
                         <label className="block text-gray-700 font-medium mb-2">Select Account</label>
@@ -191,17 +193,17 @@ const TransactionForm = () => {
                     )}
 
                     {/* Amount and Message */}
-                    <div className="mb-4">
-                        <label className="block text-gray-700 font-medium mb-2">Amount</label>
-                        <input
-                            type="number"
-                            value={amount}
-                            onChange={(e) => setAmount(e.target.value)}
-                            placeholder="Enter amount"
-                            className="w-full p-3 border border-gray-300 rounded-lg"
-                        />
-                    </div>
                     <div className="flex space-x-4">
+                        <div className="w-full">
+                            <label className="block text-gray-700 font-medium mb-2">Amount</label>
+                            <input
+                                type="number"
+                                value={amount}
+                                onChange={(e) => setAmount(e.target.value)}
+                                placeholder="Enter amount"
+                                className="w-full p-3 border border-gray-300 rounded-lg"
+                            />
+                        </div>
                         <div className="w-full">
                             <label className="block text-gray-700 font-medium mb-2">Fee</label>
                             <input
@@ -234,18 +236,20 @@ const TransactionForm = () => {
                             className="w-full p-3 border border-gray-300 rounded-lg"
                         ></textarea>
                     </div>
+                    <div className='flex flex-row justify-center'>
+                        <button
+                            onClick={handleTransaction}
+                            disabled={loading}
+                            className={`w-full max-w-40 py-3 font-semibold rounded-lg ${
+                                loading
+                                    ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
+                                    : 'bg-blue-500 text-white hover:bg-blue-600'
+                            }`}
+                        >
+                            {loading ? 'Submitting...' : 'Submit'}
+                        </button>
+                    </div>
 
-                    <button
-                        onClick={handleTransaction}
-                        disabled={loading}
-                        className={`w-full py-3 font-semibold rounded-lg ${
-                            loading
-                                ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
-                                : 'bg-blue-500 text-white hover:bg-blue-600'
-                        }`}
-                    >
-                        {loading ? 'Submitting...' : 'Submit'}
-                    </button>
                 </div>
             </div>
 

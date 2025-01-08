@@ -38,7 +38,6 @@ public class AccountController {
                 .map(AccountDetailsResponse::new) // Create a new AccountDetailsResponse for each Account
                 .toList();
         return ResponseEntity.ok(accountDetailsResponses);
-
     }
 
     /**
@@ -127,6 +126,11 @@ public class AccountController {
         Transaction transaction = accountService.deposit(depositRequest);
         // temp return
         return ResponseEntity.ok(transaction);
+    }
+
+    @GetMapping("/get/{accountId}")
+    public Account getAccountByAccountId(@PathVariable String accountId) {
+        return accountService.getAccountByAccountId(Integer.parseInt(accountId));
     }
 }
 

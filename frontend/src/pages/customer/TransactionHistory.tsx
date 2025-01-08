@@ -54,8 +54,6 @@ const TransactionHistory = () => {
 
             const data = await response.data.data;
 
-            console.log('Data:', data);
-
             if (data.length === 0) {
                 setError('Không có dữ liệu giao dịch.');
                 return;
@@ -126,24 +124,24 @@ const TransactionHistory = () => {
                     <input
                         type="text"
                         placeholder="Số tài khoản"
-                        className="border border-gray-300 rounded-lg p-2 flex-1 text-white"
+                        className="border border-gray-300 rounded-lg p-2 flex-1"
                         value={partnerAccountNumber}
                         onChange={(e) => setPartnerAccountNumber(e.target.value)}
                     />
                     <input
                         type="date"
-                        className="border border-gray-300 rounded-lg p-2 text-white"
+                        className="border border-gray-300 rounded-lg p-2"
                         value={startDate}
                         onChange={(e) => setStartDate(e.target.value)}
                     />
                     <input
                         type="date"
-                        className="border border-gray-300 rounded-lg p-2 text-white"
+                        className="border border-gray-300 rounded-lg p-2"
                         value={endDate}
                         onChange={(e) => setEndDate(e.target.value)}
                     />
                     <select
-                        className="border border-gray-300 rounded-lg p-2 text-white"
+                        className="border border-gray-300 rounded-lg p-2"
                         value={transactionType}
                         onChange={(e) => setTransactionType(e.target.value as 'internal' | 'interbank')}
                     >
@@ -152,7 +150,7 @@ const TransactionHistory = () => {
                     </select>
                     <button
                         onClick={handleSearch}
-                        className="bg-blue-500 text-white font-semibold py-2 px-6 rounded-lg hover:bg-blue-600"
+                        className="bg-blue-500 font-semibold py-2 px-6 rounded-lg hover:bg-blue-600"
                     >
                         Tìm kiếm
                     </button>
@@ -164,7 +162,7 @@ const TransactionHistory = () => {
                         <button
                             key={tab}
                             onClick={() => handleTabChange(tab as 'all' | 'in' | 'out')}
-                            className={`w-1/3 p-4 text-center font-semibold text-white ${
+                            className={`w-1/3 p-4 text-center font-semibold ${
                                 activeTab === tab ? 'border-b-4 border-blue-500 text-blue-600' : 'text-gray-500'
                             }`}
                         >

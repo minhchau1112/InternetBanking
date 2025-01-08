@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import {useEffect, useState} from 'react';
 import axios from 'axios';
 import {toast, ToastContainer} from "react-toastify";
 
 const TransactionForm = () => {
     const [amount, setAmount] = useState('');
     const [fee, setFee] = useState('');
+    const [account, setAccount] = useState('');
     const [destinationAccount, setDestinationAccount] = useState('');
     const [feePayer, setFeePayer] = useState('SENDER');
     const [type, setType] = useState('TRANSFER');
@@ -13,9 +14,42 @@ const TransactionForm = () => {
     const [transactionId, setTransactionId] = useState(null);
     const [otpSent, setOtpSent] = useState(false);
     const [loading, setLoading] = useState(false);
-
+    const [activeTab, setActiveTab] = useState('internal');
     const sourceAccountId = localStorage.getItem('accountId');
     const accessToken = localStorage.getItem('access_token');
+
+    useEffect(() => {
+        const fetchAccount = async () => {
+            try {
+                const response = await axios.get(
+                    `http://localhost:8888/api/accounts/get/${sourceAccountId}`, {
+                    method: 'GET',
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`,
+                    },
+                });
+                const accountData = response.data.data; // Dữ liệu trả về từ API
+                setAccount(accountData);
+            } catch (error) {
+                console.error("Error fetching accounts:", error);
+                toast.error("Unable to fetch accounts.");
+                if (error.response) {
+                    // Lỗi từ API
+                    console.error("Response error:", error.response);
+                    toast.error(`API Error: ${error.response.data.message || error.response.statusText}`);
+                } else {
+                    // Lỗi kết nối hoặc không có phản hồi
+                    toast.error("An unexpected error occurred.");
+                }
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (sourceAccountId) {
+            fetchAccount();
+        }
+    }, [sourceAccountId]);
 
     const handleTransaction = async () => {
         setLoading(true); // Bắt đầu tải dữ liệu
@@ -83,7 +117,43 @@ const TransactionForm = () => {
             <div className="bg-white shadow-lg rounded-lg p-8 w-full max-w-lg">
                 <div className="relative">
                     <h2 className="text-2xl font-semibold text-gray-700 mb-6">Transaction Form</h2>
+
+                    {/* Tabs */}
+                    <div className="flex border-b mb-6">
+                        <button
+                            className={`py-2 px-4 border-b-2 font-medium ${
+                                activeTab === 'transfer'
+                                    ? 'border-blue-500 text-blue-500'
+                                    : 'border-transparent text-gray-500 hover:text-blue-500'
+                            }`}
+                            onClick={() => setActiveTab('internal')}
+                        >
+                            Internal
+                        </button>
+                        <button
+                            className={`py-2 px-4 border-b-2 font-medium ${
+                                activeTab === 'deposit'
+                                    ? 'border-blue-500 text-blue-500'
+                                    : 'border-transparent text-gray-500 hover:text-blue-500'
+                            }`}
+                            onClick={() => setActiveTab('interbank')}
+                        >
+                            Interbank
+                        </button>
+                    </div>
+
+                    {/* Internal Transaction Form */}
+                    {activeTab === 'internal' && (
                     <div className="space-y-4">
+                        <div>
+                            <label className="block text-gray-700 font-medium mb-2">Source Account Number</label>
+                            <input
+                                type="text"
+                                placeholder="Enter source account"
+                                value={account.accountNumber || ''}
+                                disabled
+                                className="w-full p-3 border border-gray-300 rounded-lg bg-gray-800 text-white placeholder-gray-400"/>
+                        </div>
                         <div>
                             <label className="block text-gray-700 font-medium mb-2">Destination Account Number</label>
                             <input
@@ -147,6 +217,86 @@ const TransactionForm = () => {
                             />
                         </div>
                     </div>
+                    )}
+
+                    {/* Interbank Transaction Form */}
+                    {activeTab === 'interbank' && (
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-gray-700 font-medium mb-2">Source Account</label>
+                                <input
+                                    type="text"
+                                    placeholder="Enter source account"
+                                    value={account.accountNumber || ''}
+                                    disabled
+                                    className="w-full p-3 border border-gray-300 rounded-lg bg-gray-800 text-white placeholder-gray-400"/>
+                            </div>
+                            <div>
+                                <label className="block text-gray-700 font-medium mb-2">Destination Account
+                                    Number</label>
+                                <input
+                                    type="text"
+                                    placeholder="Enter destination account"
+                                    value={destinationAccount}
+                                    onChange={(e) => setDestinationAccount(e.target.value)}
+                                    className="w-full p-3 border border-gray-300 rounded-lg bg-gray-800 text-white placeholder-gray-400"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-gray-700 font-medium mb-2">Amount</label>
+                                <input
+                                    type="number"
+                                    placeholder="Enter amount"
+                                    value={amount}
+                                    onChange={(e) => setAmount(e.target.value)}
+                                    className="w-full p-3 border border-gray-300 rounded-lg bg-gray-800 text-white placeholder-gray-400"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-gray-700 font-medium mb-2">Fee</label>
+                                <input
+                                    type="number"
+                                    placeholder="Enter fee"
+                                    value={fee}
+                                    onChange={(e) => setFee(e.target.value)}
+                                    className="w-full p-3 border border-gray-300 rounded-lg bg-gray-800 text-white placeholder-gray-400"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-gray-700 font-medium mb-2">Fee Payer</label>
+                                <select
+                                    value={feePayer}
+                                    onChange={(e) => setFeePayer(e.target.value)}
+                                    className="w-full p-3 border border-gray-300 rounded-lg bg-gray-800 text-white"
+                                >
+                                    <option value="SENDER">Sender</option>
+                                    <option value="RECEIVER">Receiver</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-gray-700 font-medium mb-2">Transaction Type</label>
+                                <select
+                                    value={type}
+                                    onChange={(e) => setType(e.target.value)}
+                                    className="w-full p-3 border border-gray-300 rounded-lg bg-gray-800 text-white"
+                                >
+                                    <option value="TRANSFER">Transfer</option>
+                                    <option value="DEPOSIT">Deposit</option>
+                                    <option value="DEBT_REMINDER">Debt Reminder</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-gray-700 font-medium mb-2">Message</label>
+                                <textarea
+                                    placeholder="Enter message"
+                                    value={message}
+                                    onChange={(e) => setMessage(e.target.value)}
+                                    className="w-full p-3 border border-gray-300 rounded-lg bg-gray-800 text-white placeholder-gray-400"
+                                />
+                            </div>
+                        </div>
+                    )}
+
                     <button
                         onClick={handleTransaction}
                         disabled={loading} // Disable khi đang tải
@@ -160,7 +310,8 @@ const TransactionForm = () => {
                     </button>
 
                     {otpSent && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
+                        <div
+                            className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
                             <div className="bg-white p-6 rounded-lg shadow-lg w-[90%] max-w-md">
                                 <h3 className="text-lg font-bold mb-4">OTP Verification</h3>
                                 <input
@@ -168,7 +319,7 @@ const TransactionForm = () => {
                                     placeholder="Enter OTP"
                                     value={otp}
                                     onChange={(e) => setOtp(e.target.value)}
-                                    className="w-full p-3 border border-gray-300 rounded-lg mb-4 text-white"
+                                    className="w-full p-3 border border-gray-300 rounded-lg mb-4"
                                 />
                                 <div className="flex justify-end space-x-4">
                                     <button

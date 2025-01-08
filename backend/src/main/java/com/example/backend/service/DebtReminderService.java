@@ -3,7 +3,7 @@ package com.example.backend.service;
 import com.example.backend.dto.request.CancelDebtReminderRequest;
 import com.example.backend.dto.response.GetDebtReminderForCreatorResponse;
 import com.example.backend.enums.DebtReminderStatus;
-import com.example.backend.exception.NotFoundException;
+import com.example.backend.exception.DebtReminderNotFoundException;
 import com.example.backend.exception.UnauthorizedException;
 import com.example.backend.model.Account;
 import com.example.backend.model.DebtReminder;
@@ -26,12 +26,12 @@ public class DebtReminderService {
         this.accountRepository = accountRepository;
     }
 
-    public DebtReminder createDebtReminder(Integer creatorAccountId, Integer debtorAccountId, BigDecimal amount, String message) {
+    public DebtReminder createDebtReminder(Integer creatorAccountId, Integer debtorAccountId, BigDecimal amount, String message) throws DebtReminderNotFoundException {
         Account creatorAccount = accountRepository.findById(creatorAccountId)
-                .orElseThrow(() -> new NotFoundException("Creator account not found"));
+                .orElseThrow(() -> new DebtReminderNotFoundException("Creator account not found"));
 
         Account debtorAccount = accountRepository.findById(debtorAccountId)
-                .orElseThrow(() -> new NotFoundException("Debtor account not found"));
+                .orElseThrow(() -> new DebtReminderNotFoundException("Debtor account not found"));
 
         DebtReminder debtReminder = new DebtReminder();
         debtReminder.setCreatorAccount(creatorAccount);
@@ -45,9 +45,9 @@ public class DebtReminderService {
         return debtReminderRepository.save(debtReminder);
     }
 
-    public Page<GetDebtReminderForCreatorResponse> getDebtRemindersForCreator(Integer creatorAccountId, DebtReminderStatus status, Pageable pageable) {
+    public Page<GetDebtReminderForCreatorResponse> getDebtRemindersForCreator(Integer creatorAccountId, DebtReminderStatus status, Pageable pageable) throws DebtReminderNotFoundException {
         Account creatorAccount = accountRepository.findById(creatorAccountId)
-                .orElseThrow(() -> new NotFoundException("Creator account not found"));
+                .orElseThrow(() -> new DebtReminderNotFoundException("Creator account not found"));
 
         if (status == null) {
             return debtReminderRepository.findByCreatorAccountId(creatorAccountId, pageable);
@@ -56,9 +56,9 @@ public class DebtReminderService {
         return debtReminderRepository.findByCreatorAccountIdAAndStatus(creatorAccountId, status, pageable);
     }
 
-    public Page<DebtReminder> getDebtRemindersForDebtor(Integer debtorAccountId, DebtReminderStatus status, Pageable pageable) {
+    public Page<DebtReminder> getDebtRemindersForDebtor(Integer debtorAccountId, DebtReminderStatus status, Pageable pageable) throws DebtReminderNotFoundException {
         Account debtorAccount = accountRepository.findById(debtorAccountId)
-                .orElseThrow(() -> new NotFoundException("Debtor account not found"));
+                .orElseThrow(() -> new DebtReminderNotFoundException("Debtor account not found"));
 
         if (status == null) {
             return debtReminderRepository.findByDebtorAccountId(debtorAccountId, pageable);
@@ -67,9 +67,9 @@ public class DebtReminderService {
         return debtReminderRepository.findByDebtorAccountIdAAndStatus(debtorAccountId, status, pageable);
     }
 
-    public void cancelDebtReminder(Integer debtReminderId, CancelDebtReminderRequest request, Integer requesterAccountId) {
+    public void cancelDebtReminder(Integer debtReminderId, CancelDebtReminderRequest request, Integer requesterAccountId) throws DebtReminderNotFoundException {
         DebtReminder debtReminder = debtReminderRepository.findById(debtReminderId)
-                .orElseThrow(() -> new NotFoundException("Debt reminder not found"));
+                .orElseThrow(() -> new DebtReminderNotFoundException("Debt reminder not found"));
 
         if (!debtReminder.getCreatorAccount().getId().equals(requesterAccountId) && !debtReminder.getDebtorAccount().getId().equals(requesterAccountId)) {
             throw new UnauthorizedException("You are not authorized to cancel this debt reminder");
@@ -81,9 +81,9 @@ public class DebtReminderService {
         debtReminderRepository.save(debtReminder);
     }
 
-    public void payDebtReminder(Integer debtReminderId) {
+    public void payDebtReminder(Integer debtReminderId) throws DebtReminderNotFoundException {
         DebtReminder debtReminder = debtReminderRepository.findById(debtReminderId)
-                .orElseThrow(() -> new NotFoundException("Debt reminder not found"));
+                .orElseThrow(() -> new DebtReminderNotFoundException("Debt reminder not found"));
 
         debtReminder.setStatus(DebtReminderStatus.PAID);
         debtReminder.setUpdatedAt(LocalDateTime.now());

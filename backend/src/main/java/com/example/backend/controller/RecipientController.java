@@ -4,9 +4,7 @@ import com.example.backend.dto.request.RecipientCreateRequest;
 import com.example.backend.dto.request.RecipientUpdateRequest;
 import com.example.backend.dto.response.GetRecipientsResponse;
 import com.example.backend.dto.response.RecipientListResponse;
-import com.example.backend.enums.StatusCode;
 import com.example.backend.exception.CustomerNotFoundException;
-import com.example.backend.model.ApiResponse;
 import com.example.backend.model.LinkedBank;
 import com.example.backend.model.Recipient;
 import com.example.backend.repository.AccountRepository;
@@ -17,8 +15,6 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -45,27 +41,15 @@ public class RecipientController {
         return ResponseEntity.ok(recipients);
     }
     @GetMapping("/v2/recipients/{customerId}")
-    public ResponseEntity<ApiResponse<List<GetRecipientsResponse>>> getRecipientsByCustomerId(@PathVariable int customerId) {
+    @APIMessage("Recipient fetched successfully")
+    public ResponseEntity<List<GetRecipientsResponse>> getRecipientsByCustomerId(@PathVariable int customerId) throws CustomerNotFoundException {
         if(!recipientService.customerExistsById(customerId)) {
-            ApiResponse<List<GetRecipientsResponse>> apiResponse = new ApiResponse<>(
-                    StatusCode.NOT_FOUND.getCode(),
-                    StatusCode.NOT_FOUND.getMessage(),
-                    "Customer does not exist",
-                    null
-            );
-            return ResponseEntity.ok(apiResponse);
+            throw new CustomerNotFoundException("Customer not found");
         }
 
         List<GetRecipientsResponse> recipients = recipientService.getRecipientsByCustomerId(customerId);
 
-        ApiResponse<List<GetRecipientsResponse>> apiResponse = new ApiResponse<>(
-               StatusCode.SUCCESS.getCode(),
-               null,
-               "Recipient fetched successfully",
-               recipients
-        );
-
-        return ResponseEntity.ok(apiResponse);
+        return ResponseEntity.ok(recipients);
     }
     @PostMapping
     @APIMessage("Recipient created successfully.")

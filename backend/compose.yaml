@@ -5,10 +5,10 @@ services:
     image: mysql:5.7
     container_name: mysql-container
     environment:
-      MYSQL_ROOT_PASSWORD: '25072018'
+      MYSQL_ROOT_PASSWORD:
       MYSQL_DATABASE: internet_banking
-      MYSQL_USER: admin
-      MYSQL_PASSWORD: password123
+      MYSQL_USER: root
+      MYSQL_PASSWORD:
     ports:
       - "3307:3306"
     expose:
@@ -28,8 +28,8 @@ services:
       - "8888:8888"
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql-container:3306/internet_banking
-      SPRING_DATASOURCE_USERNAME: admin
-      SPRING_DATASOURCE_PASSWORD: password123
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD:
     depends_on:
       - mysql
     command: [ "sh", "-c", "sleep 10 && java -jar backend.jar" ]

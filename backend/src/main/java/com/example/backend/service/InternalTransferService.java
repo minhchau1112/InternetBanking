@@ -3,7 +3,7 @@ package com.example.backend.service;
 import com.example.backend.dto.request.ConfirmTransferRequest;
 import com.example.backend.dto.request.InternalTransferRequest;
 import com.example.backend.exception.EmailNotFoundException;
-import com.example.backend.exception.NotFoundException;
+import com.example.backend.exception.DebtReminderNotFoundException;
 import com.example.backend.exception.OTPNotFoundException;
 import com.example.backend.model.Account;
 import com.example.backend.model.Transaction;
@@ -33,10 +33,10 @@ public class InternalTransferService {
     }
 
     @Transactional
-    public String initiateTransfer(InternalTransferRequest request) {
+    public String initiateTransfer(InternalTransferRequest request) throws DebtReminderNotFoundException {
         System.out.println("initiateTransfer");
         Account sourceAccount = accountRepository.findById(request.getSourceAccountId())
-                .orElseThrow(() -> new NotFoundException("Source account not found"));
+                .orElseThrow(() -> new DebtReminderNotFoundException("Source account not found"));
 
         System.out.println("source_account_id: " + sourceAccount.getId());
         if (sourceAccount.getBalance().compareTo(request.getAmount()) < 0) {
@@ -46,7 +46,7 @@ public class InternalTransferService {
         System.out.println("balance ok");
 
         Account destinationAccount = accountRepository.findById(request.getDestinationAccountId())
-                .orElseThrow(() -> new NotFoundException("Destination account not found"));
+                .orElseThrow(() -> new DebtReminderNotFoundException("Destination account not found"));
 
         System.out.println("des_account_id: " + destinationAccount.getId());
 

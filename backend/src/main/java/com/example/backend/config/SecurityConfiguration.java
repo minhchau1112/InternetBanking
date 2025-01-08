@@ -30,6 +30,7 @@ public class SecurityConfiguration {
             "/api/auth/reset-password",
             "/v3/api-docs",
             "/swagger-ui/**",
+            "/api/debt-reminders/**",
     };
 
     @Bean

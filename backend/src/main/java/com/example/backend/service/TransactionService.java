@@ -40,7 +40,14 @@ public class TransactionService {
 
     private final Map<Integer, String> otpCache = new HashMap<>();
 
-    // Lấy danh sách giao dịch nội bộ của tài khoản
+    /**
+     * Get the list of transactions for a user.
+     * @param accountId ID of the current logged account.
+     * @param partnerAccountNumber Account number of the partner.
+     * @param startDate Start date of the transaction.
+     * @param endDate End date of the transaction.
+     * @return List of transactions.
+     */
     public List<TransactionResponse> getUserTransactions(
             Integer accountId,
             String partnerAccountNumber,
@@ -55,7 +62,14 @@ public class TransactionService {
         }).collect(Collectors.toList());
     }
 
-    // Lấy danh sách giao dịch liên ngân hàng của tài khoản
+    /**
+     * Get the list of interbank transactions for a user.
+     * @param accountId ID of the current logged account.
+     * @param partnerAccountNumber Account number of the partner.
+     * @param startDate Start date of the transaction.
+     * @param endDate End date of the transaction.
+     * @return List of interbank transactions.
+     */
     public List<InterbankTransactionResponse> getUserInterbankTransactions(
             Integer accountId,
             String partnerAccountNumber,
@@ -74,6 +88,11 @@ public class TransactionService {
         }).collect(Collectors.toList());
     }
 
+    /**
+     * Generate and send OTP for a transaction.
+     * @param request Transaction request.
+     * @return OTP.
+     */
     public String generateAndSendOTP(Transaction request) {
         String otp = String.valueOf((int) ((Math.random() * 9000) + 1000)); // Generate 4-digit OTP
 
@@ -87,6 +106,11 @@ public class TransactionService {
         return otp;
     }
 
+    /**
+     * Create a new transaction in the PENDING state.
+     * @param request Transaction request.
+     * @return Created transaction.
+     */
     public Transaction createPendingTransaction(TransactionRequest request) {
         Account sourceAccount = accountRepository.findById(request.getSourceAccountId())
                 .orElseThrow(() -> new IllegalArgumentException("Source account not found"));
@@ -119,6 +143,11 @@ public class TransactionService {
         return transaction;
     }
 
+    /**
+     * Verify OTP and complete the transaction.
+     * @param otpRequest OTP verification request.
+     * @return True if the OTP is verified and the transaction is completed.
+     */
     public boolean verifyOtpAndCompleteTransaction(OtpVerificationRequest otpRequest) {
         String cachedOtp = otpCache.get(otpRequest.getTransactionId());
         if (cachedOtp != null && cachedOtp.equals(otpRequest.getOtp())) {
@@ -159,6 +188,14 @@ public class TransactionService {
         return false;
     }
 
+    /**
+     * Check if the account has sufficient balance for the transaction.
+     * @param account Account.
+     * @param amount Amount to be deducted.
+     * @param fee Transaction fee.
+     * @param feePayer Fee payer.
+     * @return True if the account has sufficient balance.
+     */
     public boolean hasSufficientBalance(Account account, BigDecimal amount, BigDecimal fee, String feePayer) {
         BigDecimal totalDeduction = feePayer.equals("SENDER") ? amount.add(fee) : amount;
         return account.getBalance().compareTo(totalDeduction) >= 0;

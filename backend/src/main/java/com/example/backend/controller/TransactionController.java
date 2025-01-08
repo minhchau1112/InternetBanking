@@ -36,6 +36,15 @@ public class TransactionController {
         this.transactionService = transactionService;
     }
 
+    /**
+     * Get the list of transactions for a user.
+     * @param accountId ID of the current logged account.
+     * @param partnerAccountNumber Account number of the partner.
+     * @param type Type of transaction.
+     * @param startDate Start date of the transaction.
+     * @param endDate End date of the transaction.
+     * @return List of transactions.
+     */
     @GetMapping
     public List<?> getTransactions(
             @RequestParam(value = "accountId") String accountId,
@@ -45,15 +54,16 @@ public class TransactionController {
             @RequestParam(value = "endDate", required = false) String endDate
     ) {
         try {
-            Integer srcAccountId = Integer.parseInt(accountId);
-            String partnerAccountNum = (partnerAccountNumber != null && !partnerAccountNumber.isEmpty()) ? partnerAccountNumber : null;
+            Integer srcAccountId = Integer.parseInt(accountId); // Parse accountId to Integer
+            String partnerAccountNum = (partnerAccountNumber != null && !partnerAccountNumber.isEmpty()) ? partnerAccountNumber : null; // Set partnerAccountNum to null if it's empty
 
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss"); // Define the date time format
             LocalDateTime start = (startDate != null && !startDate.isEmpty())
-                    ? LocalDateTime.parse(startDate + "T00:00:00", formatter) : null;
+                    ? LocalDateTime.parse(startDate + "T00:00:00", formatter) : null; // Parse startDate to LocalDateTime
             LocalDateTime end = (endDate != null && !endDate.isEmpty())
-                    ? LocalDateTime.parse(endDate + "T23:59:59", formatter) : null;
+                    ? LocalDateTime.parse(endDate + "T23:59:59", formatter) : null; // Parse endDate to LocalDateTime
 
+            // Check if the type is "interbank"
             if ("interbank".equals(type)) {
                 return transactionService.getUserInterbankTransactions(srcAccountId, partnerAccountNum, start, end);
             } else {
@@ -65,12 +75,18 @@ public class TransactionController {
         }
     }
 
+    /**
+     * Create a new transaction.
+     * @param transactionRequest Transaction request object.
+     * @return Transaction ID and message.
+     */
     @PostMapping("/create")
     public ResponseEntity<?> createTransaction(@RequestBody TransactionRequest transactionRequest) {
         try {
-            BigDecimal fee = transactionRequest.getFee();
-            BigDecimal amount = transactionRequest.getAmount();
+            BigDecimal fee = transactionRequest.getFee(); // Get fee from the request
+            BigDecimal amount = transactionRequest.getAmount(); // Get amount from the request
 
+            // Create a new transaction request object
             TransactionRequest newTransactionRequest = TransactionRequest.builder()
                     .sourceAccountId(transactionRequest.getSourceAccountId())
                     .destinationAccountNumber(transactionRequest.getDestinationAccountNumber())
@@ -81,10 +97,10 @@ public class TransactionController {
                     .type(transactionRequest.getType())
                     .build();
 
-            // Lưu giao dịch vào trạng thái chờ xác thực OTP
+            // Save the transaction
             Transaction transaction = transactionService.createPendingTransaction(newTransactionRequest);
 
-            // Tạo OTP và gửi qua email
+            // Generate and send OTP
             String otp = transactionService.generateAndSendOTP(transaction);
 
             return ResponseEntity.ok(new HashMap<String, Object>() {{
@@ -96,9 +112,14 @@ public class TransactionController {
         }
     }
 
+    /**
+     * Verify OTP and complete the transaction.
+     * @param otpRequest OTP verification request.
+     * @return Response message.
+     */
     @PostMapping("/verify-otp")
     public ResponseEntity<?> verifyOtp(@RequestBody OtpVerificationRequest otpRequest) {
-        boolean isVerified = transactionService.verifyOtpAndCompleteTransaction(otpRequest);
+        boolean isVerified = transactionService.verifyOtpAndCompleteTransaction(otpRequest); // Verify OTP
 
         if (isVerified) {
             return ResponseEntity.ok("Transaction completed successfully.");

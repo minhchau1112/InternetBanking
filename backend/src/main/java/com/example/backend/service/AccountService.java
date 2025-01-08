@@ -125,6 +125,20 @@ public class AccountService {
         return accountRepository.findByCustomerId(customer.getId()).get();
     }
 
+    public Account getAccountDetailsByAccountId(String accountId) {
+//        // get customer class by username
+//        Optional<Customer> customer = customerRepository.findById(Integer.valueOf(userId));
+//        // get account class associated with the customer
+//        if(customer.isEmpty()){
+//            throw new IllegalArgumentException("User does not exist");
+//        }
+        Optional<Account> account = accountRepository.findById(Integer.valueOf(accountId));
+        if(account.isEmpty()){
+            throw new IllegalArgumentException("Account does not exist");
+        }
+        return account.get();
+    }
+
     public Transaction deposit(DepositRequest depositRequest){
         Optional<Account> account = null;
         if (depositRequest.getAccountNumber() != null) {

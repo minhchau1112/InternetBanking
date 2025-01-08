@@ -117,7 +117,7 @@ const ManageEmployee = () => {
                         <div>
                             <button onClick={() => handleEdit(employee)} className="bg-yellow-500 text-white p-1 mr-2">Edit</button>
                             <button onClick={() => handleDelete(employee.id)} className="bg-red-500 text-white p-1">Delete</button>
-                        </div>
+            </div>
                     </li>
                 ))}
             </ul>

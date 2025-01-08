@@ -40,10 +40,15 @@ public class RecipientService {
 
         Customer customer = customerRepository.findById(createRequest.getCustomerId()).get();
 
-        Account account = accountRepository.findByAccountNumber(createRequest.getAccountNumber()).get();
-
-        String aliasName = (!createRequest.getAliasName().isEmpty()) ?
-                createRequest.getAliasName() : account.getCustomer().getName();
+        String aliasName;
+        if(Objects.equals(createRequest.getBankCode(), "GROUP2")){
+            Account account = accountRepository.findByAccountNumber(createRequest.getAccountNumber()).get();
+            aliasName = (!createRequest.getAliasName().isEmpty()) ?
+                    createRequest.getAliasName() : account.getCustomer().getName();
+        } else {
+            aliasName = createRequest.getAliasName();
+        }
+        System.out.println("Alias Name: " + aliasName);
 
         Recipient recipient = Recipient.builder()
                 .customer(customer)

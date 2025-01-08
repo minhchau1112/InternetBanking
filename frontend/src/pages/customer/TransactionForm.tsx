@@ -1,6 +1,14 @@
 import { useState } from 'react';
 import axios from 'axios';
 import {toast, ToastContainer} from "react-toastify";
+import {SubmitHandler, useForm} from "react-hook-form";
+import {createRecipient} from "@/api/recipientAPI.ts";
+
+type ContactFormData = {
+    accountNumber: string,
+    aliasName: string,
+    bankCode: string
+}
 
 const TransactionForm = () => {
     const [amount, setAmount] = useState('');
@@ -68,9 +76,20 @@ const TransactionForm = () => {
             // Hiển thị thông báo thành công
             toast.success('Transaction completed successfully!');
 
+            //Lưu người nhận mới
+            const reicipientResponse = await createRecipient(destinationAccount, "", "GROUP2");
+            toast.success(reicipientResponse);
             // Trì hoãn reload để người dùng kịp thấy thông báo
             setTimeout(() => {
-                window.location.reload(); // Reload lại trang sau 2 giây
+                // window.location.reload(); // Reload lại trang sau 2 giây
+                setAmount('');
+                setFee('');
+                setFeePayer('SENDER');
+                setType('TRANSFER');
+                setMessage('');
+                setOtp('');
+                setTransactionId(null);
+                setOtpSent(false);
             }, 3000);
         } catch (error) {
             console.error('Error verifying OTP:', error);
@@ -160,7 +179,8 @@ const TransactionForm = () => {
                     </button>
 
                     {otpSent && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
+                        <div
+                            className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
                             <div className="bg-white p-6 rounded-lg shadow-lg w-[90%] max-w-md">
                                 <h3 className="text-lg font-bold mb-4">OTP Verification</h3>
                                 <input
@@ -188,6 +208,7 @@ const TransactionForm = () => {
                         </div>
                     )}
                 </div>
+
                 <ToastContainer/>
             </div>
         </div>

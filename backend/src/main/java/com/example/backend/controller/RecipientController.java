@@ -25,6 +25,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/recipients")
@@ -132,7 +133,8 @@ public class RecipientController {
     public ResponseEntity<Void> createRecipient
             (@RequestBody @Valid RecipientCreateRequest createRequest) throws CustomerNotFoundException {
 
-        if(!accountRepository.existsByAccountNumber(createRequest.getAccountNumber())) {
+        if(Objects.equals(createRequest.getBankCode(), "GROUP2") &&
+        !accountRepository.existsByAccountNumber(createRequest.getAccountNumber())) {
             throw new CustomerNotFoundException("Không tìm thấy khách hàng này");
         }
 

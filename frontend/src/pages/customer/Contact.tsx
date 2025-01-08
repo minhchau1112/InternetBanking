@@ -3,6 +3,7 @@ import {useEffect, useState} from 'react';
 import axios from "axios";
 import {useForm, SubmitHandler} from "react-hook-form";
 import {toast, ToastContainer} from "react-toastify";
+import {createRecipient, deleteRecipients, fetchCustomerRecipients, updateRecipient} from "@/api/recipientAPI.ts";
 
 type Customer = {
     createdAt: string,
@@ -48,14 +49,9 @@ const Recipient = () => {
 
     const fetchRecipients = async () => {
         try {
-            const response = await axios.get(`http://localhost:8888/api/recipients/${userID}`, {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem('access_token')}`,
-                },
-            });
-            const { data } = response.data;
-            setRecipients(data);
-            handleSearch('', data);
+            const response = await fetchCustomerRecipients();
+            setRecipients(response);
+            handleSearch('', response);
         } catch (error) {
             toast.error("Error fetching recipients.");
         }
@@ -100,46 +96,26 @@ const Recipient = () => {
         setCurrentPage(prevPage);
     };
 
-    const handleDelete = async (customerId: number) => {
+    const handleDelete = async (recipientId: number) => {
         resetU();
         setUpdatingRecipientId(-1);
         try {
-            const response = await axios.delete(`http://localhost:8888/api/recipients/${customerId}`,
-                {
-                    headers: {
-                        Authorization: `Bearer ${localStorage.getItem('access_token')}`,
-                    },
-                }
-            );
-            toast.success(response.data.message);
+            const response = await deleteRecipients(recipientId);
+            toast.success(response);
             fetchRecipients();
         } catch (err) {
-            const errorMessage = err.response?.data?.message || "An unexpected error occurred.";
-            toast.error(errorMessage);
+            toast.error("Error delete recipient");
         }
     }
 
     const onSubmitCreate: SubmitHandler<FormData> = async (data) => {
         try {
-            const response = await axios.post(`http://localhost:8888/api/recipients`,
-                {
-                    customerId: userID,
-                    accountNumber: data.accountNumber,
-                    aliasName: data.aliasName,
-                    bankCode: data.bankCode,
-                },
-                {
-                    headers: {
-                        Authorization: `Bearer ${localStorage.getItem('access_token')}`,
-                    },
-                }
-                );
-            toast.success(response.data.message);
+            const response = await createRecipient(data.accountNumber, data.aliasName, data.bankCode);
+            toast.success(response);
             resetC();
             fetchRecipients();
         } catch (err) {
-            const errorMessage = err.response?.data?.message || "An unexpected error occurred.";
-            toast.error(errorMessage);
+            toast.error("Error create recipient");
         }
     };
 
@@ -151,26 +127,19 @@ const Recipient = () => {
     }
     const onSubmitUpdate: SubmitHandler<FormData> = async (data) => {
         try {
-            const response = await axios.put(`http://localhost:8888/api/recipients/${updatingRecipientId}`,
-                {
-                    recipientId: updatingRecipientId,
-                    accountNumber: data.accountNumber,
-                    aliasName: data.aliasName,
-                    bankCode: data.bankCode,
-                },
-                {
-                    headers: {
-                        Authorization: `Bearer ${localStorage.getItem('access_token')}`,
-                    },
-                }
-            );
-            toast.success(response.data.message);
+            const response = await updateRecipient(
+                updatingRecipientId,
+                data.accountNumber,
+                data.aliasName,
+                data.bankCode
+            )
+
+            toast.success(response);
             resetU();
             setUpdatingRecipientId(-1);
             fetchRecipients();
         } catch (err) {
-            const errorMessage = err.response?.data?.message || "An unexpected error occurred.";
-            toast.error(errorMessage);
+            toast.error("Error update recipient");
         }
     };
     return (
@@ -231,7 +200,7 @@ const Recipient = () => {
                     <div className="w-full h-full flex flex-col justify-between items-start col-span-2 space-y-4">
                         <div className="w-full px-8 py-4 ml-4 border border-gray-300 rounded-lg">
                             <h1 className="w-full text-2xl font-bold text-gray-800 mb-4 text-center">
-                                Add New Contact</h1>
+                                New Contact</h1>
                             <form onSubmit={subC(onSubmitCreate)} className="space-y-4 w-full">
                                 <div>
                                     <label className="block text-gray-700 text-md mb-1">Bank Code</label>

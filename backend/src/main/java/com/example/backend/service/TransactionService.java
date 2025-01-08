@@ -3,6 +3,7 @@ package com.example.backend.service;
 import com.example.backend.dto.request.OtpVerificationRequest;
 import com.example.backend.dto.request.TransactionRequest;
 import com.example.backend.dto.response.InterbankTransactionResponse;
+import com.example.backend.dto.response.TransactionResponse;
 import com.example.backend.model.Account;
 import com.example.backend.model.InterbankTransaction;
 import com.example.backend.model.LinkedBank;
@@ -14,11 +15,9 @@ import com.example.backend.repository.TransactionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -41,27 +40,37 @@ public class TransactionService {
 
     private final Map<Integer, String> otpCache = new HashMap<>();
 
-    public List<Transaction> getTransactions(
-            Integer sourceAccountId,
-            String destinationAccountNum,
+    // Lấy danh sách giao dịch nội bộ của tài khoản
+    public List<TransactionResponse> getUserTransactions(
+            Integer accountId,
+            String partnerAccountNumber,
             LocalDateTime startDate,
             LocalDateTime endDate
     ) {
-            return transactionRepository.findTransactions(sourceAccountId, destinationAccountNum, startDate, endDate);
+        List<Transaction> transactions = transactionRepository.findAllTransactionsByAccount(accountId, partnerAccountNumber, startDate, endDate);
+
+        return transactions.stream().map(transaction -> {
+            String tab = transaction.getSourceAccount().getId().equals(accountId) ? "out" : "in";
+            return new TransactionResponse(transaction, tab);
+        }).collect(Collectors.toList());
     }
 
-    public List<InterbankTransactionResponse> getInterbankTransactionsWithBankName(
-            Integer sourceAccountId,
-            String destinationAccountNum,
+    // Lấy danh sách giao dịch liên ngân hàng của tài khoản
+    public List<InterbankTransactionResponse> getUserInterbankTransactions(
+            Integer accountId,
+            String partnerAccountNumber,
             LocalDateTime startDate,
             LocalDateTime endDate
     ) {
-        List<InterbankTransaction> transactions = interbankTransactionRepository.findInterbankTransactionsWithBankName(sourceAccountId, destinationAccountNum, startDate, endDate);
-        return transactions.stream().map(transaction ->{
-           String bankName = linkedBankRepository.findByBankCode(transaction.getExternalBankCode())
-                   .map(LinkedBank::getName)
-                   .orElse("Unknown Bank");
-           return new InterbankTransactionResponse(transaction, bankName);
+        List<InterbankTransaction> transactions = interbankTransactionRepository.findInterbankTransactionsByAccount(accountId, partnerAccountNumber, startDate, endDate);
+
+        return transactions.stream().map(transaction -> {
+            String tab = transaction.isIncoming() ? "in" : "out";
+            String externalAccount = transaction.isIncoming() ? transaction.getExternalAccountNumber() : transaction.getSourceAccount().getAccountNumber();
+            String bankName = linkedBankRepository.findByBankCode(transaction.getExternalBankCode())
+                    .map(LinkedBank::getName)
+                    .orElse("Unknown Bank");
+            return new InterbankTransactionResponse(transaction, externalAccount, bankName, tab);
         }).collect(Collectors.toList());
     }
 
@@ -81,6 +90,13 @@ public class TransactionService {
     public Transaction createPendingTransaction(TransactionRequest request) {
         Account sourceAccount = accountRepository.findById(request.getSourceAccountId())
                 .orElseThrow(() -> new IllegalArgumentException("Source account not found"));
+
+        if(String.valueOf(request.getType()).equals("TRANSFER") || String.valueOf(request.getType()).equals("DEPOSIT")) {
+            boolean hasBalance = hasSufficientBalance(sourceAccount, request.getAmount(), request.getFee(), String.valueOf(request.getFeePayer()));
+            if(!hasBalance) {
+                throw new IllegalArgumentException("Insufficient balance for the transaction");
+            }
+        }
 
         Account destinationAccount = accountRepository.findByAccountNumber(request.getDestinationAccountNumber())
                 .orElseThrow(() -> new IllegalArgumentException("Destination account not found"));
@@ -109,6 +125,28 @@ public class TransactionService {
             // Hoàn tất giao dịch
             Transaction transaction = transactionRepository.findById(otpRequest.getTransactionId())
                     .orElseThrow(() -> new IllegalArgumentException("Transaction not found"));
+
+            // Kiểm tra loại giao dịch
+            if (String.valueOf(transaction.getType()).equals("TRANSFER") || String.valueOf(transaction.getType()).equals("DEPOSIT")) {
+                BigDecimal amount = transaction.getAmount();
+                BigDecimal fee = transaction.getFee();
+                String feePayer = String.valueOf(transaction.getFeePayer());
+
+                Account sourceAccount = transaction.getSourceAccount();
+                Account destinationAccount = transaction.getDestinationAccount();
+
+                // Cập nhật số dư cho tài khoản nguồn
+                BigDecimal totalDeduction = feePayer.equals("SENDER") ? amount.add(fee) : amount;
+                sourceAccount.setBalance(sourceAccount.getBalance().subtract(totalDeduction));
+
+                // Cập nhật số dư cho tài khoản đích
+                totalDeduction = feePayer.equals("RECEIVER") ? amount.subtract(fee) : amount;
+                destinationAccount.setBalance(destinationAccount.getBalance().add(totalDeduction));
+
+                accountRepository.save(sourceAccount);
+                accountRepository.save(destinationAccount);
+            }
+
             transaction.setStatus("COMPLETED");
             transaction.setOtpVerified(true);
             transaction.setCompletedAt(LocalDateTime.now());
@@ -119,6 +157,11 @@ public class TransactionService {
             return true;
         }
         return false;
+    }
+
+    public boolean hasSufficientBalance(Account account, BigDecimal amount, BigDecimal fee, String feePayer) {
+        BigDecimal totalDeduction = feePayer.equals("SENDER") ? amount.add(fee) : amount;
+        return account.getBalance().compareTo(totalDeduction) >= 0;
     }
 
 }

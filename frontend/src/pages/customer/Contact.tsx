@@ -1,6 +1,5 @@
 import { Edit, Delete, NavigateBefore, NavigateNext } from '@mui/icons-material';
 import {useEffect, useState} from 'react';
-import axios from "axios";
 import {useForm, SubmitHandler} from "react-hook-form";
 import {toast, ToastContainer} from "react-toastify";
 import {createRecipient, deleteRecipients, fetchCustomerRecipients, updateRecipient} from "@/api/recipientAPI.ts";
@@ -31,8 +30,6 @@ type FormData = {
 
 const Recipient = () => {
 
-    const [user] = useState<string>(localStorage.getItem('user') || '');
-    const { userID } = JSON.parse(user);
     const [recipients, setRecipients] = useState<Recipient[]>([]);
     const [filteredRecipients, setFilteredRecipients] = useState<Recipient[]>([]);
     const [pageRecipients, setPageRecipients] = useState<Recipient[]>([]);

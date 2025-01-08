@@ -1,14 +1,8 @@
-import { useState } from 'react';
+import {useEffect, useState} from 'react';
 import axios from 'axios';
 import {toast, ToastContainer} from "react-toastify";
-import {SubmitHandler, useForm} from "react-hook-form";
-import {createRecipient} from "@/api/recipientAPI.ts";
-
-type ContactFormData = {
-    accountNumber: string,
-    aliasName: string,
-    bankCode: string
-}
+import {createRecipient, fetchCustomerRecipients} from "@/api/recipientAPI.ts";
+import Recipient from "@/pages/customer/Contact.tsx";
 
 const TransactionForm = () => {
     const [amount, setAmount] = useState('');
@@ -21,6 +15,7 @@ const TransactionForm = () => {
     const [transactionId, setTransactionId] = useState(null);
     const [otpSent, setOtpSent] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [recipients, setRecipients] = useState<Recipient[]>([]);
 
     const sourceAccountId = localStorage.getItem('accountId');
     const accessToken = localStorage.getItem('access_token');
@@ -97,10 +92,24 @@ const TransactionForm = () => {
         }
     };
 
+    const fetchRecipients = async () => {
+        try {
+            const response = await fetchCustomerRecipients();
+            setRecipients(response);
+        } catch (error) {
+            toast.error("Error fetching recipients.");
+        }
+    };
+
+    useEffect(() => {
+        fetchRecipients();
+    }, []);
+
+
     return (
         <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
-            <div className="bg-white shadow-lg rounded-lg p-8 w-full max-w-lg">
-                <div className="relative">
+            <div className="bg-white shadow-lg rounded-lg p-8 w-full max-w-3xl grid grid-cols-3">
+                <div className="relative col-span-2">
                     <h2 className="text-2xl font-semibold text-gray-700 mb-6">Transaction Form</h2>
                     <div className="space-y-4">
                         <div>
@@ -209,6 +218,19 @@ const TransactionForm = () => {
                     )}
                 </div>
 
+
+                <div className="w-full h-full col-span-1 border-l-[1px] border-gray-200 ml-8 flex flex-col">
+                    <h1 className="text-xl font-semibold text-gray-700 pl-4 mb-2">Contact</h1>
+                    <div className="w-full max-h-[525px] flex-1 flex flex-col overflow-auto overflow-y-scroll">
+                        {recipients.map((recipient) => (
+                            <div key={recipient.id} onClick={() => setDestinationAccount(recipient.accountNumber)}
+                                    className="w-full flex flex-col justify-center hover:bg-amber-200 pl-4 py-2 space-y-1">
+                                <p className="text-md font-bold">{recipient.aliasName}</p>
+                                <p className="text-sm font-light text-gray-400">{recipient.accountNumber}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
                 <ToastContainer/>
             </div>
         </div>

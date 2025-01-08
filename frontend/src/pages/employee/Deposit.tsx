@@ -158,6 +158,17 @@ const DepositPage = () => {
             dispatch(setRawAccountNumber(rawValue));
             debouncedSearchByAccountNumber(rawValue);
         }
+        if (rawValue === '') {
+            dispatch(setAccountSearchResult(null)); // Reset owner name when account number input is empty
+        }
+    };
+
+    const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const username = e.target.value;
+        if (username === '') {
+            dispatch(setUsernameSearchResult(null)); // Reset account number when username input is empty
+        }
+        debouncedSearchByUsername(username);
     };
 
     return (
@@ -174,7 +185,7 @@ const DepositPage = () => {
                                 <input
                                     {...registerUsername('identifier', { 
                                         required: 'Username is required',
-                                        onChange: (e) => debouncedSearchByUsername(e.target.value),
+                                        onChange: handleUsernameChange,
                                     })}
                                     className="border border-gray-300 rounded-lg px-4 py-2 w-full"
                                     placeholder="Enter username"

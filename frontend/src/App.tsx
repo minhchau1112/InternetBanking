@@ -12,11 +12,11 @@ import DepositPage from "./pages/employee/Deposit";
 import Recipient from "./pages/customer/Contact.tsx";
 import ForgotPassword from "@/pages/login/ForgotPassword.tsx";
 import AccountCreation from "./pages/employee/AccountCreation.tsx";
-import TransactionHistory from "./pages/employee/TransactionHistory.tsx";
+import TransactionHistory from "./pages/customer/TransactionHistory.tsx";
+import TransactionForm from "@/pages/customer/TransactionForm.tsx";
 import ResetPassword from "@/pages/login/ResetPassword.tsx";
 import Profile from "@/pages/customer/Profile.tsx";
 
-import TransactionForm from "@/pages/employee/TransactionForm.tsx";
 
 function App() {
     const messages = useWebSocket("ws://localhost:8888/ws/notifications?account=4");
@@ -59,7 +59,7 @@ function App() {
                     <Route path="/forgot-password" element={<ForgotPassword/>}/>
                     <Route path="/reset-password" element={<ResetPassword/>}/>
                     <Route path="/profile" element={<Profile/>}/>
-                    <Route path="/transactions/createTransaction" element={<TransactionForm/>}/>
+                    <Route path="/transactions/create" element={<TransactionForm/>}/>
                 </Routes>
             </div>
         </div>

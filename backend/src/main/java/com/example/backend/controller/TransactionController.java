@@ -39,14 +39,14 @@ public class TransactionController {
     @GetMapping
     public List<?> getTransactions(
             @RequestParam(value = "accountId") String accountId,
-            @RequestParam(value = "destinationAccountNumber", required = false) String destinationAccountNumber,
+            @RequestParam(value = "partnerAccountNumber", required = false) String partnerAccountNumber,
             @RequestParam(value = "type", required = false) String type,
             @RequestParam(value = "startDate", required = false) String startDate,
             @RequestParam(value = "endDate", required = false) String endDate
     ) {
         try {
             Integer srcAccountId = Integer.parseInt(accountId);
-            String desAccountNum = (destinationAccountNumber != null && !destinationAccountNumber.isEmpty()) ? destinationAccountNumber : null;
+            String partnerAccountNum = (partnerAccountNumber != null && !partnerAccountNumber.isEmpty()) ? partnerAccountNumber : null;
 
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
             LocalDateTime start = (startDate != null && !startDate.isEmpty())
@@ -54,12 +54,10 @@ public class TransactionController {
             LocalDateTime end = (endDate != null && !endDate.isEmpty())
                     ? LocalDateTime.parse(endDate + "T23:59:59", formatter) : null;
 
-            System.out.println("accountId: " + srcAccountId + ", destinationAccountNumber: " + desAccountNum + ", startDate: " + start + ", endDate: " + end);
-
             if ("interbank".equals(type)) {
-                return transactionService.getInterbankTransactionsWithBankName(srcAccountId, desAccountNum, start, end);
+                return transactionService.getUserInterbankTransactions(srcAccountId, partnerAccountNum, start, end);
             } else {
-                return transactionService.getTransactions(srcAccountId, desAccountNum, start, end);
+                return transactionService.getUserTransactions(srcAccountId, partnerAccountNum, start, end);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -69,30 +67,33 @@ public class TransactionController {
 
     @PostMapping("/create")
     public ResponseEntity<?> createTransaction(@RequestBody TransactionRequest transactionRequest) {
-        // Tính toán phí giao dịch và số tiền
-        BigDecimal fee = transactionRequest.getFee();
-        BigDecimal amount = transactionRequest.getAmount();
+        try {
+            BigDecimal fee = transactionRequest.getFee();
+            BigDecimal amount = transactionRequest.getAmount();
 
-        TransactionRequest newTransactionRequest = TransactionRequest.builder()
-                .sourceAccountId(transactionRequest.getSourceAccountId())
-                .destinationAccountNumber(transactionRequest.getDestinationAccountNumber())
-                .amount(amount)
-                .fee(fee)
-                .feePayer(transactionRequest.getFeePayer())
-                .message(transactionRequest.getMessage())
-                .type(transactionRequest.getType())
-                .build();
+            TransactionRequest newTransactionRequest = TransactionRequest.builder()
+                    .sourceAccountId(transactionRequest.getSourceAccountId())
+                    .destinationAccountNumber(transactionRequest.getDestinationAccountNumber())
+                    .amount(amount)
+                    .fee(fee)
+                    .feePayer(transactionRequest.getFeePayer())
+                    .message(transactionRequest.getMessage())
+                    .type(transactionRequest.getType())
+                    .build();
 
-        // Lưu giao dịch vào trạng thái chờ xác thực OTP
-        Transaction transaction = transactionService.createPendingTransaction(newTransactionRequest);
+            // Lưu giao dịch vào trạng thái chờ xác thực OTP
+            Transaction transaction = transactionService.createPendingTransaction(newTransactionRequest);
 
-        // Tạo OTP và gửi qua email
-        String otp = transactionService.generateAndSendOTP(transaction);
+            // Tạo OTP và gửi qua email
+            String otp = transactionService.generateAndSendOTP(transaction);
 
-        return ResponseEntity.ok(new HashMap<String, Object>() {{
-            put("transactionId", transaction.getId());  // Trả về transactionId
-            put("message", "OTP sent to your email.");
-        }});
+            return ResponseEntity.ok(new HashMap<String, Object>() {{
+                put("transactionId", transaction.getId());  // Trả về transactionId
+                put("message", "OTP sent to your email.");
+            }});
+        } catch (IllegalArgumentException e){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
     }
 
     @PostMapping("/verify-otp")

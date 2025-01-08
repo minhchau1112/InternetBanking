@@ -41,6 +41,11 @@ const TransactionForm = () => {
             setOtpSent(true);
         } catch (error) {
             console.error('Error creating transaction:', error);
+            if (error.response && error.response.data) {
+                toast.error(error.response.data); // Hiển thị lỗi từ server
+            } else {
+                toast.error('An unexpected error occurred.');
+            }
         } finally {
             setLoading(false); // Kết thúc tải dữ liệu
         }

@@ -1,8 +1,10 @@
-import React from 'react';
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { toast, ToastContainer } from "react-toastify";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import Drawer from 'react-modern-drawer';
+import 'react-modern-drawer/dist/index.css';
+import { FaEdit, FaTrash } from 'react-icons/fa';
 
 type Employee = {
     id: number;
@@ -10,21 +12,21 @@ type Employee = {
     status: string;
 };
 
-const ManageEmployee = () => {
+const ManageEmployee: React.FC = () => {
     const [employees, setEmployees] = useState<Employee[]>([]);
     const [currentEmployee, setCurrentEmployee] = useState<Employee | null>(null);
-    const [formData, setFormData] = useState({ name: '', status: '' });
-    const [searchTerm, setSearchTerm] = useState('');
+    const [formData, setFormData] = useState<{ id: number; name: string; status: string }>({ id: 0, name: '', status: '' });
+    const [searchTerm, setSearchTerm] = useState<string>('');
     const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>([]);
-    
-    
+    const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false);
+
     useEffect(() => {
         fetchEmployees();
     }, []);
 
     const fetchEmployees = async () => {
         try {
-            const response = await fetch('http://localhost:3306/api/employees');
+            const response = await fetch('http://localhost:8888/api/employees');
             if (!response.ok) {
                 throw new Error('Failed to fetch employees');
             }
@@ -32,8 +34,7 @@ const ManageEmployee = () => {
             setEmployees(data);
             setFilteredEmployees(data);
         } catch (error) {
-            // toast.error('Error fetching employees: ' + error.message);
-            toast.error('Error fetching employees: ' + (error as any).message);
+            toast.error('Error fetching employees: ' + (error as Error).message);
         }
     };
 
@@ -44,11 +45,9 @@ const ManageEmployee = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         const method = currentEmployee ? 'PUT' : 'POST';
-        const url = currentEmployee ? `http://localhost:3306/api/employees/${currentEmployee.id}` : 'http://localhost:3306/api/employees';
+        const url = currentEmployee ? `http://localhost:8888/api/employees/${currentEmployee.id}` : 'http://localhost:8888/api/employees';
 
-        const body = currentEmployee 
-            ? JSON.stringify({ name: formData.name, status: formData.status }) 
-            : JSON.stringify({ name: formData.name, status: formData.status });
+        const body = JSON.stringify({ id: formData.id, name: formData.name, status: formData.status });
 
         try {
             const response = await fetch(url, {
@@ -62,30 +61,37 @@ const ManageEmployee = () => {
             }
 
             const savedEmployee = await response.json();
-            toast.success(`Employee ${currentEmployee ? 'updated' : 'created'} successfully.`);
+            if (!currentEmployee) {
+                toast.success('New employee added successfully!');
+            } else {
+                toast.success(`Employee updated successfully.`);
+            }
+            
             fetchEmployees();
-            setFormData({ name: '', status: '' });
+            setFormData({ id: 0, name: '', status: '' });
             setCurrentEmployee(null);
+            closeDrawer();
         } catch (error) {
-            toast.error('Error saving employee: ' + (error as any).message);
+            toast.error('Error saving employee: ' + (error as Error).message);
         }
     };
 
     const handleEdit = (employee: Employee) => {
         setCurrentEmployee(employee);
-        setFormData({ name: employee.name, status: employee.status });
+        setFormData({ id: employee.id, name: employee.name, status: employee.status });
+        setIsDrawerOpen(true);
     };
 
     const handleDelete = async (id: number) => {
         try {
-            const response = await fetch(`http://localhost:3306/api/employees/${id}`, { method: 'DELETE' });
+            const response = await fetch(`http://localhost:8888/api/employees/${id}`, { method: 'DELETE' });
             if (!response.ok) {
                 throw new Error('Failed to delete employee');
             }
             toast.success('Employee deleted successfully.');
             fetchEmployees();
         } catch (error) {
-            toast.error('Error deleting employee: ' + (error as any).message);
+            toast.error('Error deleting employee: ' + (error as Error).message);
         }
     };
 
@@ -94,6 +100,15 @@ const ManageEmployee = () => {
         setSearchTerm(term);
         const filtered = employees.filter(employee => employee.name.toLowerCase().includes(term.toLowerCase()));
         setFilteredEmployees(filtered);
+    };
+
+    const handleAddEmployee = () => {
+        setIsDrawerOpen(true);
+        setFormData({ id: 0, name: '', status: '' });
+    };
+
+    const closeDrawer = () => {
+        setIsDrawerOpen(false);
     };
 
     return (
@@ -107,7 +122,7 @@ const ManageEmployee = () => {
                     onChange={handleSearchChange}
                     className="mr-2"
                 />
-                <Button onClick={() => setCurrentEmployee(null)} variant="default">
+                <Button onClick={handleAddEmployee} variant="default">
                     Add Employee
                 </Button>
             </div>
@@ -127,14 +142,64 @@ const ManageEmployee = () => {
                             <td className="border p-2">{employee.name}</td>
                             <td className="border p-2">{employee.status}</td>
                             <td className="border p-2">
-                                <Button onClick={() => handleEdit(employee)} variant="secondary" className="mr-2">Edit</Button>
-                                <Button onClick={() => handleDelete(employee.id)} variant="destructive">Delete</Button>
+                                <Button onClick={() => handleEdit(employee)} variant="secondary" className="mr-2">
+                                    <FaEdit className="inline mr-1" /> Edit
+                                </Button>
+                                <Button onClick={() => handleDelete(employee.id)} variant="destructive">
+                                    <FaTrash className="inline mr-1" /> Delete
+                                </Button>
                             </td>
                         </tr>
                     ))}
                 </tbody>
             </table>
             <ToastContainer />
+            <Drawer isOpen={isDrawerOpen} onClose={closeDrawer}>
+                <div className="p-4">
+                    <h2 className="text-xl mb-4">{currentEmployee ? 'Edit Employee' : 'Add Employee'}</h2>
+                    <form onSubmit={handleSubmit}>
+                        <div className="mb-4">
+                            <label htmlFor="id" className="block mb-1">ID</label>
+                            <Input
+                                type="number"
+                                name="id"
+                                value={formData.id}
+                                onChange={handleInputChange}
+                                required
+                                className="border p-2 w-full"
+                            />
+                        </div>
+                        <div className="mb-4">
+                            <label htmlFor="name" className="block mb-1">Name</label>
+                            <Input
+                                type="text"
+                                name="name"
+                                value={formData.name}
+                                onChange={handleInputChange}
+                                required
+                                className="border p-2 w-full"
+                            />
+                        </div>
+                        <div className="mb-4">
+                            <label htmlFor="status" className="block mb-1">Status</label>
+                            <Input
+                                type="text"
+                                name="status"
+                                value={formData.status}
+                                onChange={handleInputChange}
+                                required
+                                className="border p-2 w-full"
+                            />
+                        </div>
+                        <div className="flex justify-end">
+                            <Button type="submit" variant="default" className="mr-2">
+                                {currentEmployee ? 'Update Employee' : 'Add Employee'}
+                            </Button>
+                            <Button onClick={closeDrawer} variant="destructive">Cancel</Button>
+                        </div>
+                    </form>
+                </div>
+            </Drawer>
         </div>
     );
 };

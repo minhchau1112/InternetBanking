@@ -34,7 +34,7 @@ export const fetchDebtors = createAsyncThunk<Debtor[], number, { state: any }>(
       if (response.status === 200) {
         return response.data.map((item: any) => ({
           name: item.name,
-          aliasName: item.alias_name,
+		      aliasName: item.alias_name,
           accountNumber: item.account_number,
         }));
       } else {

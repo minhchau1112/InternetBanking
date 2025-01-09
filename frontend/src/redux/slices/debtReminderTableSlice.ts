@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { setTransactions } from "./transactionsSlice";
 
 interface DebtReminderState {
   rows: any[];
@@ -10,6 +11,8 @@ interface DebtReminderState {
   openDialog: boolean;
   openOtpDialog: boolean;
   otpError: string;
+  otpString: string;
+  transactionId: number;
 }
 
 const initialState: DebtReminderState = {
@@ -22,6 +25,8 @@ const initialState: DebtReminderState = {
   openDialog: false,
   openOtpDialog: false,
   otpError: "",
+  otpString: "",
+  transactionId: 0,
 };
 
 const debtReminderSlice = createSlice({
@@ -55,6 +60,12 @@ const debtReminderSlice = createSlice({
     setOtpError(state, action: PayloadAction<string>) {
       state.otpError = action.payload;
     },
+    setOtpString(state, action: PayloadAction<string>) {
+      state.otpString = action.payload;
+    },
+    setTransactionId(state, action: PayloadAction<number | 0>) {
+      state.transactionId = action.payload;
+    }
   },
 });
 
@@ -68,6 +79,8 @@ export const {
   setOpenDialog,
   setOpenOtpDialog,
   setOtpError,
+  setOtpString,
+  setTransactionId,
 } = debtReminderSlice.actions;
 
 export default debtReminderSlice.reducer;

@@ -2,8 +2,10 @@ package com.example.backend.service;
 
 import com.example.backend.dto.request.ConfirmTransferRequest;
 import com.example.backend.dto.request.InternalTransferRequest;
+import com.example.backend.dto.response.InitiateInternalTransferResponse;
 import com.example.backend.exception.EmailNotFoundException;
 import com.example.backend.exception.DebtReminderNotFoundException;
+import com.example.backend.exception.InsufficientBalanceException;
 import com.example.backend.exception.OTPNotFoundException;
 import com.example.backend.model.Account;
 import com.example.backend.model.Transaction;
@@ -35,7 +37,7 @@ public class InternalTransferService {
     }
 
     @Transactional
-    public String initiateTransfer(InternalTransferRequest request) throws DebtReminderNotFoundException {
+    public InitiateInternalTransferResponse initiateTransfer(InternalTransferRequest request) throws DebtReminderNotFoundException {
         System.out.println("initiateTransfer");
         Account sourceAccount = accountRepository.findById(request.getSourceAccountId())
                 .orElseThrow(() -> new DebtReminderNotFoundException("Source account not found"));
@@ -66,13 +68,14 @@ public class InternalTransferService {
         emailService.sendEmailFromTemplateSync(email, "Transaction Transfer OTP Confirmation", "transaction-otp-email-template", emailVariables);
 
 
-        transactionService.savePendingTransaction(sourceAccount, destinationAccount, request.getAmount(), request.getMessage(), request.getFeePayer());
+        Integer transactionId = transactionService.savePendingTransaction(sourceAccount, destinationAccount, request.getAmount(), request.getMessage(), request.getFeePayer());
 
-        return otp;
+        InitiateInternalTransferResponse response = new InitiateInternalTransferResponse(otp, transactionId);
+        return response;
     }
 
     @Transactional
-    public void confirmTransfer(ConfirmTransferRequest request) throws OTPNotFoundException, EmailNotFoundException {
+    public void confirmTransfer(ConfirmTransferRequest request) throws OTPNotFoundException, EmailNotFoundException, InsufficientBalanceException {
         log.info("confirmTransfer");
         String email = request.getEmail();
         String otp = request.getOtp();
@@ -102,7 +105,7 @@ public class InternalTransferService {
         otpService.deleteOtp(email);
 
         log.info("getPendingTransaction");
-        Transaction pendingTransaction = transactionService.getPendingTransaction()
+        Transaction pendingTransaction = transactionService.getPendingTransaction(request.getTransactionId())
                 .orElseThrow(() -> new IllegalStateException("No pending transaction found"));
         log.info("getPendingTransaction success");
 

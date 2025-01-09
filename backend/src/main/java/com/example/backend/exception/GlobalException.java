@@ -123,4 +123,15 @@ public class GlobalException {
         res.setMessage("The account was not found");
         return ResponseEntity.status(HttpStatus.OK).body(res);
     }
+
+    @ExceptionHandler(value = {
+            InsufficientBalanceException.class,
+    })
+    public ResponseEntity<RestResponse<Object>> handleInsufficientBalance(Exception ex) {
+        RestResponse<Object> res = new RestResponse<Object>();
+        res.setStatus(500);
+        res.setError(ex.getMessage());
+        res.setMessage(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.OK).body(res);
+    }
 }

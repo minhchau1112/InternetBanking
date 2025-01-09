@@ -1,5 +1,6 @@
 package com.example.backend.controller;
 
+import com.example.backend.dto.response.RestResponse;
 import com.example.backend.dto.response.interbank.*;
 import com.example.backend.dto.response.InterbankResponse;
 import com.example.backend.helper.HashUtil;
@@ -8,6 +9,12 @@ import com.example.backend.helper.PGPUtil;
 import com.example.backend.helper.RSAUtil;
 import com.example.backend.service.AccountService;
 import com.example.backend.service.KeyService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.headers.Header;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPPublicKey;
@@ -79,7 +86,7 @@ public class InterbankController {
 //
 //        return new ResponseEntity<>(response, null, HttpStatus.OK);
 //    }
-    @GetMapping("/temp-api-to-get-pgp-header/")
+    @PostMapping("/temp-api-to-get-pgp-header/")
     public ResponseEntity<Map<String, String>> getPGPHeader(@RequestBody LinkedHashMap<String,
             Object> body) throws Exception {
         // Timestamp without milliseconds
@@ -107,7 +114,7 @@ public class InterbankController {
 
         return new ResponseEntity<>(response, null, HttpStatus.OK);
     }
-    @GetMapping("/temp-api-to-get-header/")
+    @PostMapping("/temp-api-to-get-header/")
     public ResponseEntity<Map<String, String>> getHeader(@RequestBody LinkedHashMap<String, Object> body) throws Exception {
         // Timestamp without milliseconds
         String timestamp = String.valueOf(System.currentTimeMillis() / 1000);
@@ -135,10 +142,66 @@ public class InterbankController {
         return new ResponseEntity<>(response, null, HttpStatus.OK);
     }
 
+    @Operation(
+            summary = "Get other account information",
+            description = "Fetch account information from another bank using the provided account number."
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "Account information retrieved successfully",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = RestResponse.class),
+                    examples = @ExampleObject(
+                            name = "Success Example",
+                            value = "{\n" +
+                                    "  \"status\": 200,\n" +
+                                    "  \"error\": null,\n" +
+                                    "  \"message\": \"Account information retrieved successfully.\",\n" +
+                                    "  \"data\": {\n" +
+                                    "    \"firstName\": \"Lam\",\n" +
+                                    "    \"lastName\": \"Le\",\n" +
+                                    "    \"bankCode\": \"WNC\",\n" +
+                                    "    \"accountNumber\": \"1389949681\"\n" +
+                                    "  }\n" +
+                                    "}"
+                    )
+            )
+    )
+    @ApiResponse(
+            responseCode = "404",
+            description = "Account not found",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = RestResponse.class),
+                    examples = @ExampleObject(
+                            name = "Error Example",
+                            value = "{\n" +
+                                    "  \"status\": 404,\n" +
+                                    "  \"error\": \"ACCOUNT_NOT_FOUND\",\n" +
+                                    "  \"message\": \"Account not found.\",\n" +
+                                    "  \"data\": null\n" +
+                                    "}"
+                    )
+            )
+    )
     // Get API for my bank to call the api from other bank to get information
     @PostMapping("/get-account-info/")
-    public ResponseEntity<AccountInfoData> getAccountInfo(@RequestBody LinkedHashMap<String,
-            String> body) throws Exception {
+    public ResponseEntity<AccountInfoData> getAccountInfo(
+            @RequestBody @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "Example request body",
+                    required = true,
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = LinkedHashMap.class),
+                            examples = @ExampleObject(
+                                    name = "Example",
+                                    value = "{\n" +
+                                            "  \"account_number\": \"3042934092\"\n" +
+                                            "}"
+                            )
+                    )
+            ) LinkedHashMap<String, String> body) throws Exception {
         System.out.println("account_number: " + body.get("account_number"));
         // call localhost:3000/api/shared/user
         RestTemplate restTemplate = new RestTemplate();
@@ -187,17 +250,60 @@ public class InterbankController {
         return new ResponseEntity<>(data, null, 200);
     }
 
+    @Operation(
+            summary = "Query account information",
+            description = "Fetch detailed account information using the provided key type and account information request."
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "Account information retrieved successfully",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = RestResponse.class),
+                    examples = @ExampleObject(
+                            name = "Success Example",
+                            value = "{\n" +
+                                    "  \"status\": 200,\n" +
+                                    "  \"error\": null,\n" +
+                                    "  \"message\": \"Account information retrieved successfully.\",\n" +
+                                    "  \"data\": {\n" +
+                                    "    \"name\": \"John Doe\",\n" +
+                                    "    \"bankCode\": \"GROUP2\",\n" +
+                                    "    \"accountNumber\": \"3042934092\",\n" +
+                                    "  }\n" +
+                                    "}"
+                    )
+            ),
+            headers = {
+                    @Header(name = "x-timestamp", description = "Timestamp of the response", schema = @Schema(type = "string")),
+                    @Header(name = "x-sign", description = "Signature of the response", schema = @Schema(type = "string"))
+            }
+    )
     // Open API for others bank to call to get account info
     @PostMapping("/{keyType}/account-info")
     public ResponseEntity<UserDetailResponse> queryAccountInfo(
             @PathVariable String keyType,
-            @RequestBody AccountInfoRequest request,
-            @RequestHeader Map<String, String> headers) {
+            @RequestBody @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "Example request body",
+                    required = true,
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = AccountInfoRequest.class),
+                            examples = @ExampleObject(
+                                    name = "Example",
+                                    value = "{\n" +
+                                            "  \"account_number\": \"439030014096\",\n" +
+                                            "  \"bank_code\": \"WNC\"\n" +
+                                            "}"
+                            )
+                    )
+            ) AccountInfoRequest request,
+            @RequestHeader("x-timestamp") String xTimestamp,
+            @RequestHeader("x-sign") String xSign) {
         System.out.println("Query Account Info");
-        System.out.println("Headers: " + headers);
         // header include x-timestamp and x-sign
-        String timestamp = headers.get("x-timestamp");
-        String signature = headers.get("x-sign");
+        String timestamp = xTimestamp;
+        String signature = xSign;
         // check signature is valid (which is hash based on secret key
         // example of payload
         // {

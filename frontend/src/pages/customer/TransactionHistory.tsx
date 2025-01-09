@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import NoDataImage from '@/assets/image/nodata.png';
 import axios from "axios";
+import {toast, ToastContainer} from "react-toastify";
 
 type BaseTransaction = {
     id: number;
@@ -37,6 +38,25 @@ const TransactionHistory = () => {
     const fetchTransactions = async () => {
         try {
             setError(null); // Clear previous errors
+            // if start and end > 30 dayx, show toast error
+            const start = new Date(startDate).getTime();
+            const end = new Date(endDate).getTime();
+            // if start and end are empty, show toast error
+            if (!startDate || !endDate) {
+                toast.error('Vui lòng chọn khoảng thời gian.');
+                return;
+            }
+            if (end - start > 30 * 24 * 60 * 60 * 1000) {
+                toast.error('Vui lòng chọn khoảng thời gian nhỏ hơn 30 ngày.');
+                return;
+            }
+            // if start > end, show toast error
+            if (start > end) {
+                toast.error('Ngày bắt đầu phải nhỏ hơn ngày kết thúc.');
+                return;
+            }
+
+
             const token = localStorage.getItem('access_token');
             const response = await axios.get('http://localhost:8888/api/transactions', {
                 method: 'GET',
@@ -277,6 +297,7 @@ const TransactionHistory = () => {
                     )}
                 </div>
             </div>
+            <ToastContainer />
         </div>
     );
 };

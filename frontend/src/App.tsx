@@ -26,8 +26,6 @@ function App() {
     const id = localStorage.getItem('accountId') || "3";
     // const message = useWebSocket("ws://127.0.0.1:8888/ws/notifications", id) || "Thông báo";
     // useStomp("ws://127.0.0.1:8888/ws/notifications", id)
-    // const message = useWebSocket("ws://127.0.0.1:8888/ws/notifications", id) || "Thông báo";
-    // useStomp("ws://127.0.0.1:8888/ws/notifications", id)
     const navigate = useNavigate();
     const token = localStorage.getItem("access_token");
     const location = useLocation();
@@ -52,7 +50,6 @@ function App() {
             {!noSidebarPages.includes(location.pathname) && <Sidebar userType={userType}/>}
             <div className={`flex-grow`}>
                 <div className="absolute top-4 right-4 z-50 bg-white shadow-lg p-4 rounded">
-                  <Notifications userId={id} />
                   <Notifications userId={id} />
                 </div>
                 <Routes>

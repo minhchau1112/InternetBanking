@@ -1,7 +1,10 @@
 package com.example.backend.controller;
 
+import com.example.backend.dto.request.CreateAccountRequest;
 import com.example.backend.dto.request.DepositRequest;
 import com.example.backend.dto.response.AccountDetailsResponse;
+import com.example.backend.dto.response.RestResponse;
+import com.example.backend.dto.response.TransactionBasicResponse;
 import com.example.backend.model.Customer;
 import com.example.backend.model.Transaction;
 import com.example.backend.utils.annotation.APIMessage;
@@ -31,13 +34,53 @@ public class AccountController {
     @Autowired
     private AccountService accountService;
 
-    @Operation(summary = "Get list of accounts for a customer", description = "Fetch all accounts belonging to a specific customer by their customer ID.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "List of accounts retrieved successfully",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = AccountDetailsResponse.class))),
-            @ApiResponse(responseCode = "404", description = "No accounts found for the customer")
-    })
+    @Operation(
+            summary = "Get list of accounts for a customer",
+            description = "Fetch all accounts belonging to a specific customer by their customer ID."
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "List of accounts retrieved successfully",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = RestResponse.class),
+                    examples = @ExampleObject(
+                            name = "Success Example",
+                            value = "{\n" +
+                                    "  \"status\": 200,\n" +
+                                    "  \"error\": null,\n" +
+                                    "  \"message\": \"List of accounts retrieved successfully.\",\n" +
+                                    "  \"data\": [\n" +
+                                    "    {\n" +
+                                    "      \"accountNumber\": \"123456789\",\n" +
+                                    "      \"accountType\": \"SAVINGS\",\n" +
+                                    "      \"balance\": \"1000.0\",\n" +
+                                    "      \"createdAt\": \"2023-10-01T12:00:00Z\",\n" +
+                                    "      \"ownerName\": \"John Doe\",\n" +
+                                    "      \"isPrimary\": true\n" +
+                                    "    }\n" +
+                                    "  ]\n" +
+                                    "}"
+                    )
+            )
+    )
+    @ApiResponse(
+            responseCode = "404",
+            description = "No accounts found for the customer",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = RestResponse.class),
+                    examples = @ExampleObject(
+                            name = "Error Example",
+                            value = "{\n" +
+                                    "  \"status\": 404,\n" +
+                                    "  \"error\": \"NO_ACCOUNTS_FOUND\",\n" +
+                                    "  \"message\": \"No accounts found for the customer.\",\n" +
+                                    "  \"data\": null\n" +
+                                    "}"
+                    )
+            )
+    )
     @GetMapping("/list/{customer_id}")
     public ResponseEntity<List<AccountDetailsResponse>> getAccountsByCustomerId(
             @PathVariable("customer_id") String customerId) {
@@ -49,33 +92,67 @@ public class AccountController {
         return ResponseEntity.ok(accountDetailsResponses);
     }
 
-    @Operation(summary = "Create a new account", description = "Create a new account for a customer with the given details.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Account created successfully",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = Customer.class))),
-            @ApiResponse(responseCode = "400", description = "Invalid input")
-    })
+    @Operation(
+            summary = "Create a new account",
+            description = "Create a new account for a customer with the given details."
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "Account created successfully",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = RestResponse.class),
+                    examples = @ExampleObject(
+                            name = "Success Example",
+                            value = "{\n" +
+                                    "  \"status\": 200,\n" +
+                                    "  \"error\": null,\n" +
+                                    "  \"message\": \"CALL API SUCCESS\",\n" +
+                                    "  \"data\": {\n" +
+                                    "    \"id\": 17,\n" +
+                                    "    \"username\": \"john_doe1\",\n" +
+                                    "    \"password\": \"r#s$CqvGcxje\",\n" +
+                                    "    \"createdAt\": \"2025-01-09T15:20:37.2322932\",\n" +
+                                    "    \"name\": \"John Doe\",\n" +
+                                    "    \"email\": \"john.doe1@example.com\",\n" +
+                                    "    \"phone\": \"12345678901\"\n" +
+                                    "  }\n" +
+                                    "}"
+                    )
+            )
+    )
+    @ApiResponse(
+            responseCode = "400",
+            description = "Invalid input",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = RestResponse.class),
+                    examples = @ExampleObject(
+                            name = "Error Example",
+                            value = "{\n" +
+                                    "  \"status\": 400,\n" +
+                                    "  \"error\": \"INVALID_INPUT\",\n" +
+                                    "  \"message\": \"Invalid input.\",\n" +
+                                    "  \"data\": null\n" +
+                                    "}"
+                    )
+            )
+    )
     @PostMapping
-    public ResponseEntity<Customer> createAccount(@RequestBody Map<String, String> requestBody) {
-        String role = requestBody.get("role");
-        String name = requestBody.get("name");
-        String email = requestBody.get("email");
-        String phone = requestBody.get("phone");
-        String username = requestBody.get("username");
-
-        if (!"customer".equals(role)) {
+    public ResponseEntity<Customer> createAccount(@RequestBody CreateAccountRequest request) {
+        if (!"customer".equals(request.getRole())) {
             throw new IllegalArgumentException("Invalid role");
         }
 
-        return ResponseEntity.ok(accountService.createAccount(username, name, email, phone));
+        return ResponseEntity.ok(accountService.createAccount(
+                request.getUsername(),
+                request.getName(),
+                request.getEmail(),
+                request.getPhone()
+        ));
     }
 
-    /**
-     * Look up account information from another bank.
-     * @param lookupRequest Request body containing lookup details.
-     * @return Account information or error response.
-     */
+
 //    @PostMapping("/lookup")
 //    public ResponseEntity<Map<String, Object>> lookupAccount(@RequestBody Map<String, String> lookupRequest) {
 //        String usernameOrAccountNumber = lookupRequest.get("username") != null ?
@@ -90,18 +167,48 @@ public class AccountController {
 //        return ResponseEntity.ok(accountInfo);
 //    }
 
-    /**
-     * Get detailed account information by account ID.
-     * @param accountNumber ID of the account.
-     * @return Account details including balance.
-     */
-    @Operation(summary = "Get account details by account number", description = "Fetch detailed information about an account using its account number.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Account details retrieved successfully",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = AccountDetailsResponse.class))),
-            @ApiResponse(responseCode = "404", description = "Account not found")
-    })
+    @Operation(
+            summary = "Get account details by account number",
+            description = "Fetch detailed information about an account using its account number."
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "Account details retrieved successfully",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = RestResponse.class),
+                    examples = @ExampleObject(
+                            name = "Success Example",
+                            value = "{\n" +
+                                    "  \"status\": 200,\n" +
+                                    "  \"error\": null,\n" +
+                                    "  \"message\": \"Account details retrieved successfully.\",\n" +
+                                    "  \"data\": {\n" +
+                                    "    \"accountNumber\": \"123456789\",\n" +
+                                    "    \"balance\": 1000.0,\n" +
+                                    "    \"currency\": \"USD\"\n" +
+                                    "  }\n" +
+                                    "}"
+                    )
+            )
+    )
+    @ApiResponse(
+            responseCode = "404",
+            description = "Account not found",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = RestResponse.class),
+                    examples = @ExampleObject(
+                            name = "Error Example",
+                            value = "{\n" +
+                                    "  \"status\": 404,\n" +
+                                    "  \"error\": \"ACCOUNT_NOT_FOUND\",\n" +
+                                    "  \"message\": \"Account not found.\",\n" +
+                                    "  \"data\": null\n" +
+                                    "}"
+                    )
+            )
+    )
     @GetMapping("/{account_number}")
     public ResponseEntity<AccountDetailsResponse> getAccountDetails(@PathVariable(
             "account_number") String accountNumber) {
@@ -123,13 +230,48 @@ public class AccountController {
      * @param username username of the customer.
      * @return Account details including balance.
      */
-    @Operation(summary = "Get account details by username", description = "Fetch detailed information about an account using the customer's username.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Account details retrieved successfully",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = AccountDetailsResponse.class))),
-            @ApiResponse(responseCode = "404", description = "Account not found")
-    })
+    @Operation(
+            summary = "Get account details by username",
+            description = "Fetch detailed information about an account using the customer's username."
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "Account details retrieved successfully",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = RestResponse.class),
+                    examples = @ExampleObject(
+                            name = "Success Example",
+                            value = "{\n" +
+                                    "  \"status\": 200,\n" +
+                                    "  \"error\": null,\n" +
+                                    "  \"message\": \"Account details retrieved successfully.\",\n" +
+                                    "  \"data\": {\n" +
+                                    "    \"accountNumber\": \"123456789\",\n" +
+                                    "    \"balance\": 1000.0,\n" +
+                                    "    \"currency\": \"USD\"\n" +
+                                    "  }\n" +
+                                    "}"
+                    )
+            )
+    )
+    @ApiResponse(
+            responseCode = "404",
+            description = "Account not found",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = RestResponse.class),
+                    examples = @ExampleObject(
+                            name = "Error Example",
+                            value = "{\n" +
+                                    "  \"status\": 404,\n" +
+                                    "  \"error\": \"ACCOUNT_NOT_FOUND\",\n" +
+                                    "  \"message\": \"Account not found.\",\n" +
+                                    "  \"data\": null\n" +
+                                    "}"
+                    )
+            )
+    )
     @GetMapping("/username/{username}")
     public ResponseEntity<AccountDetailsResponse> getAccountDetailsByUsername(@PathVariable(
             "username") String username) {
@@ -143,7 +285,7 @@ public class AccountController {
      * @param accountId userId of the customer.
      * @return Account details including balance.
      */
-    @Operation(summary = "Get account details by username", description = "Fetch detailed information about an account using the customer's username.")
+    @Operation(summary = "Get account details by accountId", description = "Fetch detailed information about an account using the customer's accountId.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Account details retrieved successfully",
                     content = @Content(mediaType = "application/json",
@@ -166,17 +308,54 @@ public class AccountController {
      *                        depositAmount and accountNumber.
      * @return Success or error response.
      */
-    @Operation(summary = "Deposit money into an account", description = "Deposit a specified amount into an account.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Deposit successful",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = Transaction.class))),
-            @ApiResponse(responseCode = "400", description = "Invalid deposit request")
-    })
+    @Operation(
+            summary = "Deposit money into an account",
+            description = "Deposit a specified amount into an account."
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "Deposit successful",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = RestResponse.class),
+                    examples = @ExampleObject(
+                            name = "Success Example",
+                            value = "{\n" +
+                                    "  \"status\": 200,\n" +
+                                    "  \"error\": null,\n" +
+                                    "  \"message\": \"Deposit successful.\",\n" +
+                                    "  \"data\": {\n" +
+                                    "    \"transactionId\": \"123456\",\n" +
+                                    "    \"accountNumber\": \"123456789\",\n" +
+                                    "    \"amount\": 1000000,\n" +
+                                    "    \"status\": \"COMPLETED\",\n" +
+                                    "    \"timestamp\": \"2023-10-01T12:00:00Z\"\n" +
+                                    "  }\n" +
+                                    "}"
+                    )
+            )
+    )
+    @ApiResponse(
+            responseCode = "400",
+            description = "Invalid deposit request",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = RestResponse.class),
+                    examples = @ExampleObject(
+                            name = "Error Example",
+                            value = "{\n" +
+                                    "  \"status\": 400,\n" +
+                                    "  \"error\": \"INVALID_REQUEST\",\n" +
+                                    "  \"message\": \"Invalid deposit request.\",\n" +
+                                    "  \"data\": null\n" +
+                                    "}"
+                    )
+            )
+    )
     @PostMapping("/deposit")
-    public ResponseEntity<Transaction> deposit(
+    public ResponseEntity<TransactionBasicResponse> deposit(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    description = "Details of the deposit request",
+                    description = "Details of the deposit request, only 1 username or account_number will have value, the other will be null",
                     required = true,
                     content = @Content(
                             mediaType = "application/json",
@@ -199,7 +378,10 @@ public class AccountController {
         }
 
         Transaction transaction = accountService.deposit(depositRequest);
-        return ResponseEntity.ok(transaction);
+        // return basic information of the transaction
+        TransactionBasicResponse transactionBasicResponse = new TransactionBasicResponse(transaction);
+
+        return ResponseEntity.ok(transactionBasicResponse);
     }
 
     @GetMapping("/v2/{accountNumber}")

@@ -20,7 +20,6 @@ import TransactionHistoryCustomer from "./pages/customer/TransactionHistory.tsx"
 import ResetPassword from "@/pages/login/ResetPassword.tsx";
 import Profile from "@/pages/customer/Profile.tsx";
 import ManageEmployee from "./pages/admin/ManageEmployee.tsx";
-import InterbankTransactions from "./pages/admin/InterbankTransactions.tsx";
 
 function App() {
     const id = localStorage.getItem('accountId') || "3";

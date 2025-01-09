@@ -122,6 +122,7 @@ export const payDebtReminder = async (
 	debtReminderId: number,
 	otp: string,
 	email: string,
+	transactionId: number,
 	accessToken: string
 ) => {
 	try {
@@ -130,6 +131,7 @@ export const payDebtReminder = async (
 			{
 				email: email,
 				otp: otp,
+				transactionId: transactionId,
 			},
 			{
 				headers: {

@@ -16,6 +16,8 @@ import {
   setOpenDialog,
   setOpenOtpDialog,
   setOtpError,
+  setOtpString,
+  setTransactionId,
 } from "../redux/slices/debtReminderTableSlice";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import CancelDialog from "./CancelDialog";
@@ -39,9 +41,13 @@ const DebtReminderTable = ({ status = "PENDING", type = "Creator" }) => {
     openDialog,
     openOtpDialog,
     otpError,
+	otpString,
+	transactionId,
   } = useSelector((state: RootState) => state.debtReminderTable);
 
   const { enqueueSnackbar } = useSnackbar();
+  const user = localStorage.getItem("user") || "3";
+  const {userID} = JSON.parse(user);
   const accountId = localStorage.getItem("accountId") || "3";
   const accessToken = localStorage.getItem("access_token") || "";
   const id = parseInt(accountId, 10);
@@ -376,7 +382,6 @@ const DebtReminderTable = ({ status = "PENDING", type = "Creator" }) => {
   };
 
   const handlePayClick = async (destinationAccountId: number, amount: number, message: string, debtReminderId: number) => {
-	let otpString;
 	dispatch(setSelectedDebtId(debtReminderId));
 	const internalTransferRequest = {
 		sourceAccountId: id,
@@ -385,28 +390,29 @@ const DebtReminderTable = ({ status = "PENDING", type = "Creator" }) => {
 		message: message,
 		feePayer: "SENDER",
 	};
+	dispatch(setOpenOtpDialog(true)); 
 
 	try {
 		const response = await initiateTransfer(internalTransferRequest, accessToken);
 		console.log("handlePayClick", response);
 
 		if (response.status == 200) {
-			otpString = response.data.otp;
+			dispatch(setOtpString(response.data.otp));
+			dispatch(setTransactionId(response.data.transaction_id));
 			console.log("setOpenOtpDialog = true");
-			dispatch(setOpenOtpDialog(true)); 
-		  }
-		} catch (error) {
+		}
+	} catch (error) {
 		  console.error('Error generate otp:', error);
 		}
 	};
   	const handleOtpSubmit = async (otp: string) => {
 		try {
-			const customer = await fetchCustomer(parseInt(accountId), accessToken);
+			const customer = await fetchCustomer(parseInt(userID), accessToken);
 			
 			console.log("customer: ", customer);
 			const email = customer.data.email;
 
-			const response = await payDebtReminder(selectedDebtId, otp, email, accessToken);
+			const response = await payDebtReminder(selectedDebtId, otp, email, transactionId, accessToken);
 			console.log("handleOtpSubmit: ", response);
 
 			if (response.status === 200) {

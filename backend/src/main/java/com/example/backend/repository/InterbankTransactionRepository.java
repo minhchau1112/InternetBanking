@@ -4,6 +4,7 @@ import com.example.backend.dto.response.InterbankTransactionResponse;
 import com.example.backend.model.InterbankTransaction;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -43,4 +44,19 @@ public interface InterbankTransactionRepository extends JpaRepository<InterbankT
             LocalDateTime startDate,
             LocalDateTime endDate
     );
+
+    @Query("SELECT t FROM InterbankTransaction t WHERE " +
+            "(t.createdAt >= :startDate OR :startDate IS NULL) AND " +
+            "(t.createdAt <= :endDate OR :endDate IS NULL) AND " +
+            "(t.externalBankCode = :bankCode OR :bankCode IS NULL)")
+    List<InterbankTransaction> findByDateAndBankCode(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
+            @Param("bankCode") String bankCode);
+
+    @Query("SELECT t FROM InterbankTransaction t " +
+            "WHERE (t.createdAt >= :startDate OR :startDate IS NULL) "+
+            "AND (t.createdAt <= :endDate OR :endDate IS NULL) " +
+            "AND t.externalBankCode NOT IN (SELECT bankCode FROM LinkedBank)")
+    List<InterbankTransaction> findTransactionsWithUnknownBanks(LocalDateTime startDate, LocalDateTime endDate);
 }

@@ -5,6 +5,7 @@ import com.example.backend.dto.request.InternalTransferRequest;
 import com.example.backend.dto.response.InitiateInternalTransferResponse;
 import com.example.backend.exception.DebtReminderNotFoundException;
 import com.example.backend.exception.EmailNotFoundException;
+import com.example.backend.exception.InsufficientBalanceException;
 import com.example.backend.exception.OTPNotFoundException;
 import com.example.backend.service.InternalTransferService;
 import com.example.backend.utils.annotation.APIMessage;
@@ -28,15 +29,14 @@ public class InternalTransferController {
     @APIMessage("OTP has been sent to your email")
     public ResponseEntity<InitiateInternalTransferResponse> initiateInternalTransfer(@RequestBody InternalTransferRequest request) throws DebtReminderNotFoundException {
         System.out.println("initiateInternalTransfer");
-        String otp = internalTransferService.initiateTransfer(request);
-        InitiateInternalTransferResponse initiateInternalTransferResponse = new InitiateInternalTransferResponse(otp);
+        InitiateInternalTransferResponse initiateInternalTransferResponse = internalTransferService.initiateTransfer(request);
 
         return ResponseEntity.ok(initiateInternalTransferResponse);
     }
 
     @PostMapping("/confirm")
     @APIMessage("Transfer completed successfully!")
-    public ResponseEntity<Void> confirmInternalTransfer(@RequestBody ConfirmTransferRequest request) throws EmailNotFoundException, OTPNotFoundException {
+    public ResponseEntity<Void> confirmInternalTransfer(@RequestBody ConfirmTransferRequest request) throws EmailNotFoundException, OTPNotFoundException, InsufficientBalanceException {
         internalTransferService.confirmTransfer(request);
 
         return ResponseEntity.ok(null);

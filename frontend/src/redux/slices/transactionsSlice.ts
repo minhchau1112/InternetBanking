@@ -32,7 +32,7 @@ const initialState: TransactionsState = {
     filteredTransactions: [],
     activeTab: 'all',
     error: null,
-    sortOrder: 'asc',
+    sortOrder: 'desc',
 };
 
 const transactionsSlice = createSlice({

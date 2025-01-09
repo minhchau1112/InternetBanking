@@ -8,7 +8,11 @@ public class InitiateInternalTransferResponse {
     @JsonProperty("otp")
     private String otp;
 
-    public InitiateInternalTransferResponse(String otp) {
+    @JsonProperty("transaction_id")
+    private Integer transactionId;
+
+    public InitiateInternalTransferResponse(String otp, Integer transactionId) {
         this.otp = otp;
+        this.transactionId = transactionId;
     }
 }

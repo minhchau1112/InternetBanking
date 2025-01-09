@@ -20,10 +20,10 @@ import ResetPassword from "@/pages/login/ResetPassword.tsx";
 import Profile from "@/pages/customer/Profile.tsx";
 import ManageEmployee from "./pages/admin/ManageEmployee.tsx";
 import InterbankTransactions from "./pages/admin/InterbankTransactions.tsx";
-import TransactionForm from "@/pages/employee/TransactionForm.tsx";
+// import TransactionForm from "@/pages/employee/TransactionForm.tsx";
 
 function App() {
-    const id = localStorage.getItem('accountId') || "3";
+    // const id = localStorage.getItem('accountId') || "3";
     // const message = useWebSocket("ws://127.0.0.1:8888/ws/notifications", id) || "Thông báo";
     // useStomp("ws://127.0.0.1:8888/ws/notifications", id)
     const id = localStorage.getItem('accountId') || "3";

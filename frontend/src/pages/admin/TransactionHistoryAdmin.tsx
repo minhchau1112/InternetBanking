@@ -15,13 +15,16 @@ type InterbankTransaction = {
     tab: 'in' | 'out';
 };
 
+type Bank = {
+    id: string;
+    bankCode: string;
+    name: string;
+};
+
+
 const TransactionHistoryAdmin = () => {
-    const [sourceAccountId] = useState<string>(localStorage.getItem('accountId') || '');
-    const [partnerAccountNumber, setPartnerAccountNumber] = useState<string>('');
-    const [transactionType, setTransactionType] = useState<'internal' | 'interbank'>('internal');
     const [startDate, setStartDate] = useState<string>('');
     const [endDate, setEndDate] = useState<string>('');
-    const [bankCode, setBankCode] = useState<string>('');
     const [error, setError] = useState<string | null>(null);
     const [banks, setBanks] = useState<Bank[]>([]);
     const [selectedBank, setSelectedBank] = useState<string>('');
@@ -66,6 +69,7 @@ const TransactionHistoryAdmin = () => {
             });
             console.log("Transactions: ", response.data.data);
             dispatch(setSortOrder('desc'));
+            dispatch(setActiveTab('all'));
             dispatch(setTransactions(response.data.data));
         } catch (error) {
             dispatch(setError("Failed to fetch transactions"));
@@ -74,14 +78,6 @@ const TransactionHistoryAdmin = () => {
 
     const handleBankChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         setSelectedBank(e.target.value);
-    };
-
-    const handleFilterChange = (e) => {
-        const { name, value } = e.target;
-        setFilters((prevFilters) => ({
-            ...prevFilters,
-            [name]: value,
-        }));
     };
 
     // Hàm tìm kiếm

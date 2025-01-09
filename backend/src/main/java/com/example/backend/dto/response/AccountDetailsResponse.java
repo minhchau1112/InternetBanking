@@ -16,11 +16,13 @@ public class AccountDetailsResponse {
     private String balance;
     private String createdAt;
     private String ownerName;
+    private boolean isPrimary;
     public AccountDetailsResponse(Account account) {
         this.accountNumber = account.getAccountNumber();
         this.accountType = account.getType().name();
         this.balance = account.getBalance().toString();
         this.createdAt = account.getCreatedAt().toString();
         this.ownerName = account.getCustomer().getName();
+        this.isPrimary = account.getIsPrimary();
     }
 }

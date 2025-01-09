@@ -49,9 +49,11 @@ public class InterbankService {
             if("sender".equalsIgnoreCase(payload.getFeePayer())){ // If sender pays the fee
                 // Deduct the amount from the account
                 account.setBalance(account.getBalance().add(BigDecimal.valueOf(payload.getAmount())));
+                transaction.setAmount(BigDecimal.valueOf(payload.getAmount()));
             } else { // if recipient pays the fee then minus the fee from the amount
                 // Deduct the amount from the account
                 account.setBalance(account.getBalance().add(BigDecimal.valueOf(payload.getAmount() - payload.getFeeAmount())));
+                transaction.setAmount(BigDecimal.valueOf(payload.getAmount() - payload.getFeeAmount()));
             }
         }
         else{ // my bank to outside bank
@@ -60,21 +62,22 @@ public class InterbankService {
                 // in my bank
                 // Deduct the amount from the account and fee
                 account.setBalance(account.getBalance().subtract(BigDecimal.valueOf(payload.getAmount() + payload.getFeeAmount())));
+                transaction.setAmount(BigDecimal.valueOf(payload.getAmount() + payload.getFeeAmount()));
             } else { // if recipient pays the fee then minus the fee from the amount
                 // Deduct the amount from the account
                 account.setBalance(account.getBalance().subtract(BigDecimal.valueOf(payload.getAmount())));
+                transaction.setAmount(BigDecimal.valueOf(payload.getAmount()));
             }
         }
 
 
         transaction.setFeeAmount(BigDecimal.valueOf(payload.getFeeAmount()));
         // Set common fields
-        if("sender".equals(payload.getFeePayer())){ // If sender pays the fee
-            transaction.setAmount(BigDecimal.valueOf(payload.getAmount()));
-        } else { // if recipient pays the fee then minus the fee from the amount
-            transaction.setAmount(BigDecimal.valueOf(payload.getAmount() - payload.getFeeAmount()));
-
-        }
+//        if("sender".equals(payload.getFeePayer())){ // If sender pays the fee
+//            transaction.setAmount(BigDecimal.valueOf(payload.getAmount() + payload.getFeeAmount()));
+//        } else { // if recipient pays the fee then minus the fee from the amount
+//            transaction.setAmount(BigDecimal.valueOf(payload.getAmount()));
+//        }
         transaction.setDescription(payload.getDescription());
         transaction.setCreatedAt(LocalDateTime.now());
         transaction.setStatus(InterbankTransactionStatus.PENDING); // Assume PENDING status initially

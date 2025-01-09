@@ -10,7 +10,7 @@ import {
 import ChangePassword from '@/pages/customer/ChangePassword.tsx';
 import { Input } from '@/components/ui/input.tsx';
 import { ToastContainer, toast } from 'react-toastify';
-import { fetchCustomerDetails, fetchCustomerAccounts } from '@/api/authAPI.ts'; // Import the API function
+import { fetchCustomerDetails, fetchCustomerAccounts, closeAccountAPI } from '@/api/authAPI.ts'; // Add the closeAccountAPI import
 
 type Account = {
     accountNumber: string;
@@ -18,7 +18,9 @@ type Account = {
     balance: string;
     createdAt: string;
     ownerName: string;
+    primary: boolean; // Add primary to determine if the account is primary
 }
+
 const Profile: React.FC = () => {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
@@ -45,19 +47,46 @@ const Profile: React.FC = () => {
     const handlePasswordChangeSuccess = () => {
         setIsDialogOpen(false);
     };
+
     useEffect(() => {
         const loadCustomerAccount = async () => {
-            try{
+            try {
                 const loadAccount = await fetchCustomerAccounts();
                 setAccounts(loadAccount);
-            }catch (e) {
+                console.log("Loading Account");
+                console.log(loadAccount);
+                console.log(accounts);
+            } catch (e) {
                 console.log(e);
                 toast.error("Error fetch customer accounts");
             }
-        }
+        };
 
         loadCustomerAccount();
     }, []);
+
+    // Function to close the account
+    const closeAccount = async (accountNumber: string) => {
+        try {
+            const response = await closeAccountAPI(accountNumber);
+            console.log(response);
+            if (response.status === 200) {
+                toast.success('Tài khoản đã được đóng.');
+                setAccounts((prevAccounts) =>
+                    prevAccounts.map((account) =>
+                        account.accountNumber === accountNumber
+                            ? { ...account, primary: false } // Set primary to false
+                            : account
+                    )
+                );
+            } else {
+                toast.error('Không thể đóng tài khoản. Vui lòng thử lại.');
+            }
+        } catch (e) {
+            console.log(e);
+            toast.error('Lỗi khi đóng tài khoản.');
+        }
+    };
 
     return (
         <div className="mx-20 py-8 ">
@@ -105,22 +134,37 @@ const Profile: React.FC = () => {
                 <div className="w-full flex flex-col space-y-2 mb-5">
                     <h1 className="text-3xl font-bold mb-3 text-gray-800 text-left">My Accounts</h1>
                     <div className="w-full flex space-x-4 overflow-auto">
-                        {accounts.map((account) => (
-                            <div key={account.accountNumber} className="w-80 h-48 rounded-2xl bg-cover bg-center p-5
-                                bg-[url('src/assets/image/card-bg.png')]"
-                            >
-                                <img src="src/assets/sim-vector.svg" alt="" className="mb-5"/>
-                                <p className="text-sm font-light text-white mb-1">Total Balance</p>
-                                <p className="text-xl font-bold text-white mb-2">{account.balance}VNĐ</p>
-                                <p className="text-md font-light text-white mb-1">{account.accountNumber}</p>
-                                <p className="text-sm font-light text-white">{account.createdAt}</p>
-                            </div>
-                        ))}
-
+                    {accounts.length === 0 ? (
+                            <p>No accounts available</p>
+                        ) : 
+                        (accounts.map((account) => {
+                            console.log(account); // Log account data for debugging
+                            return (
+                                <div
+                                    key={account.accountNumber}
+                                    className={`w-80 h-full rounded-2xl bg-cover bg-center p-5
+                                        ${account.primary ? `bg-[url('src/assets/image/card-bg.png')]` : 'bg-gray-300'}`} // Grey out if not primary
+                                >
+                                    <img src="src/assets/sim-vector.svg" alt="" className="mb-5"/>
+                                    <p className="text-sm font-light text-white mb-1">Total Balance</p>
+                                    <p className="text-xl font-bold text-white mb-2">{account.balance}VNĐ</p>
+                                    <p className="text-md font-light text-white mb-1">{account.accountNumber}</p>
+                                    <p className="text-sm font-light text-white">{account.createdAt}</p>
+                                    {/* Close Account Button */}
+                                    {account.primary && (
+                                        <Button
+                                            className="mt-4 w-full bg-red-500 hover:bg-red-600"
+                                            onClick={() => closeAccount(account.accountNumber)}
+                                        >
+                                            Đóng tài khoản
+                                        </Button>
+                                    )}
+                                </div>
+                            );
+                        }))}
                     </div>
                 </div>
             </div>
-
 
             <ToastContainer/>
         </div>

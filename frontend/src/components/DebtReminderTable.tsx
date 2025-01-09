@@ -42,6 +42,8 @@ const DebtReminderTable = ({ status = "PENDING", type = "Creator" }) => {
   } = useSelector((state: RootState) => state.debtReminderTable);
 
   const { enqueueSnackbar } = useSnackbar();
+  const user = localStorage.getItem("user") || "3";
+  const {userID} = JSON.parse(user);
   const accountId = localStorage.getItem("accountId") || "3";
   const accessToken = localStorage.getItem("access_token") || "";
   const id = parseInt(accountId, 10);
@@ -401,7 +403,7 @@ const DebtReminderTable = ({ status = "PENDING", type = "Creator" }) => {
 	};
   	const handleOtpSubmit = async (otp: string) => {
 		try {
-			const customer = await fetchCustomer(parseInt(accountId), accessToken);
+			const customer = await fetchCustomer(parseInt(userID), accessToken);
 			
 			console.log("customer: ", customer);
 			const email = customer.data.email;

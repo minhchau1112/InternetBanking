@@ -310,6 +310,33 @@ public class TransactionService {
         }).collect(Collectors.toList());
     }
 
+    // Lấy danh sách giao dịch liên ngân hàng cho admin
+    public List<InterbankTransactionResponse> filterInterbankTransactions(
+            LocalDateTime startDate,
+            LocalDateTime endDate,
+            String bankCode
+    ) {
+        List<InterbankTransaction> transactions;
 
+        if ("-1".equals(bankCode)) {
+            // Truy vấn các giao dịch có externalBankCode không tồn tại trong bảng LinkedBank
+            transactions = interbankTransactionRepository.findTransactionsWithUnknownBanks(startDate, endDate);
+        } else {
+            transactions = interbankTransactionRepository.findByDateAndBankCode(startDate, endDate, bankCode);
+        }
 
+        return transactions.stream().map(transaction -> {
+            String tab = transaction.isIncoming() ? "in" : "out";
+            String externalAccount = transaction.getExternalAccountNumber();
+
+            // Nếu bankCode = -1, luôn trả về "Unknown Bank"
+            String bankName = "-1".equals(bankCode)
+                    ? "Unknown Bank"
+                    : linkedBankRepository.findByBankCode(transaction.getExternalBankCode())
+                    .map(LinkedBank::getName)
+                    .orElse("Unknown Bank");
+
+            return new InterbankTransactionResponse(transaction, externalAccount, bankName, tab);
+        }).collect(Collectors.toList());
+    }
 }

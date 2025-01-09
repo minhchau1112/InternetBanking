@@ -16,7 +16,7 @@ import TransactionHistory from "./pages/employee/TransactionHistory.tsx";
 import ResetPassword from "@/pages/login/ResetPassword.tsx";
 import Profile from "@/pages/customer/Profile.tsx";
 import ManageEmployee from "./pages/admin/ManageEmployee.tsx";
-import
+import InterbankTransactions from "./pages/admin/InterbankTransactions.tsx";
 import TransactionForm from "@/pages/employee/TransactionForm.tsx";
 
 function App() {
@@ -64,6 +64,7 @@ function App() {
                     <Route path="/profile" element={<Profile/>}/>
                     <Route path="/transactions/create" element={<TransactionForm/>}/>
                     <Route path="/manage-employee" element={<ManageEmployee/>}/>
+                    <Route path="/interbank-transactions" element={<InterbankTransactions/>}/>
                 </Routes>
             </div>
         </div>

@@ -15,15 +15,17 @@ import AccountCreation from "./pages/employee/AccountCreation.tsx";
 import TransactionHistory from "./pages/employee/TransactionHistory.tsx";
 import ResetPassword from "@/pages/login/ResetPassword.tsx";
 import Profile from "@/pages/customer/Profile.tsx";
-
+import ManageEmployee from "./pages/admin/ManageEmployee.tsx";
+import
 import TransactionForm from "@/pages/employee/TransactionForm.tsx";
 
 function App() {
-    const messages = useWebSocket("ws://localhost:8888/ws/notifications?account=4");
+    const id = localStorage.getItem('accountId') || "3";
+    // const message = useWebSocket("ws://127.0.0.1:8888/ws/notifications", id) || "Thông báo";
+    // useStomp("ws://127.0.0.1:8888/ws/notifications", id)
     const navigate = useNavigate();
     const token = localStorage.getItem("access_token");
     const location = useLocation();
-
 
     useEffect(() => {
         if (!token && location.pathname !== "/login" && location.pathname !== "/forgot-password" && location.pathname !== "/reset-password") {
@@ -45,7 +47,7 @@ function App() {
             {!noSidebarPages.includes(location.pathname) && <Sidebar userType={userType}/>}
             <div className={`flex-grow`}>
                 <div className="absolute top-4 right-4 z-50 bg-white shadow-lg p-4 rounded">
-                  <Notifications messages={messages} />
+                  <Notifications userId={id} />
                 </div>
                 <Routes>
                     <Route path="/" element={<h1>Welcome to Internet Banking</h1>}/>
@@ -55,11 +57,13 @@ function App() {
                     <Route path="/deposit" element={<DepositPage/>}/>
                     <Route path="/contact" element={<Recipient/>}/>
                     <Route path="/customers" element={< AccountCreation/>}/>
-                    <Route path="/history" element={< TransactionHistory/>}/>
+                    <Route path="/history" element={< TransactionHistoryCustomer/>}/>
+                    <Route path="/employee-transaction" element={<TransactionHistory/>}/>
                     <Route path="/forgot-password" element={<ForgotPassword/>}/>
                     <Route path="/reset-password" element={<ResetPassword/>}/>
                     <Route path="/profile" element={<Profile/>}/>
-                    <Route path="/transactions/createTransaction" element={<TransactionForm/>}/>
+                    <Route path="/transactions/create" element={<TransactionForm/>}/>
+                    <Route path="/manage-employee" element={<ManageEmployee/>}/>
                 </Routes>
             </div>
         </div>

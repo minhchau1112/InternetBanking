@@ -109,7 +109,7 @@ const Sidebar: React.FC<SidebarProps> = ({ userType }) => {
 
           {userType === "ROLE_ADMIN" && (
             <>
-              <NavLink to="/employees" className={getNavLinkClass}>
+              <NavLink to="/manage-employee" className={getNavLinkClass}>
                 <PaymentOutlined /> Employees
               </NavLink>
               <NavLink to="/transactions" className={getNavLinkClass}>

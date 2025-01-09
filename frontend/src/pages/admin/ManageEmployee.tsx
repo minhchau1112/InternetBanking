@@ -45,7 +45,7 @@ const ManageEmployee: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         const method = currentEmployee ? 'PUT' : 'POST';
-        const url = currentEmployee ? `http://localhost:8888/api/employees/${currentEmployee.id}` : 'http://localhost:3306/api/employees';
+        const url = currentEmployee ? `http://localhost:8888/api/employees/${currentEmployee.id}` : 'http://localhost:8888/api/employees';
 
         const body = JSON.stringify({ id: formData.id, name: formData.name, status: formData.status });
 

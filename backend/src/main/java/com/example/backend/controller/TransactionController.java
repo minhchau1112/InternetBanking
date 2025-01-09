@@ -91,6 +91,19 @@ public class TransactionController {
         }
     }
 
+    /**
+     * Get the list of transactions for a customer.
+     * @param partnerAccountNumber Account number of the partner.
+     * @param startDate Start date of the transaction.
+     * @param endDate End date of the transaction.
+     * @return List of transactions.
+     */
+    @Operation(summary = "Get transactions", description = "Retrieve transactions based on filters")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "List of transactions retrieved successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid input parameters", content = @Content),
+            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+    })
     @GetMapping("/employee")
     public List<?> getCustomerTransactions(
             @RequestParam(value = "partnerAccountNumber", required = false) String partnerAccountNumber,

@@ -13,6 +13,7 @@ import DepositPage from "./pages/employee/Deposit";
 import Recipient from "./pages/customer/Contact.tsx";
 import ForgotPassword from "@/pages/login/ForgotPassword.tsx";
 import AccountCreation from "./pages/employee/AccountCreation.tsx";
+import TransactionHistoryAdmin from "./pages/admin/TransactionHistoryAdmin.tsx";
 import TransactionHistory from "./pages/employee/Transaction.tsx";
 import TransactionForm from "@/pages/customer/TransactionForm.tsx";
 import TransactionHistoryCustomer from "./pages/customer/TransactionHistory.tsx";
@@ -20,12 +21,8 @@ import ResetPassword from "@/pages/login/ResetPassword.tsx";
 import Profile from "@/pages/customer/Profile.tsx";
 import ManageEmployee from "./pages/admin/ManageEmployee.tsx";
 import InterbankTransactions from "./pages/admin/InterbankTransactions.tsx";
-// import TransactionForm from "@/pages/employee/TransactionForm.tsx";
 
 function App() {
-    // const id = localStorage.getItem('accountId') || "3";
-    // const message = useWebSocket("ws://127.0.0.1:8888/ws/notifications", id) || "Thông báo";
-    // useStomp("ws://127.0.0.1:8888/ws/notifications", id)
     const id = localStorage.getItem('accountId') || "3";
     // const message = useWebSocket("ws://127.0.0.1:8888/ws/notifications", id) || "Thông báo";
     // useStomp("ws://127.0.0.1:8888/ws/notifications", id)
@@ -54,7 +51,6 @@ function App() {
             <div className={`flex-grow`}>
                 <div className="absolute top-4 right-4 z-50 bg-white shadow-lg p-4 rounded">
                   <Notifications userId={id} />
-                  <Notifications userId={id} />
                 </div>
                 <Routes>
                     <Route path="/" element={<h1>Welcome to Internet Banking</h1>}/>
@@ -71,6 +67,7 @@ function App() {
                     <Route path="/forgot-password" element={<ForgotPassword/>}/>
                     <Route path="/reset-password" element={<ResetPassword/>}/>
                     <Route path="/profile" element={<Profile/>}/>
+                    <Route path="/transactions" element={<TransactionHistoryAdmin/>}/>
                     <Route path="/transactions/create" element={<TransactionForm/>}/>
                     <Route path="/manage-employee" element={<ManageEmployee/>}/>
                     <Route path="/interbank-transactions" element={<InterbankTransactions/>}/>

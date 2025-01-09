@@ -9,6 +9,7 @@ import com.example.backend.model.Customer;
 import com.example.backend.model.Transaction;
 import com.example.backend.utils.annotation.APIMessage;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -384,6 +385,66 @@ public class AccountController {
         return ResponseEntity.ok(transactionBasicResponse);
     }
 
+    @Operation(
+            summary = "Retrieve account by account number",
+            description = "Fetches an account based on the provided account number.",
+            parameters = {
+                    @Parameter(
+                            name = "accountNumber",
+                            description = "The account number to retrieve the account information",
+                            required = true,
+                            example = "345562455"
+                    )
+            },
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Retrieve account by account number success",
+                            content = @Content(
+                                    examples = @ExampleObject(
+                                            name = "Case: Account found",
+                                            value = "{\n" +
+                                                    "  \"status\": 200,\n" +
+                                                    "  \"error\": null,\n" +
+                                                    "  \"message\": \"Retrieve account by account number success\",\n" +
+                                                    "  \"data\": {\n" +
+                                                    "    \"id\": 3,\n" +
+                                                    "    \"customer\": {\n" +
+                                                    "      \"id\": 3,\n" +
+                                                    "      \"username\": \"nlqkhanh\",\n" +
+                                                    "      \"password\": \"$2a$10$0SsupHTuP8RS17QUbynsRuVcHnjmnQhqeiY08Mm2.fhbsMP99W/QS\",\n" +
+                                                    "      \"createdAt\": \"2024-12-22T00:05:53\",\n" +
+                                                    "      \"name\": \"Quốc Khánh\",\n" +
+                                                    "      \"email\": \"chauhhcc@gmail.com\",\n" +
+                                                    "      \"phone\": \"034724892\"\n" +
+                                                    "    },\n" +
+                                                    "    \"accountNumber\": \"345562455\",\n" +
+                                                    "    \"balance\": 12500000.00,\n" +
+                                                    "    \"isPrimary\": true,\n" +
+                                                    "    \"type\": \"CHECKING\",\n" +
+                                                    "    \"createdAt\": \"2024-12-22T00:19:39\"\n" +
+                                                    "  }\n" +
+                                                    "}"
+                                    )
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "Account not found",
+                            content = @Content(
+                                    examples = @ExampleObject(
+                                            name = "Case: Account not found",
+                                            value = "{\n" +
+                                                    "  \"status\": 404,\n" +
+                                                    "  \"error\": \"Account not found\",\n" +
+                                                    "  \"message\": \"The account was not found\",\n" +
+                                                    "  \"data\": null\n" +
+                                                    "}"
+                                    )
+                            )
+                    )
+            }
+    )
     @GetMapping("/v2/{accountNumber}")
     @APIMessage("Retrieve account by account number success")
     public ResponseEntity<Account> findAccountByAccountNumber(@PathVariable String accountNumber) throws com.example.backend.exception.AccountNotFoundException {

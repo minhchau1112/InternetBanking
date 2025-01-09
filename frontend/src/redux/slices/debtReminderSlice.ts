@@ -3,6 +3,7 @@ import { fetchRecipients } from "../../services/recipientService";
 
 interface Debtor {
   name: string;
+  aliasName: string;
   accountNumber: string;
 }
 
@@ -10,6 +11,7 @@ interface DebtReminderState {
   tab: number;
   filter: string;
   savedDebtors: Debtor[];
+  isDialogOpen: boolean;
   loading: boolean;
   error: string | null;
 }
@@ -18,6 +20,7 @@ const initialState: DebtReminderState = {
   tab: 0,
   filter: "PENDING",
   savedDebtors: [],
+  isDialogOpen: false,
   loading: false,
   error: null,
 };
@@ -29,8 +32,9 @@ export const fetchDebtors = createAsyncThunk<Debtor[], number, { state: any }>(
     try {
       const response = await fetchRecipients(customerId, accessToken);
       if (response.status === 200) {
-        return response.data.data.map((item: any) => ({
+        return response.data.map((item: any) => ({
           name: item.name,
+		  alias_name: item.alias_name,
           accountNumber: item.account_number,
         }));
       } else {
@@ -52,6 +56,9 @@ const debtReminderSlice = createSlice({
     setFilter(state, action: PayloadAction<string>) {
       state.filter = action.payload;
     },
+	setDialogOpen(state, action: PayloadAction<boolean>) {
+		state.isDialogOpen = action.payload;
+	},
   },
   extraReducers: (builder) => {
     builder
@@ -70,6 +77,6 @@ const debtReminderSlice = createSlice({
   },
 });
 
-export const { setTab, setFilter } = debtReminderSlice.actions;
+export const { setTab, setFilter, setDialogOpen } = debtReminderSlice.actions;
 
 export default debtReminderSlice.reducer;

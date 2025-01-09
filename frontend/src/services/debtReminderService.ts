@@ -2,6 +2,41 @@ import axios from 'axios';
 
 const API_URL = 'http://localhost:8888/api/debt-reminders';
 
+interface DebtorInfo { 
+	debtorId: number, 
+	accountNumber: string; 
+	debtAmount: string; 
+	debtContent: string 
+}
+
+export const createDebtReminder = async (
+	creatorId: number,
+	debtorInfor: DebtorInfo,
+	accessToken: string,
+) => {
+	try {
+		const response = await axios.post(
+			`${API_URL}`,
+			{
+				creator_account_id: creatorId,
+				debtor_account_id: debtorInfor.debtorId,
+				amount: debtorInfor.debtAmount,
+				message: debtorInfor.debtContent,
+			},
+			{
+				headers: {
+					Authorization: `Bearer ${accessToken}`,
+				},
+			}
+		);
+
+		console.log("createDebtReminder: ", response);
+		return response.data;
+	} catch (error) {
+		console.error('Error fetching debt reminders:', error);
+		throw error;
+	}
+}
 // Fetch debt reminders for creator
 export const fetchDebtRemindersForCreator = async (
 	id: number,

@@ -1,17 +1,24 @@
-import { Dialog, DialogActions, DialogContent, DialogTitle, TextField, Button, InputAdornment, Autocomplete } from "@mui/material";
-import { useState, useEffect } from "react";
+import { Dialog, DialogActions, DialogContent, DialogTitle, TextField, Button, InputAdornment, Box, List, ListItem, ListItemText } from "@mui/material";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState, AppDispatch } from "../redux/store";
+import { setDebtorAccount, setDebtorName, setDebtAmount, setDebtContent, setDebtorId, setError, resetState } from "../redux/slices/debtReminderCreateSlice";
+import { fetchAccount } from "../services/accountService";
+import { setLoading } from "@/redux/slices/debtReminderTableSlice";
+import { SearchOutlined } from '@mui/icons-material';
+import { createDebtReminder } from "@/services/debtReminderService";
+import { useSnackbar } from "notistack";
 
 interface Debtor {
   name: string;
+  aliasName: string;
   accountNumber: string;
 }
 
 interface DebtReminderDialogProps {
   open: boolean;
   onClose: () => void;
-  onCreate: (debtorInfo: { accountNumber: string; debtAmount: string; debtContent: string }) => void;
-  savedDebtors: Debtor[];  // Giả sử đây là danh sách người nợ đã lưu trong frontend
-  fetchDebtorInfo: (accountNumber: string) => Promise<Debtor | null>; // Hàm gọi API để lấy thông tin người nợ
+  onCreate: (debtorInfo: { debtorId: number, accountNumber: string; debtAmount: string; debtContent: string }) => void;
+  savedDebtors: Debtor[];  
 }
 
 const CreateDebtReminderDialog: React.FC<DebtReminderDialogProps> = ({
@@ -19,113 +26,165 @@ const CreateDebtReminderDialog: React.FC<DebtReminderDialogProps> = ({
   onClose,
   onCreate,
   savedDebtors,
-  fetchDebtorInfo,
 }) => {
-  const [debtorAccount, setDebtorAccount] = useState("");
-  const [debtorName, setDebtorName] = useState("");
-  const [debtAmount, setDebtAmount] = useState("");
-  const [debtContent, setDebtContent] = useState("");
-  const [error, setError] = useState(""); // Thông báo lỗi nếu không tìm thấy người nợ
+  const dispatch = useDispatch<AppDispatch>();
+  const { debtorAccount, debtorName, debtAmount, debtContent, debtorId, error } = useSelector((state: RootState) => state.debtReminderCreateReducer);
 
-  useEffect(() => {
-    // Tự động tìm kiếm người nợ khi số tài khoản thay đổi
-    if (debtorAccount) {
-      const debtor = savedDebtors.find((d) => d.accountNumber === debtorAccount);
-      if (debtor) {
-        setDebtorName(debtor.name);
-        setError("");
+  const { enqueueSnackbar } = useSnackbar();
+
+  const retrieveInfo = async (account_number: string) => {
+    const accessToken = localStorage.getItem('access_token') || "";
+    dispatch(setLoading(true));
+    try {
+      const response = await fetchAccount(account_number, accessToken);
+      if (response.status === 200) {
+        const data = response.data;
+        dispatch(setDebtorName(data.customer.name));
+        dispatch(setDebtorId(data.id));
+        dispatch(setError(''));
       } else {
-        // Gọi API để tìm thông tin người nợ từ hệ thống
-        fetchDebtorInfo(debtorAccount).then((data) => {
-          if (data) {
-            setDebtorName(data.name);
-            setError("");
-          } else {
-            setDebtorName("");
-            setError("Không tìm thấy người nợ với số tài khoản này.");
-          }
-        });
+        dispatch(setDebtorName(''));
+        dispatch(setDebtorId(0));
+        dispatch(setError('Không tìm thấy khách hàng với số tài khoản này.'));
+      }
+    } catch (error) {
+      dispatch(setError('Lỗi khi lấy thông tin người nợ.'));
+    } finally {
+      dispatch(setLoading(false));
+    }
+  };
+
+  const handleCreate = async () => {
+    if (debtorAccount && debtAmount && debtContent) {
+      if (!debtorId) {
+        await retrieveInfo(debtorAccount);
+        if (!debtorId) return;
+      }
+
+      const accountId = localStorage.getItem('accountId') || "";
+      const accessToken = localStorage.getItem('access_token') || "";
+      dispatch(setLoading(true));
+      try {
+        const response = await createDebtReminder(parseInt(accountId, 10), { debtorId, accountNumber: debtorAccount, debtAmount, debtContent }, accessToken);
+        if (response.status === 201) {
+          onCreate({ debtorId, accountNumber: debtorAccount, debtAmount, debtContent });
+          dispatch(resetState());
+          enqueueSnackbar('Tạo nhắc nợ thành công', { variant: 'success', autoHideDuration: 3000 });
+          onClose();
+        } else {
+          dispatch(setError('Tạo nhắc nợ thất bại'));
+          enqueueSnackbar('Tạo nhắc nợ thất bại', { variant: 'error', autoHideDuration: 3000 });
+        }
+      } catch (error) {
+        dispatch(setError('Lỗi khi tạo nhắc nợ.'));
+        enqueueSnackbar('Lỗi khi tạo nhắc nợ', { variant: 'error', autoHideDuration: 3000 });
+      } finally {
+        dispatch(setLoading(false));
       }
     } else {
-      setDebtorName(""); // Reset nếu số tài khoản trống
-    }
-  }, [debtorAccount, savedDebtors, fetchDebtorInfo]);
-
-  const handleCreate = () => {
-    if (debtorAccount && debtAmount && debtContent) {
-      onCreate({ accountNumber: debtorAccount, debtAmount, debtContent });
-      setDebtorAccount("");
-      setDebtorName("");
-      setDebtAmount("");
-      setDebtContent("");
-      onClose();
-    } else {
-      alert("Vui lòng điền đầy đủ thông tin.");
+      alert('Vui lòng điền đầy đủ thông tin.');
     }
   };
 
   return (
-    <Dialog open={open} onClose={onClose}>
+    <Dialog open={open} onClose={onClose} maxWidth="lg">
       <DialogTitle>Tạo Nhắc Nợ</DialogTitle>
       <DialogContent>
-        {/* Nhập số tài khoản người nợ với Autocomplete */}
-        <Autocomplete
-          freeSolo
-          options={savedDebtors.map((debtor) => debtor.accountNumber)}
-          onInputChange={(event, value) => setDebtorAccount(value)}
-          renderInput={(params) => (
+        <Box display="flex" justifyContent="space-between">
+          <Box flex={1} paddingRight={2}>
+            <Box display="flex" alignItems="center">
+              <TextField
+                label="Số tài khoản"
+                variant="outlined"
+                fullWidth
+                margin="normal"
+                value={debtorAccount}
+                onChange={(e) => dispatch(setDebtorAccount(e.target.value))} 
+              />
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() => retrieveInfo(debtorAccount)} 
+                sx={{
+                  marginTop: 1,
+                  marginLeft: 1,
+                  height: "100%",
+                  minHeight: "56px", 
+                }}
+              >
+                <SearchOutlined />
+              </Button>
+            </Box>
+
+            <Box>
+              {error && <div style={{ color: "red" }}>{error}</div>}
+
+              <TextField
+                label="Tên khách hàng"
+                variant="outlined"
+                fullWidth
+                margin="normal"
+                value={debtorName}
+                disabled
+              />
+            </Box>
+
             <TextField
-              {...params}
-              label="Số Tài Khoản Người Nợ"
+              label="Số Tiền"
               variant="outlined"
               fullWidth
               margin="normal"
+              type="number"
+              value={debtAmount}
+              onChange={(e) => dispatch(setDebtAmount(e.target.value))}
+              InputProps={{
+                startAdornment: <InputAdornment position="start">₫</InputAdornment>,
+              }}
             />
-          )}
-        />
 
-        {/* Tên người nợ sẽ tự động điền khi tìm thấy thông tin */}
-        <TextField
-          label="Tên Người Nợ"
-          variant="outlined"
-          fullWidth
-          margin="normal"
-          value={debtorName}
-          disabled
-        />
+            <TextField
+              label="Nội Dung"
+              variant="outlined"
+              fullWidth
+              margin="normal"
+              value={debtContent}
+              onChange={(e) => dispatch(setDebtContent(e.target.value))}
+            />
+          </Box>
 
-        {/* Thông báo lỗi nếu không tìm thấy người nợ */}
-        {error && <div style={{ color: "red" }}>{error}</div>}
-
-        {/* Nhập số tiền */}
-        <TextField
-          label="Số Tiền"
-          variant="outlined"
-          fullWidth
-          margin="normal"
-          type="number"
-          value={debtAmount}
-          onChange={(e) => setDebtAmount(e.target.value)}
-          InputProps={{
-            startAdornment: <InputAdornment position="start">₫</InputAdornment>,
-          }}
-        />
-
-        {/* Nhập nội dung nhắc nợ */}
-        <TextField
-          label="Nội Dung"
-          variant="outlined"
-          fullWidth
-          margin="normal"
-          value={debtContent}
-          onChange={(e) => setDebtContent(e.target.value)}
-        />
+          <Box flex={1} paddingLeft={2} borderLeft="1px solid #ccc" maxHeight="400px" overflow="auto">
+          <Box fontSize={20} fontWeight="bold" textAlign="center" marginBottom={2}>
+            Danh sách đã lưu
+          </Box>
+            
+            <List>
+              {savedDebtors.map((debtor) => (
+                <ListItem
+                  key={debtor.accountNumber}
+                  component="button"
+                  onClick={() => {
+                    dispatch(setDebtorAccount(debtor.accountNumber));
+                    dispatch(setDebtorName(debtor.name));
+                    dispatch(setError('')); 
+                  }}
+                  sx={{
+                    marginBottom: 1.5
+                  }}
+                >
+                  <ListItemText
+                    primary={`${debtor.aliasName} - ${debtor.accountNumber}`}
+                  />
+                </ListItem>
+              ))}
+            </List>
+          </Box>
+        </Box>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} color="primary">
+        <Button onClick={onClose} variant="outlined" color="secondary">
           Hủy
         </Button>
-        <Button onClick={handleCreate} color="primary">
+        <Button onClick={handleCreate} variant="contained" color="primary">
           Gửi Nhắc Nợ
         </Button>
       </DialogActions>

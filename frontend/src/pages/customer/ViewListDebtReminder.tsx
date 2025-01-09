@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "../../redux/store";
-import { setTab, setFilter, fetchDebtors } from "../../redux/slices/debtReminderSlice";
+import { setTab, setFilter, setDialogOpen, fetchDebtors } from "../../redux/slices/debtReminderSlice";
 import DebtReminderTable from "../../components/DebtReminderTable";
 import {
   FormControl,
@@ -19,7 +19,7 @@ import CreateDebtReminderDialog from "../../components/CreateDebtReminderDialog"
 const ViewListDebtReminder = () => {
   const dispatch: AppDispatch = useDispatch();
 
-  const { tab, filter, savedDebtors } = useSelector((state: RootState) => state.debtReminder);
+  const { tab, filter, savedDebtors, isDialogOpen } = useSelector((state: RootState) => state.debtReminder);
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     dispatch(setTab(newValue));
@@ -36,7 +36,7 @@ const ViewListDebtReminder = () => {
     debtContent: string;
   }) => {
     console.log("Tạo nhắc nợ:", debtorInfo);
-    // Gửi API hoặc xử lý logic tại đây
+    dispatch(setDialogOpen(false)); 
   };
 
   useEffect(() => {
@@ -64,7 +64,7 @@ const ViewListDebtReminder = () => {
           </Select>
         </FormControl>
 
-        <Button variant="contained" color="primary" onClick={() => console.log("Open Dialog")}>
+        <Button variant="contained" color="primary" onClick={() => dispatch(setDialogOpen(true))}>
           Tạo nhắc nợ
         </Button>
       </Box>
@@ -72,11 +72,10 @@ const ViewListDebtReminder = () => {
       <DebtReminderTable status={filter === "ALL" ? "" : filter} type={currentType} />
 
       <CreateDebtReminderDialog
-        open={false}
-        onClose={() => console.log("Close Dialog")}
+        open={isDialogOpen}
+        onClose={() => dispatch(setDialogOpen(false))}
         onCreate={handleCreateDebtReminder}
         savedDebtors={savedDebtors}
-        fetchDebtorInfo={() => Promise.resolve(null)}
       />
     </Box>
   );

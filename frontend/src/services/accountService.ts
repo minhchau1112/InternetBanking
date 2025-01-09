@@ -1,13 +1,13 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:8888/api/recipients';
+const API_URL = 'http://localhost:8888/api/accounts';
 
-export const fetchRecipients = async (
-    customerId: number,
+export const fetchAccount = async (
+    accountNumber: string,
     accessToken: string
 ) => {
     try {
-        const response = await axios.get(`${API_URL}/v2/${customerId}`, {
+        const response = await axios.get(`${API_URL}/v2/${accountNumber}`, {
             headers: {
                 Authorization: `Bearer ${accessToken}`,
                 'Content-Type': 'application/json',
@@ -15,11 +15,11 @@ export const fetchRecipients = async (
             withCredentials: true,
         });
 
-        console.log("fetchRecipients: ", response.data);
+        console.log("fetchAccount: ", response.data);
 
         return response.data;
     } catch (error) {
-        console.error('Error fetching recipients:', error);
+        console.error('Error fetching account:', error);
 		throw error;
     }
 };

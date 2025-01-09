@@ -8,6 +8,7 @@ import com.example.backend.exception.OTPNotFoundException;
 import com.example.backend.model.Account;
 import com.example.backend.model.Transaction;
 import com.example.backend.repository.AccountRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,6 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
+@Slf4j
 @Service
 public class InternalTransferService {
 
@@ -71,32 +73,41 @@ public class InternalTransferService {
 
     @Transactional
     public void confirmTransfer(ConfirmTransferRequest request) throws OTPNotFoundException, EmailNotFoundException {
+        log.info("confirmTransfer");
         String email = request.getEmail();
         String otp = request.getOtp();
 
         if (email == null || email.isBlank()) {
+            log.info("EmailNotFoundException");
             throw new EmailNotFoundException("Email can not be blank");
         }
 
         if (otp == null || otp.isBlank()) {
+            log.info("OTPNotFoundException");
             throw new OTPNotFoundException("OTP can not be blank");
         }
 
         String storedOtp = otpService.getOtp(email);
 
         if (storedOtp == null) {
+            log.info("OTP is not valid");
             throw new OTPNotFoundException("OTP is not valid");
         }
 
         if (!storedOtp.equals(otp)) {
+            log.info("OTP is not valid");
             throw new OTPNotFoundException("OTP is not valid");
         }
 
         otpService.deleteOtp(email);
 
+        log.info("getPendingTransaction");
         Transaction pendingTransaction = transactionService.getPendingTransaction()
                 .orElseThrow(() -> new IllegalStateException("No pending transaction found"));
+        log.info("getPendingTransaction success");
 
         transactionService.executeTransaction(pendingTransaction);
+        log.info("executeTransaction success");
+
     }
 }

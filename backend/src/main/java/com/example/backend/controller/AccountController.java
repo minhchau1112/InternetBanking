@@ -4,6 +4,7 @@ import com.example.backend.dto.request.DepositRequest;
 import com.example.backend.dto.response.AccountDetailsResponse;
 import com.example.backend.model.Customer;
 import com.example.backend.model.Transaction;
+import com.example.backend.utils.annotation.APIMessage;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -190,6 +191,14 @@ public class AccountController {
 
         Transaction transaction = accountService.deposit(depositRequest);
         return ResponseEntity.ok(transaction);
+    }
+
+    @GetMapping("/v2/{accountNumber}")
+    @APIMessage("Retrieve account by account number success")
+    public ResponseEntity<Account> findAccountByAccountNumber(@PathVariable String accountNumber) throws com.example.backend.exception.AccountNotFoundException {
+        Account account = accountService.getAccountByAccountNumber(accountNumber);
+
+        return ResponseEntity.ok(account);
     }
 }
 

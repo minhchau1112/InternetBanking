@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface TransactionRepository extends JpaRepository<Transaction, Integer> {
@@ -23,6 +24,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Intege
             LocalDateTime endDate
     );
 
+    Optional<Transaction> findFirstByStatus(String status);
     // Truy vấn theo source account id và destination account id (nếu có)
     @Query("SELECT t FROM Transaction t " +
             "WHERE (:accountNumber IS NULL OR t.sourceAccount.accountNumber = :accountNumber OR t.destinationAccount.accountNumber = :accountNumber) " +

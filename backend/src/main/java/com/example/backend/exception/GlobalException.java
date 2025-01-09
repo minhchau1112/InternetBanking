@@ -101,4 +101,26 @@ public class GlobalException {
         res.setMessage("reCAPTCHA validation failed");
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(res);
     }
+
+    @ExceptionHandler(value = {
+            DebtReminderNotFoundException.class,
+    })
+    public ResponseEntity<RestResponse<Object>> handleDebtReminderNotFound(Exception ex) {
+        RestResponse<Object> res = new RestResponse<Object>();
+        res.setStatus(HttpStatus.NOT_FOUND.value());
+        res.setError(ex.getMessage());
+        res.setMessage("The debt reminder was not found");
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(res);
+    }
+
+    @ExceptionHandler(value = {
+            AccountNotFoundException.class,
+    })
+    public ResponseEntity<RestResponse<Object>> handleAccountNotFound(Exception ex) {
+        RestResponse<Object> res = new RestResponse<Object>();
+        res.setStatus(HttpStatus.NOT_FOUND.value());
+        res.setError(ex.getMessage());
+        res.setMessage("The account was not found");
+        return ResponseEntity.status(HttpStatus.OK).body(res);
+    }
 }

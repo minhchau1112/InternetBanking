@@ -12,16 +12,27 @@ import java.util.Optional;
 @Repository
 public interface TransactionRepository extends JpaRepository<Transaction, Integer> {
     // Truy vấn theo source account id và destination account id (nếu có)
-    @Query("SELECT t FROM Transaction t WHERE t.sourceAccount.id = :sourceAccountId" +
-            " AND (:destinationAccountNum IS NULL OR t.destinationAccount.accountNumber = :destinationAccountNum)" +
-            " AND (:startDate IS NULL OR t.createdAt >= :startDate)" +
-            " AND (:endDate IS NULL OR t.createdAt <= :endDate)")
-    List<Transaction> findTransactions(
-            Integer sourceAccountId,
-            String destinationAccountNum,
+    @Query("SELECT t FROM Transaction t " +
+            "WHERE (t.sourceAccount.id = :accountId OR t.destinationAccount.id = :accountId) " +
+            "AND (:partnerAccountNumber IS NULL OR t.sourceAccount.accountNumber = :partnerAccountNumber OR t.destinationAccount.accountNumber = :partnerAccountNumber) " +
+            "AND (:startDate IS NULL OR t.createdAt >= :startDate) " +
+            "AND (:endDate IS NULL OR t.createdAt <= :endDate)")
+    List<Transaction> findAllTransactionsByAccount(
+            Integer accountId,
+            String partnerAccountNumber,
             LocalDateTime startDate,
             LocalDateTime endDate
     );
 
     Optional<Transaction> findFirstByStatus(String status);
+    // Truy vấn theo source account id và destination account id (nếu có)
+    @Query("SELECT t FROM Transaction t " +
+            "WHERE (:accountNumber IS NULL OR t.sourceAccount.accountNumber = :accountNumber OR t.destinationAccount.accountNumber = :accountNumber) " +
+            "AND (:startDate IS NULL OR t.createdAt >= :startDate) " +
+            "AND (:endDate IS NULL OR t.createdAt <= :endDate)")
+    List<Transaction> findAllTransactionsByAccountNumber(
+            String accountNumber,
+            LocalDateTime startDate,
+            LocalDateTime endDate
+    );
 }

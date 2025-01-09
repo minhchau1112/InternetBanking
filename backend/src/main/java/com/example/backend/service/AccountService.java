@@ -1,9 +1,11 @@
 package com.example.backend.service;
 
 import com.example.backend.dto.request.DepositRequest;
+import com.example.backend.dto.response.interbank.UserDetailResponse;
 import com.example.backend.enums.AccountType;
 import com.example.backend.enums.FeePayer;
 import com.example.backend.enums.TransactionType;
+import com.example.backend.exception.AccountNotFoundException;
 import com.example.backend.helper.PasswordGenerator;
 import com.example.backend.model.Account;
 import com.example.backend.model.Customer;
@@ -16,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.data.repository.core.support.TransactionalRepositoryFactoryBeanSupport;
 import org.springframework.stereotype.Service;
+
 import java.math.BigDecimal;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
@@ -95,7 +98,18 @@ public class AccountService {
             accountNumber.append(random.nextInt(10)); // Appends a digit (0-9)
         }
         return accountNumber.toString();
+    }
 
+    public UserDetailResponse getUserDetailByAccountNumber(String accountNumber) {
+        Account account = accountRepository.findByAccountNumber(accountNumber).orElseThrow(() -> new IllegalArgumentException("Account does not exist"));
+        Customer customer = account.getCustomer();
+
+        UserDetailResponse response = new UserDetailResponse();
+        response.setName(customer.getName());
+        response.setBankCode("GROUP2");
+        response.setAccountNumber(account.getAccountNumber());
+
+        return response;
     }
 
     public Account getAccountDetails(String accountNumber) {
@@ -111,6 +125,20 @@ public class AccountService {
         Customer customer = customerRepository.findByUsername(username);
         // get account class associated with the customer
         return accountRepository.findByCustomerId(customer.getId()).get();
+    }
+
+    public Account getAccountDetailsByAccountId(String accountId) {
+//        // get customer class by username
+//        Optional<Customer> customer = customerRepository.findById(Integer.valueOf(userId));
+//        // get account class associated with the customer
+//        if(customer.isEmpty()){
+//            throw new IllegalArgumentException("User does not exist");
+//        }
+        Optional<Account> account = accountRepository.findById(Integer.valueOf(accountId));
+        if(account.isEmpty()){
+            throw new IllegalArgumentException("Account does not exist");
+        }
+        return account.get();
     }
 
     public Transaction deposit(DepositRequest depositRequest){
@@ -171,4 +199,22 @@ public class AccountService {
         return accountRepository.findByCustomerId(customerId);
     }
 
+    public boolean checkIfAccountExistedByAccountNumber(String recipientAccountNumber) {
+        return accountRepository.existsByAccountNumber(recipientAccountNumber);
+    }
+
+    public Account findAccountByAccountNumber(String accountNumber) {
+        return accountRepository.findByAccountNumber(accountNumber).orElse(null);
+    }
+
+    public Account getAccountByAccountNumber(String accountNumber) throws AccountNotFoundException {
+        return accountRepository.findByAccountNumber(accountNumber).orElseThrow(() -> new AccountNotFoundException("Account not found"));
+    }
+
+    public Account deleteAccount(String accountNumber) {
+        Account account = accountRepository.findByAccountNumber(accountNumber).orElseThrow(() -> new IllegalArgumentException("Account does not exist"));
+        account.setIsPrimary(false);
+        accountRepository.save(account);
+        return account;
+    }
 }

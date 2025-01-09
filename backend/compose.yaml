@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  #  mysql:
+  #    image: baofbu/wnc:mysql
+  #    container_name: mysql-container
+  #    environment:
+  #      MYSQL_ROOT_PASSWORD: '25072018'
+  #      MYSQL_DATABASE: internet_banking
+  #      MYSQL_USER: admin
+  #      MYSQL_PASSWORD: password123
+  #    ports:
+  #      - "3307:3306"
+  #    expose:
+  #        - 3307
+  #    volumes:
+  #      - mysql-data:/var/lib/mysql
+  #    networks:
+  #      - app-network
+
+  spring-boot:
+    #    build:
+    #      context: .
+    #      dockerfile: ./Dockerfile
+    image: baofbu/wnc:latest
+    container_name: spring-boot-backend
+    ports:
+      - "8888:8888"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://35.188.102.7:3306/internet_banking
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: 25072018
+    command: [ "sh", "-c", "sleep 10 && java -jar backend.jar" ]
+    networks:
+      - app-network
+
+volumes:
+  mysql-data:
+
+networks:
+  app-network:
+    driver: bridge

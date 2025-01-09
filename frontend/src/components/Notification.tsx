@@ -1,18 +1,23 @@
-import React from "react";
+import React, { useEffect } from "react";
+import useWebSocket from '../hooks/useWebSocket';
+import { useSnackbar } from 'notistack';
 
 interface NotificationsProps {
-    messages: string[];
+  userId: string; 
 }
 
-const Notifications: React.FC<NotificationsProps> = ({ messages }) => {
+const Notifications: React.FC<NotificationsProps> = ({ userId }) => {
+    const message = useWebSocket({ userId });
+    const { enqueueSnackbar } = useSnackbar();
+
+    useEffect(() => {
+        if (message) {
+            enqueueSnackbar(message, { variant: 'success', autoHideDuration: 3000 });
+        }
+    }, [message, enqueueSnackbar]);
+
     return (
         <div>
-            <h2>Thông báo</h2>
-            <ul>
-                {messages.map((message, index) => (
-                    <li key={index}>{message}</li>
-                ))}
-            </ul>
         </div>
     );
 };

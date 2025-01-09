@@ -1,38 +1,33 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { RootState, AppDispatch } from "../../redux/store";
+import { setTab, setFilter, setDialogOpen, fetchDebtors } from "../../redux/slices/debtReminderSlice";
 import DebtReminderTable from "../../components/DebtReminderTable";
 import {
   FormControl,
   Select,
   MenuItem,
   InputLabel,
-  SelectChangeEvent,
   Box,
   Tabs,
   Tab,
   Button,
+  SelectChangeEvent
 } from "@mui/material";
 import CreateDebtReminderDialog from "../../components/CreateDebtReminderDialog";
-import { fetchRecipients } from "../../services/recipientService";
-
-interface Debtor {
-  name: string;
-  accountNumber: string;
-}
 
 const ViewListDebtReminder = () => {
-	const accessToken = localStorage.getItem('access_token') || '';
-  const [tab, setTab] = useState(0);
-  const [filter, setFilter] = useState("PENDING");
-  const [openDialog, setOpenDialog] = useState(false);
-  const [savedDebtors, setSavedDebtors] = useState<Debtor[]>([]);
+  const dispatch: AppDispatch = useDispatch();
+
+  const { tab, filter, savedDebtors, isDialogOpen } = useSelector((state: RootState) => state.debtReminder);
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    setTab(newValue);
+    dispatch(setTab(newValue));
   };
 
-  const handleStatusChange = (e: SelectChangeEvent<string>) => {
-    const selectedValue = e.target.value;
-    setFilter(selectedValue);
+  const handleStatusChange = (event: SelectChangeEvent<string>) => {
+    const selectedValue = event.target.value; // `value` sẽ là kiểu `string` do khai báo generic
+    dispatch(setFilter(selectedValue));
   };
 
   const handleCreateDebtReminder = (debtorInfo: {
@@ -41,60 +36,18 @@ const ViewListDebtReminder = () => {
     debtContent: string;
   }) => {
     console.log("Tạo nhắc nợ:", debtorInfo);
-    // Logic gửi nhắc nợ đến người nợ (API call hoặc xử lý logic ở đây)
-    setOpenDialog(false);
-  };
-
-  const handleDialogClose = () => {
-    setOpenDialog(false);
-  };
-
-  const fetchDebtors = async (customerId: number): Promise<Debtor[]> => {
-    try {
-      const response = await fetchRecipients(customerId, accessToken);
-	    console.log("response: ", response);
-
-      if (response.status == 200) {
-        console.log("response: ", response);
-        return response.data.data.map((item: any, index: number) => ({
-          name: item.name,
-          accountNumber: item.account_number
-        }))
-      } else {
-        console.error("Không thành công: ", response.message);
-        return [];
-      }
-    } catch (error) {
-      console.error("Lỗi khi fetch debtors: ", error);
-      return [];
-    }
-  };
-
-  const fetchDebtorInfo = async (accountNumber: string): Promise<Debtor | null> => {
-    try {
-      const tmp = { name: "John Doe", accountNumber: "12345" }; // Dữ liệu giả lập
-      return tmp;
-    } catch (error) {
-      console.error(error);
-      return null;
-    }
+    dispatch(setDialogOpen(false)); 
   };
 
   useEffect(() => {
-    // Gọi fetchDebtors khi component được mount
-    const loadDebtors = async () => {
-      const customerId = 3; // Thay bằng ID khách hàng hiện tại
-      const debtors = await fetchDebtors(customerId);
-      setSavedDebtors(debtors);
-    };
-
-    loadDebtors();
-  }, []);
+    const customerId = 3; // Thay bằng ID khách hàng
+    dispatch(fetchDebtors(customerId));
+  }, [dispatch]);
 
   const currentType = tab === 0 ? "Creator" : "Debtor";
 
   return (
-    <Box sx={{ paddingLeft: 4, paddingTop: 4 }}>
+    <Box sx={{ paddingLeft: 10, paddingRight: 10, paddingTop: 4 }}>
       <Tabs value={tab} onChange={handleTabChange}>
         <Tab label="Created by You" />
         <Tab label="Received from Others" />
@@ -111,25 +64,18 @@ const ViewListDebtReminder = () => {
           </Select>
         </FormControl>
 
-        {/* Nút tạo nhắc nợ */}
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={() => setOpenDialog(true)}
-        >
+        <Button variant="contained" color="primary" onClick={() => dispatch(setDialogOpen(true))}>
           Tạo nhắc nợ
         </Button>
       </Box>
 
       <DebtReminderTable status={filter === "ALL" ? "" : filter} type={currentType} />
 
-      {/* Dialog tạo nhắc nợ */}
       <CreateDebtReminderDialog
-        open={openDialog}
-        onClose={handleDialogClose}
+        open={isDialogOpen}
+        onClose={() => dispatch(setDialogOpen(false))}
         onCreate={handleCreateDebtReminder}
-        savedDebtors={savedDebtors} // Truyền danh sách người nợ
-        fetchDebtorInfo={fetchDebtorInfo}
+        savedDebtors={savedDebtors}
       />
     </Box>
   );

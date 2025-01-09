@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class RecipientService {
@@ -35,12 +36,16 @@ public class RecipientService {
     }
     public Recipient saveRecipient(RecipientCreateRequest createRequest) {
 
-        Customer customer = accountRepository.findById(createRequest.getCustomerId()).get().getCustomer();
+        Customer customer = customerRepository.findById(createRequest.getCustomerId()).get();
 
-        Account account = accountRepository.findByAccountNumber(createRequest.getAccountNumber()).get();
-
-        String aliasName = (!createRequest.getAliasName().isEmpty()) ?
-                createRequest.getAliasName() : account.getCustomer().getName();
+        String aliasName;
+        if(Objects.equals(createRequest.getBankCode(), "GROUP2")){
+            Account account = accountRepository.findByAccountNumber(createRequest.getAccountNumber()).get();
+            aliasName = (!createRequest.getAliasName().isEmpty()) ?
+                    createRequest.getAliasName() : account.getCustomer().getName();
+        } else {
+            aliasName = createRequest.getAliasName();
+        }
 
         Recipient recipient = Recipient.builder()
                 .customer(customer)
@@ -57,11 +62,14 @@ public class RecipientService {
 
         Recipient existingRecipient = recipientRepository.findById(updateRequest.getRecipientId()).get();
 
-        if(!updateRequest.getAliasName().isEmpty()){
-            existingRecipient.setAliasName(updateRequest.getAliasName());
+        if(Objects.equals(updateRequest.getBankCode(), "GROUP2")){
+            Account account = accountRepository.findByAccountNumber(updateRequest.getAccountNumber()).get();
+            String aliasName = (!updateRequest.getAliasName().isEmpty()) ?
+                    updateRequest.getAliasName() : account.getCustomer().getName();
+            existingRecipient.setAliasName(aliasName);
         } else {
-            String aliasName = accountRepository.findByAccountNumber(updateRequest.getAccountNumber()).get()
-                    .getCustomer().getName();
+            String aliasName = (!updateRequest.getAliasName().isEmpty()) ?
+                    updateRequest.getAliasName() : existingRecipient.getAliasName();
             existingRecipient.setAliasName(aliasName);
         }
 

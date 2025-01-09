@@ -1,27 +1,27 @@
 version: '3.8'
 
 services:
-#  mysql:
-#    image: baofbu/wnc:mysql
-#    container_name: mysql-container
-#    environment:
-#      MYSQL_ROOT_PASSWORD: '25072018'
-#      MYSQL_DATABASE: internet_banking
-#      MYSQL_USER: admin
-#      MYSQL_PASSWORD: password123
-#    ports:
-#      - "3307:3306"
-#    expose:
-#        - 3307
-#    volumes:
-#      - mysql-data:/var/lib/mysql
-#    networks:
-#      - app-network
+  #  mysql:
+  #    image: baofbu/wnc:mysql
+  #    container_name: mysql-container
+  #    environment:
+  #      MYSQL_ROOT_PASSWORD: '25072018'
+  #      MYSQL_DATABASE: internet_banking
+  #      MYSQL_USER: admin
+  #      MYSQL_PASSWORD: password123
+  #    ports:
+  #      - "3307:3306"
+  #    expose:
+  #        - 3307
+  #    volumes:
+  #      - mysql-data:/var/lib/mysql
+  #    networks:
+  #      - app-network
 
   spring-boot:
-#    build:
-#      context: .
-#      dockerfile: ./Dockerfile
+    #    build:
+    #      context: .
+    #      dockerfile: ./Dockerfile
     image: baofbu/wnc:latest
     container_name: spring-boot-backend
     ports:

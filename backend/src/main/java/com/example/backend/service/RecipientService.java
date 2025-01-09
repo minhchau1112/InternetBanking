@@ -2,13 +2,12 @@ package com.example.backend.service;
 
 import com.example.backend.dto.request.RecipientCreateRequest;
 import com.example.backend.dto.request.RecipientUpdateRequest;
+import com.example.backend.dto.response.GetRecipientsResponse;
 import com.example.backend.model.Account;
 import com.example.backend.model.Customer;
-import com.example.backend.model.LinkedBank;
 import com.example.backend.model.Recipient;
 import com.example.backend.repository.AccountRepository;
 import com.example.backend.repository.CustomerRepository;
-import com.example.backend.repository.LinkedBankRepository;
 import com.example.backend.repository.RecipientRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -24,26 +23,29 @@ public class RecipientService {
     private RecipientRepository recipientRepository;
 
     @Autowired
-    private CustomerRepository customerRepository;
-
-    @Autowired
     private AccountRepository accountRepository;
 
     @Autowired
-    private LinkedBankRepository linkedBankRepository;
+    private CustomerRepository customerRepository;
 
     public List<Recipient> findByCustomer(Integer customerId) {
         return recipientRepository.findByCustomerId(customerId);
     }
-
+    public List<GetRecipientsResponse> getRecipientsByCustomerId(Integer customerId) {
+        return recipientRepository.getRecipientsByCustomerId(customerId);
+    }
     public Recipient saveRecipient(RecipientCreateRequest createRequest) {
 
-        Customer customer = accountRepository.findById(createRequest.getCustomerId()).get().getCustomer();
+        Customer customer = customerRepository.findById(createRequest.getCustomerId()).get();
 
-        Account account = accountRepository.findByAccountNumber(createRequest.getAccountNumber()).get();
-
-        String aliasName = (!createRequest.getAliasName().isEmpty()) ?
-                createRequest.getAliasName() : account.getCustomer().getName();
+        String aliasName;
+        if(Objects.equals(createRequest.getBankCode(), "GROUP2")){
+            Account account = accountRepository.findByAccountNumber(createRequest.getAccountNumber()).get();
+            aliasName = (!createRequest.getAliasName().isEmpty()) ?
+                    createRequest.getAliasName() : account.getCustomer().getName();
+        } else {
+            aliasName = createRequest.getAliasName();
+        }
 
         Recipient recipient = Recipient.builder()
                 .customer(customer)
@@ -60,11 +62,14 @@ public class RecipientService {
 
         Recipient existingRecipient = recipientRepository.findById(updateRequest.getRecipientId()).get();
 
-        if(!updateRequest.getAliasName().isEmpty()){
-            existingRecipient.setAliasName(updateRequest.getAliasName());
+        if(Objects.equals(updateRequest.getBankCode(), "GROUP2")){
+            Account account = accountRepository.findByAccountNumber(updateRequest.getAccountNumber()).get();
+            String aliasName = (!updateRequest.getAliasName().isEmpty()) ?
+                    updateRequest.getAliasName() : account.getCustomer().getName();
+            existingRecipient.setAliasName(aliasName);
         } else {
-            String aliasName = accountRepository.findByAccountNumber(updateRequest.getAccountNumber()).get()
-                    .getCustomer().getName();
+            String aliasName = (!updateRequest.getAliasName().isEmpty()) ?
+                    updateRequest.getAliasName() : existingRecipient.getAliasName();
             existingRecipient.setAliasName(aliasName);
         }
 
@@ -72,6 +77,10 @@ public class RecipientService {
         existingRecipient.setAccountNumber(updateRequest.getAccountNumber());
 
         return recipientRepository.save(existingRecipient);
+    }
+
+    public boolean customerExistsById(Integer id) {
+        return customerRepository.existsById(id);
     }
 
     public void deleteRecipient(Integer id) {

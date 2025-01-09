@@ -1,5 +1,6 @@
 package com.example.backend.service;
 
+import com.example.backend.exception.CustomerNotFoundException;
 import com.example.backend.exception.EmailNotFoundException;
 import com.example.backend.model.Customer;
 import com.example.backend.repository.CustomerRepository;
@@ -48,5 +49,7 @@ public class CustomerService {
 
         return false;
     }
-
+    public Customer getCustomerById(Integer id) throws CustomerNotFoundException {
+        return customerRepository.findById(id).orElseThrow(() -> new CustomerNotFoundException("Customer not found"));
+    }
 }

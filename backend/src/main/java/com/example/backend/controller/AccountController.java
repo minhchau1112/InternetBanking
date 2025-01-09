@@ -4,6 +4,7 @@ import com.example.backend.dto.request.DepositRequest;
 import com.example.backend.dto.response.AccountDetailsResponse;
 import com.example.backend.model.Customer;
 import com.example.backend.model.Transaction;
+import com.example.backend.utils.annotation.APIMessage;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -44,6 +45,7 @@ public class AccountController {
         List<AccountDetailsResponse> accountDetailsResponses = accounts.stream()
                 .map(AccountDetailsResponse::new)
                 .toList();
+        System.out.println("accountDetailsResponses: " + accountDetailsResponses);
         return ResponseEntity.ok(accountDetailsResponses);
     }
 
@@ -104,6 +106,14 @@ public class AccountController {
     public ResponseEntity<AccountDetailsResponse> getAccountDetails(@PathVariable(
             "account_number") String accountNumber) {
         Account accountDetails = accountService.getAccountDetails(accountNumber);
+        return ResponseEntity.ok(new AccountDetailsResponse(accountDetails));  // Convert Account
+        // to AccountDetailsResponse
+    }
+
+    @DeleteMapping("/{account_number}")
+    public ResponseEntity<AccountDetailsResponse> deleteAccount(@PathVariable(
+            "account_number") String accountNumber) {
+        Account accountDetails = accountService.deleteAccount(accountNumber);
         return ResponseEntity.ok(new AccountDetailsResponse(accountDetails));  // Convert Account
         // to AccountDetailsResponse
     }
@@ -190,6 +200,14 @@ public class AccountController {
 
         Transaction transaction = accountService.deposit(depositRequest);
         return ResponseEntity.ok(transaction);
+    }
+
+    @GetMapping("/v2/{accountNumber}")
+    @APIMessage("Retrieve account by account number success")
+    public ResponseEntity<Account> findAccountByAccountNumber(@PathVariable String accountNumber) throws com.example.backend.exception.AccountNotFoundException {
+        Account account = accountService.getAccountByAccountNumber(accountNumber);
+
+        return ResponseEntity.ok(account);
     }
 }
 

@@ -108,6 +108,17 @@ export const fetchCustomerAccounts = async () => {
         console.error(error);
     }
 };
+export const closeAccountAPI = async (accountNumber: string) => {
+    try {
+        const accessToken = localStorage.getItem('access_token');
+        const response = await axios.delete(`${API_CUSTOMER_URL}/api/accounts/${accountNumber}`, {
+            headers: { Authorization: `Bearer ${accessToken}` }
+        });
+        return response.data;
+    } catch (error) {
+        console.error(error);
+    }
+};
 
 
 

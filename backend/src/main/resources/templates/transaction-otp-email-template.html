@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mã OTP Khôi Phục Mật Khẩu</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+            color: #333333;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .email-header {
+            background-color: #000000;
+            color: #ffffff;
+            padding: 20px;
+            text-align: left;
+        }
+        .email-body {
+            padding: 20px;
+            color: #333333;
+            line-height: 1.6;
+        }
+        .email-body h2 {
+            margin: 0 0 10px;
+            color: #000000;
+        }
+        .email-footer {
+            text-align: center;
+            padding: 15px;
+            background-color: #f4f4f4;
+            font-size: 12px;
+            color: #777777;
+        }
+        .otp-code {
+            font-size: 24px;
+            color: #000000;
+            font-weight: bold;
+            margin: 20px 0;
+            text-align: center;
+        }
+        p{
+            color: #000000;
+        }
+    </style>
+</head>
+<body>
+<div class="email-container">
+    <div class="email-header">
+        <h2>Xác nhận giao dịch OTP</h2>
+    </div>
+    <div class="email-body">
+        <p>Xin chào [[${customerName}]],</p>
+        <p>Chúng tôi vừa nhận được yêu cầu chuyển tiền từ tài khoản của bạn với chi tiết giao dịch như sau:</p>
+        <p><strong>Số tài khoản nhận:</strong> [[${receiverAccountNumber}]]</p>
+        <p><strong>Tên người nhận:</strong> [[${receiverFullName}]]</p>
+        <p><strong>Số tiền:</strong> [[${transactionAmount}]] VND</p>
+        <p>Vui lòng sử dụng mã OTP dưới đây để xác nhận giao dịch:</p>
+        <p class="otp-code" th:text="${otpCode}"></p>
+        <p><strong>Lưu ý:</strong> Mã OTP có hiệu lực trong vòng 5 phút. Không chia sẻ mã OTP này với bất kỳ ai để bảo vệ tài khoản của bạn.</p>
+    </div>
+    <div class="email-footer">
+        <p>&copy; 2024 Internet Banking. All rights reserved.</p>
+    </div>
+</div>
+</body>
+</html>

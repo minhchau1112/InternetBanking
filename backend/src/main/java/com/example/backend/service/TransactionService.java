@@ -1,5 +1,15 @@
 package com.example.backend.service;
 
+import com.example.backend.enums.FeePayer;
+import com.example.backend.enums.TransactionType;
+import com.example.backend.model.Account;
+import com.example.backend.model.Transaction;
+import com.example.backend.repository.TransactionRepository;
+import org.springframework.stereotype.Service;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.Optional;
 import com.example.backend.dto.request.OtpVerificationRequest;
 import com.example.backend.dto.request.TransactionRequest;
 import com.example.backend.dto.response.InterbankTransactionResponse;
@@ -22,7 +32,6 @@ import java.util.stream.Collectors;
 
 @Service
 public class TransactionService {
-
     @Autowired
     private TransactionRepository transactionRepository;
 
@@ -211,6 +220,44 @@ public class TransactionService {
         return false;
     }
 
+    public void savePendingTransaction(Account source, Account destination, BigDecimal amount, String message, FeePayer feePayer) {
+        Transaction transaction = new Transaction();
+        transaction.setSourceAccount(source);
+        transaction.setDestinationAccount(destination);
+        transaction.setAmount(amount);
+        transaction.setMessage(message);
+        transaction.setFee(BigDecimal.valueOf(3000));
+        transaction.setFeePayer(feePayer);
+        transaction.setOtpVerified(false);
+        transaction.setType(TransactionType.TRANSFER);
+        transaction.setStatus("PENDING");
+        transaction.setCreatedAt(LocalDateTime.now());
+        transactionRepository.save(transaction);
+    }
+
+    public Optional<Transaction> getPendingTransaction() {
+        return transactionRepository.findFirstByStatus("PENDING");
+    }
+
+    public void executeTransaction(Transaction transaction) {
+        Account source = transaction.getSourceAccount();
+        source.setBalance(source.getBalance().subtract(transaction.getAmount()));
+
+        Account destination = transaction.getDestinationAccount();
+        destination.setBalance(destination.getBalance().add(transaction.getAmount()));
+
+        if (transaction.getFeePayer().equals(FeePayer.SENDER)) {
+            source.setBalance(source.getBalance().subtract(transaction.getFee()));
+        } else if (transaction.getFeePayer().equals(FeePayer.RECEIVER)) {
+            destination.setBalance(destination.getBalance().subtract(transaction.getFee()));
+        }
+
+        transaction.setOtpVerified(true);
+        transaction.setStatus("COMPLETED");
+        transaction.setCompletedAt(LocalDateTime.now());
+
+        transactionRepository.save(transaction);
+    }
     /**
      * Check if the account has sufficient balance for the transaction.
      * @param account Account.

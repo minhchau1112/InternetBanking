@@ -5,10 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e0eed544-89c0-42c9-896e-fc7e2e690907" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources.local.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.local.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/App.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/App.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/example/backend/controller/LinkedBankController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/example/backend/controller/LinkedBankController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/example/backend/controller/TransactionController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/example/backend/controller/TransactionController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/pages/admin/TransactionHistoryAdmin.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/admin/TransactionHistoryAdmin.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/redux/slices/transactionsSlice.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/redux/slices/transactionsSlice.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -153,6 +154,8 @@
       <workItem from="1736348383245" duration="1083000" />
       <workItem from="1736358243673" duration="7746000" />
       <workItem from="1736393053899" duration="12239000" />
+      <workItem from="1736424103769" duration="445000" />
+      <workItem from="1736424578989" duration="459000" />
     </task>
     <servers />
   </component>
@@ -167,7 +170,6 @@
       <breakpoints>
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/frontend/src/main.tsx</url>
-          <properties lambdaOrdinal="-1" />
           <option name="timeStamp" value="6" />
         </line-breakpoint>
       </breakpoints>

@@ -136,9 +136,10 @@ public class InterbankController {
     }
 
     // Get API for my bank to call the api from other bank to get information
-    @GetMapping("/get-account-info/")
+    @PostMapping("/get-account-info/")
     public ResponseEntity<AccountInfoData> getAccountInfo(@RequestBody LinkedHashMap<String,
             String> body) throws Exception {
+        System.out.println("account_number: " + body.get("account_number"));
         // call localhost:3000/api/shared/user
         RestTemplate restTemplate = new RestTemplate();
         String url = "http://localhost:3000/api/shared/user";

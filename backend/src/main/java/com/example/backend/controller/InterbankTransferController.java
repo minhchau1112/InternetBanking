@@ -3,6 +3,7 @@ package com.example.backend.controller;
 
 
 import com.example.backend.dto.request.InterbankRequest;
+import com.example.backend.dto.request.OtpVerificationRequest;
 import com.example.backend.dto.response.interbank.*;
 import com.example.backend.dto.response.InterbankResponse;
 import com.example.backend.helper.HashUtil;
@@ -12,6 +13,7 @@ import com.example.backend.helper.RSAUtil;
 import com.example.backend.model.InterbankTransaction;
 import com.example.backend.service.InterbankService;
 import com.example.backend.service.KeyService;
+import com.example.backend.service.TransactionService;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -39,10 +41,31 @@ public class InterbankTransferController {
     @Autowired
     private InterbankService interbankService;
 
+    @Autowired
+    private TransactionService transactionService;
+
     private final KeyService keyService;
 
     public InterbankTransferController(KeyService keyService) {
         this.keyService = keyService;
+    }
+
+    @PostMapping("/create")
+    public ResponseEntity<InterbankResponse> createInterbankTransaction(@RequestBody DepositInterbankRequest request) {
+        InterbankTransaction transaction = interbankService.createTransaction(request);
+        InterbankResponse response = new InterbankResponse();
+        response.setPayload(String.valueOf(transaction.getId()));
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+    @PostMapping("/verify-otp")
+    public ResponseEntity<?> verifyOtp(@RequestBody OtpVerificationRequest otpRequest) {
+        boolean isVerified = interbankService.verifyOtpAndCompleteTransaction(otpRequest); // Verify OTP
+
+        if (isVerified) {
+            return ResponseEntity.ok("Transaction completed successfully.");
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid OTP or expired.");
+        }
     }
 
     @PostMapping("/transfer")
@@ -78,6 +101,9 @@ public class InterbankTransferController {
         ResponseEntity<Object> response=  restTemplate.exchange(url, HttpMethod.POST,
                 entity,
                 Object.class);
+
+        request.setSenderBankCode("WNC");
+//        interbankService.createTransaction(request);
 
         return new ResponseEntity<Object>(response, headers, 200);
     }

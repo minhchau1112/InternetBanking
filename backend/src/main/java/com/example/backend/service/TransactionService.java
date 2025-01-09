@@ -49,7 +49,14 @@ public class TransactionService {
 
     private final Map<Integer, String> otpCache = new HashMap<>();
 
-    // Lấy danh sách giao dịch nội bộ của tài khoản
+    /**
+     * Get the list of transactions for a user.
+     * @param accountId ID of the current logged account.
+     * @param partnerAccountNumber Account number of the partner.
+     * @param startDate Start date of the transaction.
+     * @param endDate End date of the transaction.
+     * @return List of transactions.
+     */
     public List<TransactionResponse> getUserTransactions(
             Integer accountId,
             String partnerAccountNumber,
@@ -60,11 +67,22 @@ public class TransactionService {
 
         return transactions.stream().map(transaction -> {
             String tab = transaction.getSourceAccount().getId().equals(accountId) ? "out" : "in";
+            System.out.println(transaction.getType());
+            if(transaction.getType().toString().equals("DEPOSIT")) {
+                tab = "in";
+            }
             return new TransactionResponse(transaction, tab);
         }).collect(Collectors.toList());
     }
 
-    // Lấy danh sách giao dịch liên ngân hàng của tài khoản
+    /**
+     * Get the list of interbank transactions for a user.
+     * @param accountId ID of the current logged account.
+     * @param partnerAccountNumber Account number of the partner.
+     * @param startDate Start date of the transaction.
+     * @param endDate End date of the transaction.
+     * @return List of interbank transactions.
+     */
     public List<InterbankTransactionResponse> getUserInterbankTransactions(
             Integer accountId,
             String partnerAccountNumber,
@@ -75,6 +93,22 @@ public class TransactionService {
 
         return transactions.stream().map(transaction -> {
             String tab = transaction.isIncoming() ? "in" : "out";
+            String externalAccount = transaction.getExternalAccountNumber();
+            String bankName = linkedBankRepository.findByBankCode(transaction.getExternalBankCode())
+                    .map(LinkedBank::getName)
+                    .orElse("Unknown Bank");
+            return new InterbankTransactionResponse(transaction, externalAccount, bankName, tab);
+        }).collect(Collectors.toList());
+    }
+
+    public List<InterbankTransactionResponse> getInterbankTransactionsWithAccountId(
+            Integer accountId,
+            LocalDateTime startDate,
+            LocalDateTime endDate
+    ) {
+        List<InterbankTransaction> transactions = interbankTransactionRepository.findInterbankTransactionsWithAccountId(accountId, startDate, endDate);
+        return transactions.stream().map(transaction -> {
+            String tab = transaction.isIncoming() ? "in" : "out";
             String externalAccount = transaction.isIncoming() ? transaction.getExternalAccountNumber() : transaction.getSourceAccount().getAccountNumber();
             String bankName = linkedBankRepository.findByBankCode(transaction.getExternalBankCode())
                     .map(LinkedBank::getName)
@@ -83,12 +117,20 @@ public class TransactionService {
         }).collect(Collectors.toList());
     }
 
+    /**
+     * Generate and send OTP for a transaction.
+     * @param request Transaction request.
+     * @return OTP.
+     */
     public String generateAndSendOTP(Transaction request) {
         String otp = String.valueOf((int) ((Math.random() * 9000) + 1000)); // Generate 4-digit OTP
 
         // Gửi OTP qua email
         String email = request.getSourceAccount().getCustomer().getEmail();
-        emailService.sendEmail(email, "Transaction OTP", "Your OTP is: " + otp);
+//        emailService.sendEmail(email, "Transaction OTP", "Your OTP is: " + otp);
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("OTP_CODE", otp);
+        emailService.sendEmailFromTemplateSync(email, "Transaction OTP", "otp", variables);
 
         // Lưu OTP vào cache hoặc cơ sở dữ liệu (chọn cache cho nhanh)
         otpCache.put(request.getId(), otp);
@@ -96,6 +138,11 @@ public class TransactionService {
         return otp;
     }
 
+    /**
+     * Create a new transaction in the PENDING state.
+     * @param request Transaction request.
+     * @return Created transaction.
+     */
     public Transaction createPendingTransaction(TransactionRequest request) {
         Account sourceAccount = accountRepository.findById(request.getSourceAccountId())
                 .orElseThrow(() -> new IllegalArgumentException("Source account not found"));
@@ -128,6 +175,11 @@ public class TransactionService {
         return transaction;
     }
 
+    /**
+     * Verify OTP and complete the transaction.
+     * @param otpRequest OTP verification request.
+     * @return True if the OTP is verified and the transaction is completed.
+     */
     public boolean verifyOtpAndCompleteTransaction(OtpVerificationRequest otpRequest) {
         String cachedOtp = otpCache.get(otpRequest.getTransactionId());
         if (cachedOtp != null && cachedOtp.equals(otpRequest.getOtp())) {
@@ -206,9 +258,58 @@ public class TransactionService {
 
         transactionRepository.save(transaction);
     }
+    /**
+     * Check if the account has sufficient balance for the transaction.
+     * @param account Account.
+     * @param amount Amount to be deducted.
+     * @param fee Transaction fee.
+     * @param feePayer Fee payer.
+     * @return True if the account has sufficient balance.
+     */
     public boolean hasSufficientBalance(Account account, BigDecimal amount, BigDecimal fee, String feePayer) {
         BigDecimal totalDeduction = feePayer.equals("SENDER") ? amount.add(fee) : amount;
         return account.getBalance().compareTo(totalDeduction) >= 0;
     }
+
+
+    // Lấy danh sách giao dịch nội bộ của tài khoản dua vao account number cho employee
+    public List<TransactionResponse> getUserTransactionsByAccountNumber(
+            String partnerAccountNumber,
+            LocalDateTime startDate,
+            LocalDateTime endDate
+    ) {
+        List<Transaction> transactions = transactionRepository.findAllTransactionsByAccountNumber(partnerAccountNumber, startDate, endDate);
+
+        return transactions.stream().map(transaction -> {
+            String tab = transaction.getSourceAccount().getAccountNumber().equals(partnerAccountNumber) ? "out" : "in";
+            System.out.println(transaction.getType());
+            if(transaction.getType().toString().equals("DEPOSIT")) {
+                tab = "in";
+            }
+            return new TransactionResponse(transaction, tab);
+        }).collect(Collectors.toList());
+    }
+
+    // Lấy danh sách giao dịch liên ngân hàng của tài khoản
+    public List<InterbankTransactionResponse> getUserInterbankTransactionsByAccountNumber(
+            String partnerAccountNumber,
+            LocalDateTime startDate,
+            LocalDateTime endDate
+    ) {
+        Account account = accountRepository.findByAccountNumber(partnerAccountNumber)
+                .orElseThrow(() -> new IllegalArgumentException("Account not found"));
+        List<InterbankTransaction> transactions = interbankTransactionRepository.findInterbankTransactionsByAccountNumber(account.getId(), startDate, endDate);
+
+        return transactions.stream().map(transaction -> {
+            String tab = transaction.isIncoming() ? "in" : "out";
+            String externalAccount = transaction.getExternalAccountNumber();
+            String bankName = linkedBankRepository.findByBankCode(transaction.getExternalBankCode())
+                    .map(LinkedBank::getName)
+                    .orElse("Unknown Bank");
+            return new InterbankTransactionResponse(transaction, externalAccount, bankName, tab);
+        }).collect(Collectors.toList());
+    }
+
+
 
 }

@@ -26,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/recipients")
@@ -87,9 +88,9 @@ public class RecipientController {
     @APIMessage("Recipient fetched successfully.")
     public ResponseEntity<List<Recipient>> getRecipient
             (@PathVariable("customer_id") int customer_id) throws CustomerNotFoundException {
-        Integer customerId = accountRepository.findById(customer_id).get().getCustomer().getId();
-        List<Recipient> recipients = recipientService.findByCustomer(customerId);
-        RecipientListResponse recipientListResponse = new RecipientListResponse(recipients);
+
+        List<Recipient> recipients = recipientService.findByCustomer(customer_id);
+//        RecipientListResponse recipientListResponse = new RecipientListResponse(recipients);
 
         return ResponseEntity.ok(recipients);
     }
@@ -148,7 +149,8 @@ public class RecipientController {
     public ResponseEntity<Void> createRecipient
             (@RequestBody @Valid RecipientCreateRequest createRequest) throws CustomerNotFoundException {
 
-        if(!accountRepository.existsByAccountNumber(createRequest.getAccountNumber())) {
+        if(Objects.equals(createRequest.getBankCode(), "GROUP2") &&
+        !accountRepository.existsByAccountNumber(createRequest.getAccountNumber())) {
             throw new CustomerNotFoundException("Không tìm thấy khách hàng này");
         }
 

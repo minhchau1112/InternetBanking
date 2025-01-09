@@ -1,10 +1,5 @@
-package com.example.backend.dto.response.interbank;
-
-import com.example.backend.helper.FloatOrIntegerSerializer;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -31,8 +26,7 @@ public class DepositInterbankRequest {
     @JsonProperty("recipient_account_number")
     private String recipientAccountNumber;
 
-    @JsonSerialize(using = FloatOrIntegerSerializer.class)
-    private Float amount;
+    private Integer amount;
 
     @JsonProperty("transaction_type")
     private String transactionType;
@@ -41,10 +35,10 @@ public class DepositInterbankRequest {
     private String feePayer;
 
     @JsonProperty("fee_amount")
-    @JsonSerialize(using = FloatOrIntegerSerializer.class)
-    private Float feeAmount;
+    private Integer feeAmount;
 
     private String description;
 
     private String status;
 }
+

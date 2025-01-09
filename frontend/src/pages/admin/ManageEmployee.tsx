@@ -26,7 +26,7 @@ const ManageEmployee: React.FC = () => {
 
     const fetchEmployees = async () => {
         try {
-            const response = await fetch('http://localhost:3306/api/employees');
+            const response = await fetch('http://localhost:8888/api/employees');
             if (!response.ok) {
                 throw new Error('Failed to fetch employees');
             }
@@ -45,7 +45,7 @@ const ManageEmployee: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         const method = currentEmployee ? 'PUT' : 'POST';
-        const url = currentEmployee ? `http://localhost:3306/api/employees/${currentEmployee.id}` : 'http://localhost:3306/api/employees';
+        const url = currentEmployee ? `http://localhost:8888/api/employees/${currentEmployee.id}` : 'http://localhost:3306/api/employees';
 
         const body = JSON.stringify({ id: formData.id, name: formData.name, status: formData.status });
 
@@ -79,7 +79,7 @@ const ManageEmployee: React.FC = () => {
 
     const handleDelete = async (id: number) => {
         try {
-            const response = await fetch(`http://localhost:3306/api/employees/${id}`, { method: 'DELETE' });
+            const response = await fetch(`http://localhost:8888/api/employees/${id}`, { method: 'DELETE' });
             if (!response.ok) {
                 throw new Error('Failed to delete employee');
             }

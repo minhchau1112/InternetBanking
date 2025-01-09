@@ -59,9 +59,9 @@ const Sidebar: React.FC<SidebarProps> = ({ userType }) => {
         <h1 className="text-2xl font-bold text-blue-600">
           Sunrise<span className="text-orange-500">Bank</span>
         </h1>
-        <p className="mt-2 text-lg text-gray-500">
+        {/* <p className="mt-2 text-lg text-gray-500">
           Welcome, <span className="text-lg font-bold">Minh Châu</span>
-        </p>
+        </p> */}
       </div>
 
       <div className="flex-grow">

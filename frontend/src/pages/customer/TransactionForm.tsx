@@ -261,15 +261,16 @@ const TransactionForm = () => {
                     setShowSaveRecipientModal(true);
                 }
 
-                // Reset transaction states
-                setAmount('');
-                setFee('');
-                setFeePayer('SENDER');
-                setMessage('');
-                setOtp('');
-                setTransactionId(null);
-                setOtpSent(false);
-                setTimeout(() => window.location.reload(), 3000);
+                setTimeout(() => {
+                    // Reload lại trang sau 2 giây
+                    setAmount('');
+                    setFee('');
+                    setFeePayer('SENDER');
+                    setMessage('');
+                    setOtp('');
+                    setTransactionId(null);
+                    setOtpSent(false);
+                }, 3000);
             } catch (error) {
                 toast.error('Invalid or expired OTP or transfer failed.');
             }

@@ -5,6 +5,7 @@ import com.example.backend.dto.response.interbank.UserDetailResponse;
 import com.example.backend.enums.AccountType;
 import com.example.backend.enums.FeePayer;
 import com.example.backend.enums.TransactionType;
+import com.example.backend.exception.AccountNotFoundException;
 import com.example.backend.helper.PasswordGenerator;
 import com.example.backend.model.Account;
 import com.example.backend.model.Customer;
@@ -17,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.data.repository.core.support.TransactionalRepositoryFactoryBeanSupport;
 import org.springframework.stereotype.Service;
+
 import java.math.BigDecimal;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
@@ -203,6 +205,10 @@ public class AccountService {
 
     public Account findAccountByAccountNumber(String accountNumber) {
         return accountRepository.findByAccountNumber(accountNumber).orElse(null);
+    }
+
+    public Account getAccountByAccountNumber(String accountNumber) throws AccountNotFoundException {
+        return accountRepository.findByAccountNumber(accountNumber).orElseThrow(() -> new AccountNotFoundException("Account not found"));
     }
 
     public Account deleteAccount(String accountNumber) {

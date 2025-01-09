@@ -1,6 +1,10 @@
 import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import CustomerDashboard from "./pages/customer/CustomerDashboard";
 import Sidebar from "./components/Sidebar";
+// import useWebSocket from "./hooks/useWebSocket";
+import Notifications from "./components/Notification";
+// import useStomp from "./hooks/useStomp.ts";
+import ViewListDebtReminder from "./pages/customer/ViewListDebtReminder";
 import { LoginForm } from "@/pages/login/Login.tsx";
 import { useEffect } from "react";
 import { useSelector } from "react-redux";
@@ -17,10 +21,12 @@ import Profile from "@/pages/customer/Profile.tsx";
 
 
 function App() {
+    const id = localStorage.getItem('accountId') || "3";
+    // const message = useWebSocket("ws://127.0.0.1:8888/ws/notifications", id) || "Thông báo";
+    // useStomp("ws://127.0.0.1:8888/ws/notifications", id)
     const navigate = useNavigate();
     const token = localStorage.getItem("access_token");
     const location = useLocation();
-
 
     useEffect(() => {
         if (!token && location.pathname !== "/login" && location.pathname !== "/forgot-password" && location.pathname !== "/reset-password") {
@@ -41,9 +47,13 @@ function App() {
         <div className="flex w-screen">
             {!noSidebarPages.includes(location.pathname) && <Sidebar userType={userType}/>}
             <div className={`flex-grow`}>
+                <div className="absolute top-4 right-4 z-50 bg-white shadow-lg p-4 rounded">
+                  <Notifications userId={id} />
+                </div>
                 <Routes>
                     <Route path="/" element={<h1>Welcome to Internet Banking</h1>}/>
                     <Route path="/customer" element={<CustomerDashboard/>}/>
+                    <Route path="/debt-reminder" element={<ViewListDebtReminder />} />
                     <Route path="/login" element={<LoginForm/>}/>
                     <Route path="/deposit" element={<DepositPage/>}/>
                     <Route path="/contact" element={<Recipient/>}/>

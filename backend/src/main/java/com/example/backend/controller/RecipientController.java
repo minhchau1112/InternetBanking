@@ -2,6 +2,7 @@ package com.example.backend.controller;
 
 import com.example.backend.dto.request.RecipientCreateRequest;
 import com.example.backend.dto.request.RecipientUpdateRequest;
+import com.example.backend.dto.response.GetRecipientsResponse;
 import com.example.backend.dto.response.RecipientListResponse;
 import com.example.backend.exception.CustomerNotFoundException;
 import com.example.backend.model.LinkedBank;
@@ -20,16 +21,17 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/recipients")
 @Tag(name = "Recipient Controller")
+@Slf4j
 public class RecipientController {
 
     @Autowired
@@ -92,6 +94,20 @@ public class RecipientController {
 
         return ResponseEntity.ok(recipients);
     }
+    @GetMapping("/v2/{customerId}")
+    @APIMessage("Recipient fetched successfully")
+    public ResponseEntity<List<GetRecipientsResponse>> getRecipientsByCustomerId(@PathVariable int customerId) throws CustomerNotFoundException {
+        log.info("getRecipientsByCustomerId");
+        if(!recipientService.customerExistsById(customerId)) {
+            log.info("Customer not found");
+            throw new CustomerNotFoundException("Customer not found");
+        }
+
+        List<GetRecipientsResponse> recipients = recipientService.getRecipientsByCustomerId(customerId);
+        log.info("getRecipientsByCustomerId success");
+
+        return ResponseEntity.ok(recipients);
+    }
 
     @Operation(
             summary = "Create a new recipient",
@@ -144,7 +160,6 @@ public class RecipientController {
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body(null);
         }
-
     }
 
     @PutMapping("/{recipient_id}")

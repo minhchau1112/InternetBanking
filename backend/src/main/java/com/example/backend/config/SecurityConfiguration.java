@@ -45,6 +45,7 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(
                         authz -> authz
                                 .requestMatchers(PUBLIC_URLS).permitAll()
+                                .requestMatchers("/ws/**").permitAll()
                                 .requestMatchers("/admin/**").hasRole("ADMIN")
                                 .requestMatchers("/customer/**").hasRole("CUSTOMER")
                                 .requestMatchers("/employee/**").hasRole("EMPLOYEE")

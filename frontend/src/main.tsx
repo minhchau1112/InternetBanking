@@ -1,17 +1,27 @@
+import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import React from "react";
 import './index.css';
 import App from './App.tsx';
+import { BrowserRouter as Router } from "react-router-dom";  
+import { SnackbarProvider } from 'notistack';
 import { Provider } from "react-redux";
 import { store } from "@/redux/store";
-import { BrowserRouter } from 'react-router-dom';
 
 createRoot(document.getElementById('root')!).render(
-    <React.StrictMode>
-        <Provider store={store}>
-            <BrowserRouter>
-                <App />
-            </BrowserRouter>
-        </Provider>
-    </React.StrictMode>
+  <StrictMode>
+    <Provider store={store}>  {/* Wrap the app with Provider */}
+      <Router>
+        <SnackbarProvider
+          maxSnack={3} 
+          anchorOrigin={{
+            vertical: 'top',
+            horizontal: 'right',
+          }}
+          autoHideDuration={3000}
+        >
+          <App />
+        </SnackbarProvider>
+      </Router>
+    </Provider>
+  </StrictMode>
 );

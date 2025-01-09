@@ -65,6 +65,7 @@ const TransactionHistoryAdmin = () => {
                 }),
             });
             console.log("Transactions: ", response.data.data);
+            dispatch(setSortOrder('desc'));
             dispatch(setTransactions(response.data.data));
         } catch (error) {
             dispatch(setError("Failed to fetch transactions"));
@@ -117,6 +118,7 @@ const TransactionHistoryAdmin = () => {
 
     // Hàm thay đổi tab
     const handleTabChange = (tab: 'all' | 'in' | 'out') => {
+        dispatch(setSortOrder('desc'));
         dispatch(setActiveTab(tab));
         filterByTab(allTransactions, tab);
     };

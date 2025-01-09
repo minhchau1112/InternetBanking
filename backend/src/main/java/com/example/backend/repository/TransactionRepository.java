@@ -24,7 +24,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Intege
             LocalDateTime endDate
     );
 
-    Optional<Transaction> findFirstByStatus(String status);
+    Optional<Transaction> findByIdAndStatus(Integer id, String status);
     // Truy vấn theo source account id và destination account id (nếu có)
     @Query("SELECT t FROM Transaction t " +
             "WHERE (:accountNumber IS NULL OR t.sourceAccount.accountNumber = :accountNumber OR t.destinationAccount.accountNumber = :accountNumber) " +

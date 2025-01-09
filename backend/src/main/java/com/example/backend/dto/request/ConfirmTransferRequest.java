@@ -5,4 +5,5 @@ import lombok.Data;
 public class ConfirmTransferRequest {
     private String otp;
     private String email;
+    private Integer transactionId;
 }

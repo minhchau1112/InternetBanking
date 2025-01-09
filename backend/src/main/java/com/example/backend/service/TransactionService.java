@@ -2,6 +2,7 @@ package com.example.backend.service;
 
 import com.example.backend.enums.FeePayer;
 import com.example.backend.enums.TransactionType;
+import com.example.backend.exception.InsufficientBalanceException;
 import com.example.backend.model.Account;
 import com.example.backend.model.Transaction;
 import com.example.backend.repository.TransactionRepository;
@@ -220,7 +221,7 @@ public class TransactionService {
         return false;
     }
 
-    public void savePendingTransaction(Account source, Account destination, BigDecimal amount, String message, FeePayer feePayer) {
+    public Integer savePendingTransaction(Account source, Account destination, BigDecimal amount, String message, FeePayer feePayer) {
         Transaction transaction = new Transaction();
         transaction.setSourceAccount(source);
         transaction.setDestinationAccount(destination);
@@ -232,24 +233,38 @@ public class TransactionService {
         transaction.setType(TransactionType.TRANSFER);
         transaction.setStatus("PENDING");
         transaction.setCreatedAt(LocalDateTime.now());
-        transactionRepository.save(transaction);
+        Transaction savedTransaction = transactionRepository.save(transaction);
+
+        return savedTransaction.getId();
     }
 
-    public Optional<Transaction> getPendingTransaction() {
-        return transactionRepository.findFirstByStatus("PENDING");
+    public Optional<Transaction> getPendingTransaction(Integer transactionId) {
+        return transactionRepository.findByIdAndStatus(transactionId, "PENDING");
     }
 
-    public void executeTransaction(Transaction transaction) {
+    public void executeTransaction(Transaction transaction) throws InsufficientBalanceException {
         Account source = transaction.getSourceAccount();
-        source.setBalance(source.getBalance().subtract(transaction.getAmount()));
-
         Account destination = transaction.getDestinationAccount();
-        destination.setBalance(destination.getBalance().add(transaction.getAmount()));
+        BigDecimal amount = transaction.getAmount();
+        BigDecimal fee = transaction.getFee();
+
+        BigDecimal totalDeduction = transaction.getFeePayer().equals(FeePayer.SENDER) ? amount.add(fee) : amount;
+        if (source.getBalance().compareTo(totalDeduction) < 0) {
+            throw new InsufficientBalanceException("Nguồn không đủ số dư để thực hiện giao dịch");
+        }
+
+        if (transaction.getFeePayer().equals(FeePayer.RECEIVER) && destination.getBalance().compareTo(fee) < 0) {
+            throw new InsufficientBalanceException("Đích không đủ số dư để chịu phí giao dịch");
+        }
+
+        source.setBalance(source.getBalance().subtract(amount));
+
+        destination.setBalance(destination.getBalance().add(amount));
 
         if (transaction.getFeePayer().equals(FeePayer.SENDER)) {
-            source.setBalance(source.getBalance().subtract(transaction.getFee()));
+            source.setBalance(source.getBalance().subtract(fee));
         } else if (transaction.getFeePayer().equals(FeePayer.RECEIVER)) {
-            destination.setBalance(destination.getBalance().subtract(transaction.getFee()));
+            destination.setBalance(destination.getBalance().subtract(fee));
         }
 
         transaction.setOtpVerified(true);
@@ -258,6 +273,7 @@ public class TransactionService {
 
         transactionRepository.save(transaction);
     }
+
     /**
      * Check if the account has sufficient balance for the transaction.
      * @param account Account.

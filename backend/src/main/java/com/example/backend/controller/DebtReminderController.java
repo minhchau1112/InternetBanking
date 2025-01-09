@@ -7,6 +7,7 @@ import com.example.backend.dto.response.GetDebtReminderForCreatorResponse;
 import com.example.backend.enums.DebtReminderStatus;
 import com.example.backend.exception.DebtReminderNotFoundException;
 import com.example.backend.exception.EmailNotFoundException;
+import com.example.backend.exception.InsufficientBalanceException;
 import com.example.backend.exception.OTPNotFoundException;
 import com.example.backend.model.DebtReminder;
 import com.example.backend.service.DebtReminderService;
@@ -517,7 +518,7 @@ public class DebtReminderController {
     )
     @PostMapping("/{debtReminderId}/pay")
     @APIMessage("Pay debt success!")
-    public ResponseEntity<Void> payDebtReminder(@PathVariable Integer debtReminderId, @RequestBody ConfirmTransferRequest request) throws EmailNotFoundException, OTPNotFoundException, DebtReminderNotFoundException {
+    public ResponseEntity<Void> payDebtReminder(@PathVariable Integer debtReminderId, @RequestBody ConfirmTransferRequest request) throws EmailNotFoundException, OTPNotFoundException, DebtReminderNotFoundException, InsufficientBalanceException {
         log.info("payDebtReminder");
         internalTransferService.confirmTransfer(request);
         debtReminderService.payDebtReminder(debtReminderId);

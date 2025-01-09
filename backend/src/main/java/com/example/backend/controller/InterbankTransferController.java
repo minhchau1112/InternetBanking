@@ -52,6 +52,7 @@ public class InterbankTransferController {
 
     @PostMapping("/create")
     public ResponseEntity<InterbankResponse> createInterbankTransaction(@RequestBody DepositInterbankRequest request) {
+        request.setSenderBankCode("WNC");
         InterbankTransaction transaction = interbankService.createTransaction(request);
         InterbankResponse response = new InterbankResponse();
         response.setPayload(String.valueOf(transaction.getId()));

@@ -210,4 +210,11 @@ public class AccountService {
     public Account getAccountByAccountNumber(String accountNumber) throws AccountNotFoundException {
         return accountRepository.findByAccountNumber(accountNumber).orElseThrow(() -> new AccountNotFoundException("Account not found"));
     }
+
+    public Account deleteAccount(String accountNumber) {
+        Account account = accountRepository.findByAccountNumber(accountNumber).orElseThrow(() -> new IllegalArgumentException("Account does not exist"));
+        account.setIsPrimary(false);
+        accountRepository.save(account);
+        return account;
+    }
 }

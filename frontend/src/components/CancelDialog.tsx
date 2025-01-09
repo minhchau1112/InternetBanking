@@ -30,7 +30,7 @@ const CancelDialog: React.FC<CancelDialogProps> = ({ open, onClose, onConfirm })
 				/>
 			</DialogContent>
 			<DialogActions>
-				<Button onClick={onClose} color="secondary">
+				<Button onClick={onClose} color="secondary" variant="outlined">
 					Cancel
 				</Button>
 				<Button onClick={handleConfirm} color="primary" variant="contained" disabled={!reason.trim()}>

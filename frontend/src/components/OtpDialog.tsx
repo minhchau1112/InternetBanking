@@ -43,7 +43,7 @@ const OtpDialog: React.FC<OtpDialogProps> = ({ open, onClose, onConfirm, errorMe
         />
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} color="secondary">
+        <Button onClick={onClose} color="secondary" variant='outlined'>
           Cancel
         </Button>
         <Button onClick={handleConfirm} color="primary" variant='contained'>

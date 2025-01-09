@@ -44,6 +44,7 @@ public class AccountController {
         List<AccountDetailsResponse> accountDetailsResponses = accounts.stream()
                 .map(AccountDetailsResponse::new)
                 .toList();
+        System.out.println("accountDetailsResponses: " + accountDetailsResponses);
         return ResponseEntity.ok(accountDetailsResponses);
     }
 
@@ -104,6 +105,14 @@ public class AccountController {
     public ResponseEntity<AccountDetailsResponse> getAccountDetails(@PathVariable(
             "account_number") String accountNumber) {
         Account accountDetails = accountService.getAccountDetails(accountNumber);
+        return ResponseEntity.ok(new AccountDetailsResponse(accountDetails));  // Convert Account
+        // to AccountDetailsResponse
+    }
+
+    @DeleteMapping("/{account_number}")
+    public ResponseEntity<AccountDetailsResponse> deleteAccount(@PathVariable(
+            "account_number") String accountNumber) {
+        Account accountDetails = accountService.deleteAccount(accountNumber);
         return ResponseEntity.ok(new AccountDetailsResponse(accountDetails));  // Convert Account
         // to AccountDetailsResponse
     }

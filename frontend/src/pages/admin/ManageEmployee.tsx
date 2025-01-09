@@ -108,7 +108,7 @@ const ManageEmployee = () => {
                     className="mr-2"
                 />
                 <Button onClick={() => setCurrentEmployee(null)} variant="default">
-                    + Add Employee
+                    Add Employee
                 </Button>
             </div>
             <table className="min-w-full border">

@@ -109,6 +109,57 @@ public class RecipientController {
 
         return ResponseEntity.ok(recipients);
     }
+    @Operation(
+            summary = "Get recipients by customer ID",
+            description = "Fetches a list of recipients associated with a specific customer ID.",
+            parameters = {
+                    @Parameter(
+                            name = "customerId",
+                            description = "The ID of the customer whose recipients to fetch",
+                            required = true,
+                            example = "3"
+                    )
+            },
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Recipients fetched successfully",
+                            content = @Content(
+                                    examples = @ExampleObject(
+                                            name = "Case: Recipients fetched",
+                                            value = "{\n" +
+                                                    "  \"status\": 200,\n" +
+                                                    "  \"error\": null,\n" +
+                                                    "  \"message\": \"Recipient fetched successfully\",\n" +
+                                                    "  \"data\": [\n" +
+                                                    "    {\n" +
+                                                    "      \"name\": \"Thanh Sơn\",\n" +
+                                                    "      \"account_number\": \"984837497\",\n" +
+                                                    "      \"alias_name\": \"Sơn làm frontend đẹp nhất\",\n" +
+                                                    "      \"bank_code\": \"\"\n" +
+                                                    "    }\n" +
+                                                    "  ]\n" +
+                                                    "}"
+                                    )
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "Customer not found",
+                            content = @Content(
+                                    examples = @ExampleObject(
+                                            name = "Case: Customer not found",
+                                            value = "{\n" +
+                                                    "  \"status\": 404,\n" +
+                                                    "  \"error\": \"Customer not found\",\n" +
+                                                    "  \"message\": \"The customer was not found\",\n" +
+                                                    "  \"data\": null\n" +
+                                                    "}"
+                                    )
+                            )
+                    )
+            }
+    )
     @GetMapping("/v2/{customerId}")
     @APIMessage("Recipient fetched successfully")
     public ResponseEntity<List<GetRecipientsResponse>> getRecipientsByCustomerId(@PathVariable int customerId) throws CustomerNotFoundException {

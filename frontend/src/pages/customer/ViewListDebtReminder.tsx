@@ -40,8 +40,9 @@ const ViewListDebtReminder = () => {
   };
 
   useEffect(() => {
-    const customerId = 3; // Thay bằng ID khách hàng
-    dispatch(fetchDebtors(customerId));
+    const user = localStorage.getItem("user") || "";
+    const {userID} = JSON.parse(user);
+    dispatch(fetchDebtors(userID));
   }, [dispatch]);
 
   const currentType = tab === 0 ? "Creator" : "Debtor";

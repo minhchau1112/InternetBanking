@@ -3,9 +3,7 @@ package com.example.backend.controller;
 import com.example.backend.dto.request.RecipientCreateRequest;
 import com.example.backend.dto.request.RecipientUpdateRequest;
 import com.example.backend.dto.response.GetRecipientsResponse;
-import com.example.backend.dto.response.RecipientListResponse;
 import com.example.backend.exception.CustomerNotFoundException;
-import com.example.backend.model.LinkedBank;
 import com.example.backend.model.Recipient;
 import com.example.backend.repository.AccountRepository;
 import com.example.backend.repository.LinkedBankRepository;
@@ -16,9 +14,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -38,9 +34,6 @@ public class RecipientController {
     private RecipientService recipientService;
 
     @Autowired
-    private LinkedBankRepository linkedBankRepository;
-
-    @Autowired
     private AccountRepository accountRepository;
 
     @Operation(
@@ -56,29 +49,48 @@ public class RecipientController {
                             content = @Content(
                                     examples = @ExampleObject(
                                             name = "Case: API called successfully with 1 result",
-                                            value = "{\n" +
-                                                    "  \"status\": 200,\n" +
-                                                    "  \"error\": null,\n" +
-                                                    "  \"message\": \"Recipient fetched successfully.\",\n" +
-                                                    "  \"data\": [\n" +
-                                                    "    {\n" +
-                                                    "      \"id\": 1,\n" +
-                                                    "      \"customer\": {\n" +
-                                                    "        \"id\": 3,\n" +
-                                                    "        \"username\": \"nlqkhanh\",\n" +
-                                                    "        \"password\": \"$2a$10$0SsupHTuP8RS17QUbynsRuVcHnjmnQhqeiY08Mm2.fhbsMP99W/QS\",\n" +
-                                                    "        \"createdAt\": \"2024-12-22T00:05:53\",\n" +
-                                                    "        \"name\": \"Quốc Khánh\",\n" +
-                                                    "        \"email\": \"chauhhcc@gmail.com\",\n" +
-                                                    "        \"phone\": \"034724892\"\n" +
-                                                    "      },\n" +
-                                                    "      \"accountNumber\": \"984837497\",\n" +
-                                                    "      \"aliasName\": \"Sơn làm frontend đẹp nhất\",\n" +
-                                                    "      \"bankCode\": \"\",\n" +
-                                                    "      \"createdAt\": \"2024-12-26T00:07:07\"\n" +
-                                                    "    }\n" +
-                                                    "  ]\n" +
-                                                    "}"
+                                            value = """
+                                                    {
+                                                      "status": 200,
+                                                      "error": null,
+                                                      "message": "Recipient fetched successfully.",
+                                                      "data": [
+                                                        {
+                                                          "id": 1,
+                                                          "customer": {
+                                                            "id": 15,
+                                                            "username": "dinhhuy",
+                                                            "password": "$2a$10$p0YNXb.KbbaJMHES3AGVBuqRHXcBFsP0LIxatm2DaWGNXxkO5xD..",
+                                                            "createdAt": "2025-01-09T12:06:01.484986",
+                                                            "name": "Dinh Huy",
+                                                            "email": "tdhuy.03@gmail.com",
+                                                            "phone": "0902999002"
+                                                          },
+                                                          "accountNumber": "439030014096",
+                                                          "aliasName": "Quoc Khanh",
+                                                          "bankCode": "GROUP2",
+                                                          "createdAt": "2025-01-09T12:07:08.321691"
+                                                        }
+                                                      ]
+                                                    }
+                                                    """
+                                    )
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "Error: Customer not found",
+                            content = @Content(
+                                    examples = @ExampleObject(
+                                            name = "Case: Customer not found",
+                                            value = """
+                                                    {
+                                                      "status": 404,
+                                                      "error": "Customer not found",
+                                                      "message": "The customer was not found",
+                                                      "data": null,
+                                                    }
+                                                    """
                                     )
                             )
                     )
@@ -89,8 +101,11 @@ public class RecipientController {
     public ResponseEntity<List<Recipient>> getRecipient
             (@PathVariable("customer_id") int customer_id) throws CustomerNotFoundException {
 
+        if(!recipientService.customerExistsById(customer_id)) {
+            throw new CustomerNotFoundException("Customer not found");
+        }
+
         List<Recipient> recipients = recipientService.findByCustomer(customer_id);
-//        RecipientListResponse recipientListResponse = new RecipientListResponse(recipients);
 
         return ResponseEntity.ok(recipients);
     }
@@ -116,13 +131,14 @@ public class RecipientController {
                     description = "Recipient details to be created",
                     content = @Content(
                             examples = @ExampleObject(
-                                    name = "Example request body with customerId exited amd accountNumber exited",
-                                    value = "{\n" +
-                                            "  \"customerId\": 3,\n" +
-                                            "  \"accountNumber\": \"984837497\",\n" +
-                                            "  \"aliasName\": \"Thanh Sơn\",\n" +
-                                            "  \"bankCode\": \"\"\n" +
-                                            "}"
+                                    name = "Example request body with customerId exited and accountNumber exited",
+                                    value = """
+                                            {
+                                              "customerId": 3,
+                                              "accountNumber": "984837497",
+                                              "aliasName": "Thanh Sơn",
+                                              "bankCode": "GROUP2"
+                                            }"""
                             )
                     )
             ),
@@ -133,15 +149,35 @@ public class RecipientController {
                             content = @Content(
                                     examples = @ExampleObject(
                                             name = "Case: API called successfully with new recipient created",
-                                            value = "{\n" +
-                                                    "  \"status\": 200,\n" +
-                                                    "  \"error\": null,\n" +
-                                                    "  \"message\": \"Recipient created successfully.\",\n" +
-                                                    "  \"data\": null\n" +
-                                                    "}"
+                                            value = """
+                                                    {
+                                                      "status": 200,
+                                                      "error": null,
+                                                      "message": "Recipient created successfully.",
+                                                      "data": null
+                                                    }
+                                                    """
                                     )
                             )
                     ),
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "Error: Customer not found",
+                            content = @Content(
+                                    examples = @ExampleObject(
+                                            name = "Case: Customer not found",
+                                            value = """
+                                                    {
+                                                      "status": 404,
+                                                      "error": "Customer not found",
+                                                      "message": "The customer was not found",
+                                                      "data": null,
+                                                    }
+                                                    """
+                                    )
+                            )
+                    ),
+                    @ApiResponse(responseCode = "500", description = "Recipient created failed", content = @Content)
             }
     )
     @PostMapping
@@ -162,11 +198,53 @@ public class RecipientController {
         }
     }
 
+    @Operation(
+            summary = "Update a recipient",
+            description = "This API update a recipient data for the customer by providing recipient information.",
+            parameters = {
+                    @Parameter(name = "recipient_id", description = "The ID of the recipient", required = true, in = ParameterIn.PATH)
+            },
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "Recipient details to be updated",
+                    content = @Content(
+                            examples = @ExampleObject(
+                                    name = "Example request body with recipientId exited and accountNumber exited",
+                                    value = """
+                                            {
+                                              "recipientId": 1,
+                                              "accountNumber": "984837497",
+                                              "aliasName": "Thanh Sơn",
+                                              "bankCode": "GROUP2"
+                                            }
+                                            """
+                            )
+                    )
+            ),
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Recipient updated successfully",
+                            content = @Content(
+                                    examples = @ExampleObject(
+                                            name = "Case: API called successfully with recipient updated",
+                                            value = """
+                                                    {
+                                                      "status": 200,
+                                                      "error": null,
+                                                      "message": "Recipient updated successfully.",
+                                                      "data": null
+                                                    }
+                                                    """
+                                    )
+                            )
+                    ),
+                    @ApiResponse(responseCode = "500", description = "Recipient updated failed", content = @Content)
+            }
+    )
     @PutMapping("/{recipient_id}")
     @APIMessage("Recipient updated successfully.")
     public ResponseEntity<Void> updateRecipient(@PathVariable("recipient_id") Integer recipient_id,
                                                 @RequestBody @Valid  RecipientUpdateRequest updateRequest) {
-
         try{
             Recipient recipient = recipientService.updateRecipient(updateRequest);
             return ResponseEntity.ok().body(null);
@@ -176,6 +254,33 @@ public class RecipientController {
 
     }
 
+    @Operation(
+            summary = "Delete a recipient",
+            description = "This API delete a recipient for the customer by providing recipient information.",
+            parameters = {
+                    @Parameter(name = "recipient_id", description = "The ID of the recipient", required = true, in = ParameterIn.PATH)
+            },
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Recipient delete successfully",
+                            content = @Content(
+                                    examples = @ExampleObject(
+                                            name = "Case: API called successfully with recipient delete",
+                                            value = """
+                                                    {
+                                                      "status": 200,
+                                                      "error": null,
+                                                      "message": "Recipient delete successfully.",
+                                                      "data": null
+                                                    }
+                                                    """
+                                    )
+                            )
+                    ),
+                    @ApiResponse(responseCode = "500", description = "Recipient deleted failed", content = @Content)
+            }
+    )
     @DeleteMapping("/{recipient_id}")
     @APIMessage("Recipient deleted successfully.")
     public ResponseEntity<Void> deleteRecipient(@PathVariable("recipient_id") int recipient_id) {
@@ -186,12 +291,5 @@ public class RecipientController {
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body(null);
         }
-    }
-
-    @GetMapping("/banks")
-    @APIMessage("Getted")
-    public ResponseEntity<List<LinkedBank>> getBanks() {
-        List<LinkedBank> banks = linkedBankRepository.findAll();
-        return ResponseEntity.ok(banks);
     }
 }

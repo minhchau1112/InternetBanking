@@ -9,6 +9,12 @@ import {
     updateRecipient
 } from "@/api/recipientAPI.ts";
 import NoDataImage from "@/assets/image/nodata.png";
+import {useDispatch, useSelector} from "react-redux";
+import {AppDispatch, RootState} from "@/redux/store";
+import {
+    setRecipients,
+    setFilteredRecipients
+} from "@/redux/slices/recipientSlice.ts";
 
 type Customer = {
     createdAt: string,
@@ -40,8 +46,6 @@ type UpdateFormData = {
 
 const Recipient = () => {
 
-    const [recipients, setRecipients] = useState<Recipient[]>([]);
-    const [filteredRecipients, setFilteredRecipients] = useState<Recipient[]>([]);
     const [pageRecipients, setPageRecipients] = useState<Recipient[]>([]);
     const [searchQuery, setSearchQuery] = useState<string>('');
     const [currentPage, setCurrentPage] = useState<number>(1);
@@ -54,6 +58,13 @@ const Recipient = () => {
     const [updatingId, setUpdatingId] = useState<number>(-1);
     const [updatingAccNum, setUpdatingAccNum] = useState<string>("");
     const [updatingBankCode, setUpdatingBankCode] = useState<string>("");
+
+    const dispatch = useDispatch<AppDispatch>();
+    const {
+        allRecipients,
+        filteredRecipients
+    } = useSelector((state: RootState) => state.recipients);
+
     useEffect(() => {
         fetchRecipients();
     }, []);
@@ -61,14 +72,15 @@ const Recipient = () => {
     const fetchRecipients = async () => {
         try {
             const response = await fetchCustomerRecipients();
-            setRecipients(response);
+            // setRecipients(response);
+            dispatch(setRecipients(response));
             handleSearch('', response);
         } catch (error) {
             toast.error("Error fetching recipients.");
         }
     };
 
-    const handleSearch = (query: string, data: Recipient[] = recipients) => {
+    const handleSearch = (query: string, data: Recipient[] = allRecipients) => {
         setSearchQuery(query);
 
         let results;
@@ -83,7 +95,8 @@ const Recipient = () => {
             );
         }
 
-        setFilteredRecipients(results);
+        // setFilteredRecipients(results);
+        dispatch(setFilteredRecipients(results));
         const total = Math.max(1, Math.ceil(results.length / pageLimit));
         setTotalPage(total);
         handleDisplayRecipients(results);
@@ -120,7 +133,7 @@ const Recipient = () => {
     }
 
     const onSubmitCreate: SubmitHandler<CreateFormData> = async (data) => {
-        if(recipients.some(recipient => recipient.accountNumber === data.accountNumber)){
+        if(allRecipients.some(recipient => recipient.accountNumber === data.accountNumber)){
             toast.error("Recipient available.");
             return;
         }
@@ -171,7 +184,7 @@ const Recipient = () => {
                 />
                 <div className="w-full grid grid-cols-6">
                     <div className="w-full h-full flex flex-col justify-start items-start col-span-4">
-                        {recipients.length > 0 ? (
+                        {allRecipients.length > 0 ? (
                             <div className="w-full flex flex-col justify-start px-[4%] py-[2%] border border-gray-300 rounded-lg">
                                 <table className="w-full text-lg text-left border-collapse">
                                     <thead>

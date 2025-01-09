@@ -7,6 +7,7 @@ import debtReminderCreateReducer from "../slices/debtReminderCreateSlice.ts";
 import transactionsReducer from "../slices/transactionsSlice";
 import searchDepositReducer from "../slices/searchDepositSlice";
 import depositReducer from "../slices/depositSlice";
+import recipientReducer from "../slices/recipientSlice";
 
 export const store = configureStore({
     reducer: {
@@ -18,6 +19,7 @@ export const store = configureStore({
         transactions: transactionsReducer,
         search: searchDepositReducer,
         deposit: depositReducer,
+        recipients: recipientReducer,
     },
 });
 

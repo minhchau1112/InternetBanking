@@ -204,8 +204,4 @@ public class AccountService {
     public Account findAccountByAccountNumber(String accountNumber) {
         return accountRepository.findByAccountNumber(accountNumber).orElse(null);
     }
-
-    public Account getAccountByAccountId(Integer accountId) {
-        return accountRepository.findById(accountId).orElse(null);
-    }
 }

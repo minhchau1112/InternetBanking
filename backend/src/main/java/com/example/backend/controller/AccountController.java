@@ -191,11 +191,6 @@ public class AccountController {
         Transaction transaction = accountService.deposit(depositRequest);
         return ResponseEntity.ok(transaction);
     }
-
-    @GetMapping("/get/{accountId}")
-    public Account getAccountByAccountId(@PathVariable String accountId) {
-        return accountService.getAccountByAccountId(Integer.parseInt(accountId));
-    }
 }
 
 

@@ -3,7 +3,7 @@ import NoDataImage from '@/assets/image/nodata.png';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
 import { setTransactions, setFilteredTransactions, setActiveTab, setSortOrder, setError } from '@/redux/slices/transactionsSlice';
-import axios from "axios";
+import axios from 'axios';
 
 type InterbankTransaction = {
     id: number;

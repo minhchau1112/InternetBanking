@@ -49,7 +49,6 @@ public class TransactionController {
      * Get the list of transactions for a user.
      * @param accountId ID of the current logged account.
      * @param partnerAccountNumber Account number of the partner.
-     * @param type Type of transaction.
      * @param startDate Start date of the transaction.
      * @param endDate End date of the transaction.
      * @return List of transactions.
@@ -120,6 +119,35 @@ public class TransactionController {
             e.printStackTrace();
             throw new RuntimeException("Error processing request: " + e.getMessage());
         }
+    }
+
+    /**
+     * Get the list of interbank transactions.
+     * @param startDate Start date of the transaction.
+     * @param endDate End date of the transaction.
+     * @param bankCode Bank code of the partner bank.
+     * @return List of interbank transactions.
+     */
+    @Operation(summary = "Get interbank transactions", description = "Retrieve interbank transactions based on filters")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "List of interbank transactions retrieved successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid input parameters", content = @Content),
+            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+    })
+    @GetMapping("/interbank-transactions/filter")
+    public List<InterbankTransactionResponse> getInterbankTransactions(
+            @RequestParam(value = "startDate", required = false) String startDate,
+            @RequestParam(value = "endDate", required = false) String endDate,
+            @RequestParam(value = "bankCode", required = false) String bankCode
+    ) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+        LocalDateTime start = (startDate != null && !startDate.isEmpty())
+                ? LocalDateTime.parse(startDate + "T00:00:00", formatter) : null;
+        LocalDateTime end = (endDate != null && !endDate.isEmpty())
+                ? LocalDateTime.parse(endDate + "T23:59:59", formatter) : null;
+        String bankCodeStr = (bankCode != null && !bankCode.isEmpty()) ? bankCode : null;
+
+        return transactionService.filterInterbankTransactions(start, end, bankCodeStr);
     }
 
     /**

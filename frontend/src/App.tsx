@@ -13,12 +13,14 @@ import DepositPage from "./pages/employee/Deposit";
 import Recipient from "./pages/customer/Contact.tsx";
 import ForgotPassword from "@/pages/login/ForgotPassword.tsx";
 import AccountCreation from "./pages/employee/AccountCreation.tsx";
+import TransactionHistoryAdmin from "./pages/admin/TransactionHistoryAdmin.tsx";
 import TransactionHistory from "./pages/employee/Transaction.tsx";
 import TransactionForm from "@/pages/customer/TransactionForm.tsx";
 import TransactionHistoryCustomer from "./pages/customer/TransactionHistory.tsx";
 import ResetPassword from "@/pages/login/ResetPassword.tsx";
 import Profile from "@/pages/customer/Profile.tsx";
-
+import ManageEmployee from "./pages/admin/ManageEmployee.tsx";
+import InterbankTransactions from "./pages/admin/InterbankTransactions.tsx";
 
 function App() {
     const id = localStorage.getItem('accountId') || "3";
@@ -60,10 +62,15 @@ function App() {
                     <Route path="/customers" element={< AccountCreation/>}/>
                     <Route path="/history" element={< TransactionHistoryCustomer/>}/>
                     <Route path="/employee-transaction" element={<TransactionHistory/>}/>
+                    <Route path="/history" element={< TransactionHistoryCustomer/>}/>
+                    <Route path="/employee-transaction" element={<TransactionHistory/>}/>
                     <Route path="/forgot-password" element={<ForgotPassword/>}/>
                     <Route path="/reset-password" element={<ResetPassword/>}/>
                     <Route path="/profile" element={<Profile/>}/>
+                    <Route path="/transactions" element={<TransactionHistoryAdmin/>}/>
                     <Route path="/transactions/create" element={<TransactionForm/>}/>
+                    <Route path="/manage-employee" element={<ManageEmployee/>}/>
+                    <Route path="/interbank-transactions" element={<InterbankTransactions/>}/>
                 </Routes>
             </div>
         </div>

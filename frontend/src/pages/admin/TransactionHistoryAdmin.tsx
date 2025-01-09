@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react';
 import NoDataImage from '@/assets/image/nodata.png';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '@/redux/store';
+import { setTransactions, setFilteredTransactions, setActiveTab, setSortOrder, setError } from '@/redux/slices/transactionsSlice';
 import axios from "axios";
 
 type InterbankTransaction = {
@@ -13,21 +16,20 @@ type InterbankTransaction = {
 };
 
 const TransactionHistoryAdmin = () => {
-    const [activeTab, setActiveTab] = useState<'all' | 'in' | 'out'>('all');
     const [sourceAccountId] = useState<string>(localStorage.getItem('accountId') || '');
     const [partnerAccountNumber, setPartnerAccountNumber] = useState<string>('');
     const [transactionType, setTransactionType] = useState<'internal' | 'interbank'>('internal');
     const [startDate, setStartDate] = useState<string>('');
     const [endDate, setEndDate] = useState<string>('');
     const [bankCode, setBankCode] = useState<string>('');
-    const [allTransactions, setAllTransactions] = useState<InterbankTransaction[]>([]);
-    const [filteredTransactions, setFilteredTransactions] = useState<InterbankTransaction[]>([]);
     const [error, setError] = useState<string | null>(null);
-    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
     const [banks, setBanks] = useState<Bank[]>([]);
     const [selectedBank, setSelectedBank] = useState<string>('');
 
     const accessToken = localStorage.getItem('access_token');
+
+    const dispatch = useDispatch();
+    const { allTransactions, filteredTransactions, activeTab, sortOrder } = useSelector((state: RootState) => state.transactions);
 
     useEffect(() => {
         const fetchBanks = async () => {
@@ -62,10 +64,10 @@ const TransactionHistoryAdmin = () => {
                     bankCode: selectedBank || '',
                 }),
             });
-            setAllTransactions(response.data.data);
-            filterByTab(sortedTransactions, activeTab);
+            console.log("Transactions: ", response.data.data);
+            dispatch(setTransactions(response.data.data));
         } catch (error) {
-            console.error("Error fetching transactions:", error);
+            dispatch(setError("Failed to fetch transactions"));
         }
     };
 
@@ -90,8 +92,8 @@ const TransactionHistoryAdmin = () => {
     const sortTransactions = (list: InterbankTransaction[]) => {
         return [...list].sort((a, b) =>
             sortOrder === 'asc'
-                ? new Date(a.date).getTime() - new Date(b.date).getTime()
-                : new Date(b.date).getTime() - new Date(a.date).getTime()
+                ? new Date(a.transaction.createdAt).getTime() - new Date(b.transaction.createdAt).getTime()
+                : new Date(b.transaction.createdAt).getTime() - new Date(a.transaction.createdAt).getTime()
         );
     };
 
@@ -107,24 +109,26 @@ const TransactionHistoryAdmin = () => {
                 (transaction) =>
                     transaction.tab === 'out'
             );
+        } else {
+            filtered = list;
         }
-        setFilteredTransactions(filtered);
+        dispatch(setFilteredTransactions(filtered));
     };
 
     // Hàm thay đổi tab
     const handleTabChange = (tab: 'all' | 'in' | 'out') => {
-        setActiveTab(tab);
+        dispatch(setActiveTab(tab));
         filterByTab(allTransactions, tab);
     };
 
     // Toggle sort order
     const toggleSortOrder = () => {
         const newOrder = sortOrder === 'asc' ? 'desc' : 'asc';
-        setSortOrder(newOrder);
+        dispatch(setSortOrder(newOrder));
 
         // Sort the transactions based on the new sort order
         const sortedTransactions = sortTransactions(filteredTransactions);
-        setFilteredTransactions(sortedTransactions);
+        filterByTab(sortedTransactions, activeTab);
     };
 
     return (

@@ -69,7 +69,7 @@ function App() {
                     <Route path="/transactions" element={<TransactionHistoryAdmin/>}/>
                     <Route path="/transactions/create" element={<TransactionForm/>}/>
                     <Route path="/manage-employee" element={<ManageEmployee/>}/>
-                    <Route path="/interbank-transactions" element={<InterbankTransactions/>}/>
+                    
                 </Routes>
             </div>
         </div>

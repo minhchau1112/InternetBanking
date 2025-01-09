@@ -5,10 +5,28 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e0eed544-89c0-42c9-896e-fc7e2e690907" name="Changes" comment="">
+<<<<<<< HEAD
+<<<<<<< HEAD
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+=======
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+<<<<<<< HEAD
+      <change beforePath="$PROJECT_DIR$/backend/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/resources/application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/employee/TransactionForm.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/employee/TransactionForm.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/employee/TransactionHistory.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/employee/TransactionHistory.tsx" afterDir="false" />
+>>>>>>> 7c7e2cabe2e51b08a2eb2ad9392a3f70d00e8973
+=======
+      <change beforePath="$PROJECT_DIR$/frontend/src/App.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/App.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/Sidebar.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/Sidebar.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/employee/TransactionForm.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/customer/TransactionForm.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/employee/TransactionHistory.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/customer/TransactionHistory.tsx" afterDir="false" />
+>>>>>>> 42eeaebcb036b62b8ad1453758d70e3b32c0e9b2
+=======
       <change beforePath="$PROJECT_DIR$/.idea/dataSources.local.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.local.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/example/backend/controller/TransactionController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/example/backend/controller/TransactionController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/resources/application.properties" afterDir="false" />
+>>>>>>> dedee181ed3315d774d04d988cd091caf48e5fdd
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -60,6 +78,20 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
+<<<<<<< HEAD
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.go.formatter.settings.were.checked": "true",
+    "RunOnceActivity.go.migrated.go.modules.settings": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "git-widget-placeholder": "MinhChau",
+    "go.import.settings.migrated": "true",
+    "last_opened_file_path": "D:/code/WNC/FinalProject/InternetBanking/backend",
+    "nodejs_package_manager_path": "npm",
+    "vue.rearranger.settings.migration": "true"
+=======
   <component name="PropertiesComponent">{
   &quot;keyToString&quot;: {
     &quot;Maven.Unnamed.executor&quot;: &quot;Run&quot;,
@@ -95,6 +127,7 @@
     &quot;DatabaseDriversLRU&quot;: [
       &quot;mysql&quot;
     ]
+>>>>>>> 7c7e2cabe2e51b08a2eb2ad9392a3f70d00e8973
   }
 }</component>
   <component name="ReactorSettings">
@@ -132,6 +165,9 @@
       <updated>1733328172529</updated>
       <workItem from="1733328173518" duration="34000" />
       <workItem from="1734763210467" duration="170000" />
+<<<<<<< HEAD
+      <workItem from="1735101406035" duration="16000" />
+=======
       <workItem from="1735546165785" duration="121000" />
       <workItem from="1735546759665" duration="7768000" />
       <workItem from="1735555386753" duration="6097000" />
@@ -146,8 +182,15 @@
       <workItem from="1735782380082" duration="298000" />
       <workItem from="1735795667132" duration="969000" />
       <workItem from="1735813247018" duration="2564000" />
+<<<<<<< HEAD
+>>>>>>> 7c7e2cabe2e51b08a2eb2ad9392a3f70d00e8973
+=======
       <workItem from="1736317652107" duration="2950000" />
+<<<<<<< HEAD
+>>>>>>> 42eeaebcb036b62b8ad1453758d70e3b32c0e9b2
+=======
       <workItem from="1736348383245" duration="928000" />
+>>>>>>> dedee181ed3315d774d04d988cd091caf48e5fdd
     </task>
     <servers />
   </component>

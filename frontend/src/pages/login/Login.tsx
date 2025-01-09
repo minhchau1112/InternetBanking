@@ -114,7 +114,7 @@ export function LoginForm() {
                             <FormItem>
                                 <FormLabel className="font-bold">Mật khẩu</FormLabel>
                                 <FormControl>
-                                    <Input placeholder="Mật khẩu" {...field} />
+                                    <Input type="password" placeholder="Mật khẩu" {...field} />
                                 </FormControl>
                                 <FormMessage/>
                             </FormItem>
